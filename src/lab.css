@@ -1,0 +1,15 @@
+/* Butterfly lab (shader test bench) — scoped so it never leaks into the portfolio. */
+.lab { position: fixed; inset: 0; background: #07070b; overflow: hidden; }
+html[data-lab-theme='light'] .lab { background: #f7f1f4; }
+.lab .hud {
+  position: fixed; left: 16px; bottom: 14px; z-index: 5;
+  font: 12px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
+  color: #c9c9d6; pointer-events: none; user-select: none;
+}
+html[data-lab-theme='light'] .lab .hud { color: #8a7a86; }
+.lab-back {
+  position: fixed; left: 16px; top: 14px; z-index: 5;
+  font: 13px/1 'Atkinson Hyperlegible Mono', ui-monospace, monospace;
+  color: #db5b90; text-decoration: none;
+}
+.lab-back:hover, .lab-back:focus-visible { text-decoration: underline; }

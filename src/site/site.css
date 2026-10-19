@@ -1,0 +1,466 @@
+/* ── Design tokens ─────────────────────────────────────────────────────────── */
+:root {
+  --font-display: 'cesso', 'Georgia', serif;                  /* Adobe Fonts kit vvb4ptb */
+  --font-mono: 'Atkinson Hyperlegible Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+  --font-pixel: 'Silkscreen', 'Atkinson Hyperlegible Mono', monospace; /* tiny retro labels only */
+
+  /* spacing: 8pt grid on desktop (multiples of 8). Redefined below 900px on a 4pt grid. */
+  --sp-1: 8px;  --sp-2: 16px; --sp-3: 24px; --sp-4: 32px;  --sp-5: 40px;
+  --sp-6: 48px; --sp-8: 64px; --sp-10: 80px; --sp-12: 96px; --sp-15: 120px;
+  --gutter: 120px;
+  --taskbar-h: 48px;
+
+  /* type: body copy never goes below 16px */
+  --text-body: 16px;
+  --text-label: 12px;  /* pixel labels / chrome only */
+
+  --accent: #e85d9e;
+  --accent-deep: #b93e78;
+  --accent-tint: rgba(232, 93, 158, 0.1);
+  --bg: #f8f1f4;
+  --bg-alt: #fcf8fa;
+  --taskbar: #eee2e8;
+  --ink: #292329;
+  --ink-soft: #6e6069;
+  --line: rgba(41, 35, 41, 0.13);
+  --line-strong: rgba(41, 35, 41, 0.26);
+  --window: #fffbfd;
+  --titlebar: #f5eaf0;
+  --icon-paper: #fffbfd;
+  --shadow-pixel: rgba(232, 93, 158, 0.22);
+  /* retro pink OS windows, derived from the accent */
+  --win-bar: #f2a3c7;        /* title bar */
+  --win-bar-ink: #7a2550;
+  --win-body: #f9dfeb;       /* window frame */
+  --win-pane: #fff7fb;       /* inset content area */
+  --win-edge: #d8679c;       /* darker pink outline */
+  --win-hi: rgba(255, 255, 255, 0.85);  /* bevel highlight */
+  --win-lo: rgba(184, 62, 120, 0.35);   /* bevel shade */
+  --win-glow: rgba(232, 93, 158, 0.32);
+  color-scheme: light;
+}
+:root[data-theme='dark'] {
+  --accent-deep: #9e3a6c;
+  --accent-tint: rgba(232, 93, 158, 0.14);
+  --bg: #1d191d;
+  --bg-alt: #221d22;
+  --taskbar: #151215;
+  --ink: #f4eaf0;
+  --ink-soft: #b5a6af;
+  --line: rgba(244, 234, 240, 0.11);
+  --line-strong: rgba(244, 234, 240, 0.24);
+  --window: #262026;
+  --titlebar: #2e272e;
+  --icon-paper: #2e272e;
+  --shadow-pixel: rgba(232, 93, 158, 0.3);
+  --win-bar: #c8508a;
+  --win-bar-ink: #fff2f8;
+  --win-body: #33232f;
+  --win-pane: #261a24;
+  --win-edge: #e85d9e;
+  --win-hi: rgba(255, 190, 222, 0.28);
+  --win-lo: rgba(0, 0, 0, 0.45);
+  --win-glow: rgba(232, 93, 158, 0.42);
+  color-scheme: dark;
+}
+@media (max-width: 1299px) { :root { --gutter: 80px; } }
+@media (max-width: 1099px) { :root { --gutter: 48px; } }
+@media (max-width: 899px) {
+  :root {
+    /* mobile: 4pt grid */
+    --sp-1: 4px;  --sp-2: 12px; --sp-3: 16px; --sp-4: 24px;  --sp-5: 28px;
+    --sp-6: 36px; --sp-8: 48px; --sp-10: 56px; --sp-12: 64px; --sp-15: 80px;
+    --gutter: 20px;
+    --taskbar-h: 52px;
+  }
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html { scroll-padding-top: var(--taskbar-h); }
+html, body, #root { margin: 0; min-height: 100%; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: var(--text-body);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+  transition: background-color 0.4s ease, color 0.4s ease;
+}
+main:focus, section:focus { outline: none; }
+a { color: inherit; }
+:focus-visible { outline: 2px dashed var(--accent); outline-offset: 4px; }
+button { font: inherit; color: inherit; }
+
+.skip-link {
+  position: fixed; left: var(--sp-2); top: -64px; z-index: 50;
+  font: 500 var(--text-body) var(--font-mono); color: var(--ink); background: var(--bg);
+  border: 1.5px solid var(--accent); padding: var(--sp-1) var(--sp-2); cursor: pointer;
+}
+.skip-link:focus-visible { top: calc(var(--taskbar-h) + var(--sp-1)); }
+
+/* ── Taskbar (menu bar) ────────────────────────────────────────────────────── */
+.taskbar {
+  position: sticky; top: 0; z-index: 30;
+  display: flex; align-items: center; justify-content: space-between; gap: var(--sp-2);
+  height: var(--taskbar-h); padding: 0 var(--gutter);
+  background: var(--taskbar); border-bottom: 1px solid var(--line);
+  font-size: var(--text-body); letter-spacing: 0.02em;
+  transition: background-color 0.4s ease, border-color 0.4s ease;
+}
+.taskbar-brand {
+  display: inline-flex; align-items: center; gap: var(--sp-1); min-width: 0;
+  text-decoration: none; font-weight: 700; white-space: nowrap;
+}
+.taskbar-brand span { overflow: hidden; text-overflow: ellipsis; }
+.taskbar-brand svg { flex: none; transition: transform 0.3s ease; }
+.taskbar-brand:hover svg { transform: translateY(-1px) rotate(-6deg); }
+.taskbar-nav { display: flex; align-items: center; gap: var(--sp-4); flex: none; }
+.taskbar-nav ul { display: flex; gap: var(--sp-4); list-style: none; margin: 0; padding: 0; }
+.taskbar-nav a {
+  text-decoration: none; padding: var(--sp-1) 0; border-bottom: 1.5px solid transparent;
+  transition: color 0.2s ease, border-color 0.2s ease;
+}
+.taskbar-nav a:hover { color: var(--accent); }
+.taskbar-nav a[aria-current='page'] { border-bottom-color: var(--accent); }
+.theme-toggle {
+  display: grid; place-items: center; width: 40px; height: 40px; padding: 0;
+  background: none; border: 1px solid transparent; cursor: pointer;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+.theme-toggle:hover { border-color: var(--line-strong); background: var(--accent-tint); }
+.theme-toggle svg { transition: transform 0.4s ease; }
+.theme-toggle:active svg { transform: rotate(40deg) scale(0.88); }
+
+/* ── Desktop hero (Lauren's layout) ────────────────────────────────────────
+   desktop:  [ name        ][ README window (centered) ][ icons ]
+             [             ][                          ][ icons ]
+             [ contact dock][                          ][       ]            */
+.desktop-hero {
+  /* clip (not hidden): focus inside can't scroll the desktop sideways */
+  position: relative; overflow: hidden; overflow: clip;
+  display: grid;
+  /* one compact group, centered both ways: name | README | icon column.
+     Rows follow the four desktop icons, so the contacts can share THOUGHT's row. */
+  grid-template-columns: max-content minmax(0, 520px) 96px;
+  grid-template-rows: repeat(4, auto);
+  justify-content: center; align-content: center;
+  column-gap: var(--sp-10); row-gap: var(--sp-3);
+  min-height: calc(100svh - var(--taskbar-h));
+  padding: var(--sp-8) var(--gutter);
+  border-bottom: 1px solid var(--line-strong);
+}
+/* tiny pixel rivets where the desktop's bottom edge meets the page sides */
+.desktop-hero::before, .desktop-hero::after {
+  content: ''; position: absolute; bottom: -1px; width: 8px; height: 8px; background: var(--accent);
+}
+.desktop-hero::before { left: var(--gutter); }
+.desktop-hero::after { right: var(--gutter); }
+
+.hero-name { grid-column: 1; grid-row: 1 / span 2; align-self: start; position: relative; z-index: 5; }
+/* the README sits centered and a little lower, leaving air above it for the small butterfly */
+.hero-window { grid-column: 2; grid-row: 1 / span 3; align-self: start; position: relative; z-index: 5; margin-top: var(--sp-10); }
+.hero-icons { display: contents; list-style: none; margin: 0; padding: 0; } /* items join the hero grid */
+.hero-icons > li { grid-column: 3; position: relative; z-index: 5; align-self: start; }
+.hero-icons > li:nth-child(1) { grid-row: 1; }
+.hero-icons > li:nth-child(2) { grid-row: 2; }
+.hero-icons > li:nth-child(3) { grid-row: 3; }
+.hero-icons > li:nth-child(4) { grid-row: 4; }
+/* contacts share THOUGHT's row: same top edge, same label baseline */
+.contact-dock { grid-column: 1 / span 2; grid-row: 4; align-self: start; }
+
+.desktop-name {
+  margin: 0; font-family: var(--font-display); font-weight: 400;
+  font-size: clamp(56px, 6vw, 96px); line-height: 0.92; letter-spacing: 0.01em;
+}
+.desktop-name span { display: block; }
+
+/* desktop icons: every icon (files, utilities, contacts) is a pixel icon + label underneath */
+.icon-slot { position: relative; display: flex; justify-content: center; }
+.desktop-file {
+  display: flex; flex-direction: column; align-items: center; gap: var(--sp-1);
+  width: 96px; padding: var(--sp-1); background: none; border: 0; cursor: pointer;
+  text-decoration: none; color: inherit;
+}
+.desktop-file svg { transition: transform 0.2s ease; }
+.desktop-file:hover svg, .desktop-file:focus-visible svg { transform: translateY(-2px); }
+.desktop-file-label {
+  font: var(--text-label)/1 var(--font-pixel); letter-spacing: 0.05em; padding: var(--sp-1);
+  border: 1px solid transparent; text-transform: uppercase;
+}
+.desktop-file:hover .desktop-file-label, .desktop-file:focus-visible .desktop-file-label { border-color: var(--accent); }
+.desktop-file.is-open .desktop-file-label { background: var(--accent); color: #fff; }
+.desktop-file:active svg { transform: translateY(1px); }
+
+/* ── Retro pink OS windows (README, thought pop-up) ─────────────────────────── */
+.win {
+  background: var(--win-body);
+  border: 1px solid var(--win-edge);
+  box-shadow:
+    inset 1px 1px 0 var(--win-hi), inset -1px -1px 0 var(--win-lo),
+    6px 6px 0 var(--shadow-pixel);
+  color: var(--ink);
+  transition: background-color 0.4s ease;
+}
+.win-bar {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--sp-1);
+  height: 32px; padding: 0 var(--sp-1) 0 var(--sp-2);
+  background: var(--win-bar); color: var(--win-bar-ink);
+  border-bottom: 1px solid var(--win-edge); user-select: none;
+}
+.win-bar.is-small { height: 28px; }
+.win-title { margin: 0; font: 400 var(--text-label)/1 var(--font-pixel); letter-spacing: 0.08em; }
+.win-buttons { display: flex; gap: 4px; }
+.win-btn {
+  position: relative; display: grid; place-items: center; width: 20px; height: 20px; padding: 0;
+  background: var(--win-body); border: 1px solid var(--win-edge);
+  box-shadow: inset 1px 1px 0 var(--win-hi), inset -1px -1px 0 var(--win-lo);
+  color: var(--win-edge); font: 700 15px/1 var(--font-mono);
+}
+.win-btn-min::after { content: ''; position: absolute; left: 5px; right: 5px; bottom: 5px; height: 2px; background: var(--win-edge); }
+.win-btn-max::after { content: ''; position: absolute; inset: 5px; border: 1.5px solid var(--win-edge); border-top-width: 3px; }
+.win-btn-close { cursor: pointer; }
+.win-btn-close span { translate: 0 -1px; }
+.win-btn-close:hover, .win-btn-close:focus-visible { background: var(--accent); color: #fff; }
+.win-btn-close:active { box-shadow: inset -1px -1px 0 var(--win-hi), inset 1px 1px 0 var(--win-lo); }
+.win-body { padding: var(--sp-1); }
+.win-pane {
+  position: relative; background: var(--win-pane);
+  border: 1px solid var(--win-edge);
+  box-shadow: inset 1px 1px 0 var(--win-lo), inset -1px -1px 0 var(--win-hi);
+}
+.win-actions { display: flex; justify-content: center; }
+.win-button {
+  min-width: 96px; padding: var(--sp-1) var(--sp-3);
+  font: var(--text-label)/1 var(--font-pixel); letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--win-bar-ink); background: var(--win-bar); border: 1px solid var(--win-edge); cursor: pointer;
+  box-shadow: inset 1px 1px 0 var(--win-hi), inset -1px -1px 0 var(--win-lo);
+}
+.win-button:hover, .win-button:focus-visible { background: var(--accent); color: #fff; }
+.win-button:active { box-shadow: inset -1px -1px 0 var(--win-hi), inset 1px 1px 0 var(--win-lo); }
+
+/* README + thought pop-up share one look: pink glow, no offset shadow */
+.readme-window, .thought-pop {
+  box-shadow:
+    inset 1px 1px 0 var(--win-hi), inset -1px -1px 0 var(--win-lo),
+    0 0 48px var(--win-glow), 0 0 120px var(--win-glow);
+}
+/* README: open/close transition */
+.readme-window {
+  transform-origin: 50% 0;
+  opacity: 0; transform: scale(0.96); visibility: hidden; pointer-events: none;
+  transition: opacity 0.24s ease, transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1), visibility 0s linear 0.28s,
+    background-color 0.4s ease;
+}
+.readme-window.is-open {
+  opacity: 1; transform: none; visibility: visible; pointer-events: auto;
+  transition: opacity 0.24s ease, transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1), visibility 0s, background-color 0.4s ease;
+}
+.readme-window .win-pane { padding: var(--sp-5); }
+.thought-pop .win-pane { padding: var(--sp-3) var(--sp-3) var(--sp-2); }
+.readme-text { margin: 0; font-size: 24px; line-height: 1.5; text-wrap: pretty; }
+/* thought pop-up opens up and to the LEFT of the right-edge column, so it stays on screen */
+.thought-pop {
+  position: absolute; z-index: 6; right: calc(100% + var(--sp-2)); bottom: 0; width: min(320px, 80vw);
+  animation: pop-in 0.22s cubic-bezier(0.2, 0.9, 0.3, 1.2); transform-origin: 100% 100%;
+}
+.thought-text { margin: 0 0 var(--sp-2); font-size: var(--text-body); line-height: 1.5; }
+@keyframes pop-in { from { opacity: 0; transform: scale(0.92); } }
+
+/* contact dock, anchored to the desktop's bottom edge */
+.contact-dock { position: relative; z-index: 5; padding: 0; }
+.contact-dock ul { display: flex; gap: var(--sp-3); list-style: none; margin: 0; padding: 0; }
+
+/* ── Light overlay: Lauren's light image on the butterflies' diagonal ─────────
+   Under the butterflies (z 4) and every desktop item (z 5). Edges fade out with a mask so
+   the image never shows a rectangle. */
+.light-overlay {
+  position: absolute; z-index: 3; pointer-events: none;
+  background: center / 100% 100% no-repeat;
+  /* fade all four edges (intersected), so no side of the image ever shows */
+  -webkit-mask-image:
+    linear-gradient(to right, transparent 0%, #000 22%, #000 80%, transparent 100%),
+    linear-gradient(to bottom, transparent 0%, #000 14%, #000 92%, transparent 100%);
+  -webkit-mask-composite: source-in;
+          mask-image:
+    linear-gradient(to right, transparent 0%, #000 22%, #000 80%, transparent 100%),
+    linear-gradient(to bottom, transparent 0%, #000 14%, #000 92%, transparent 100%);
+          mask-composite: intersect;
+  --light-opacity: 1;
+  opacity: var(--light-opacity);
+  transition: opacity 0.4s ease;
+  animation: light-breathe 14s ease-in-out infinite;
+}
+/* dark: Lauren's dark-mode light image (mirrored), screened so only the light shows */
+:root[data-theme='dark'] .light-overlay {
+  background-image: url('/art/light-overlay-dark.png');
+  background-image: image-set(url('/art/light-overlay-dark.webp') type('image/webp'), url('/art/light-overlay-dark.png') type('image/png'));
+  mix-blend-mode: screen;
+  /* softer than the raw image: less saturated rainbow, a little less bright */
+  --light-opacity: 1.2;
+  filter: saturate(0.5) brightness(0.3) contrast(1.1);
+}
+/* light: white light can't show on #F8F1F4 (lighten/screen ≈ invisible, multiply = grey
+   smudge), so light mode uses its own transparent version of the same light: alpha follows
+   the light, whites become pearly pink → lavender, rainbow hues are kept. Normal blending,
+   toned down a bit so it stays a whisper behind the README. */
+:root[data-theme='light'] .light-overlay {
+  --light-opacity: 0.5;
+  background-image: url('/art/light-overlay-light.png');
+  background-image: image-set(url('/art/light-overlay-light.webp') type('image/webp'), url('/art/light-overlay-light.png') type('image/png'));
+  mix-blend-mode: normal;
+}
+/* cheap brightness boost: a soft CSS mesh glow along the same diagonal (no WebGL) */
+.light-overlay-glow {
+  position: absolute; inset: 0; z-index: -1;
+  background:
+    radial-gradient(28% 34% at 80% 14%, rgba(255, 244, 250, 0.55), transparent 70%),
+    radial-gradient(30% 26% at 62% 46%, rgba(255, 200, 228, 0.28), transparent 72%),
+    radial-gradient(26% 30% at 40% 78%, rgba(214, 196, 255, 0.22), transparent 72%);
+  filter: blur(18px);
+}
+:root[data-theme='light'] .light-overlay-glow { display: none; } /* `lighten` handles light mode */
+@keyframes light-breathe {
+  0%, 100% { opacity: var(--light-opacity); }
+  50% { opacity: calc(var(--light-opacity) * 0.86); }
+}
+
+/* butterfly mode: ghost butterflies overlay (pixel ones are the no-WebGL fallback) */
+.ghost-butterflies { position: absolute; inset: 0; z-index: 4; pointer-events: none; animation: ghost-in 0.8s ease; }
+.ghost-butterflies canvas { pointer-events: none !important; }
+/* The lab look (glow 0.3, halo 1, smoke 0.1 in GhostButterflies LOOK) is rendered in the
+   canvas. The lab also runs a bloom pass; this soft drop-shadow stands in for that bloom. */
+:root[data-theme='dark'] .ghost-butterflies canvas {
+  filter: drop-shadow(0 0 6px rgba(255, 190, 222, 0.7)) drop-shadow(0 0 22px rgba(232, 93, 158, 0.45));
+}
+:root[data-theme='light'] .ghost-butterflies canvas {
+  /* a lighter, whiter glow so the butterflies lift off the light overlay */
+  filter: drop-shadow(0 0 6px rgba(255, 255, 255, 1)) drop-shadow(0 0 18px rgba(255, 255, 255, 0.95)) drop-shadow(0 0 36px rgba(255, 214, 234, 0.6));
+}
+@keyframes ghost-in { from { opacity: 0; } }
+.pixel-butterflies { position: absolute; inset: 0; z-index: 4; pointer-events: none; }
+.pixel-butterfly { position: absolute; left: 0; top: 0; will-change: transform; transition: opacity 0.4s ease; }
+.pixel-butterfly-wings { display: block; animation: flap 0.6s ease-in-out infinite alternate; }
+.pixel-butterflies.is-still .pixel-butterfly-wings { animation: none; }
+@keyframes flap { from { transform: scaleX(1); } to { transform: scaleX(0.35); } }
+
+/* ── Work ──────────────────────────────────────────────────────────────────── */
+.work { background: var(--bg-alt); padding: var(--sp-12) var(--gutter) var(--sp-15); transition: background-color 0.4s ease; }
+.section-head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--sp-2); flex-wrap: wrap; margin-bottom: var(--sp-5); }
+.section-title { margin: 0; font: 400 clamp(48px, 6vw, 80px)/1 var(--font-display); }
+.section-note { margin: 0; font: var(--text-label) var(--font-pixel); letter-spacing: 0.05em; color: var(--ink-soft); }
+.work-grid {
+  list-style: none; margin: 0; padding: 0;
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-4);
+}
+.work-card {
+  position: relative; display: flex; flex-direction: column;
+  background: var(--window); border: 1px solid var(--line-strong);
+  transition: border-color 0.2s ease, box-shadow 0.25s ease, transform 0.25s ease, background-color 0.4s ease;
+}
+.work-card:hover { border-color: var(--accent); box-shadow: 8px 8px 0 var(--shadow-pixel); transform: translate(-2px, -2px); }
+.work-card-bar {
+  display: flex; justify-content: space-between; align-items: center; height: 40px; padding: 0 var(--sp-2);
+  background: var(--titlebar); border-bottom: 1px solid var(--line-strong);
+  font: var(--text-label)/1 var(--font-pixel); letter-spacing: 0.05em; color: var(--ink-soft);
+}
+.work-card-index { color: var(--accent); }
+.work-card-body { padding: var(--sp-4); flex: 1; }
+.work-card-title { margin: 0 0 var(--sp-2); font: 400 clamp(32px, 3vw, 40px)/1.05 var(--font-display); }
+.work-card-title a { text-decoration: none; }
+.work-card-title a::after { content: ''; position: absolute; inset: 0; }
+.work-card-summary { margin: 0 0 var(--sp-2); font-size: var(--text-body); line-height: 1.6; max-width: 56ch; }
+.work-card-role { margin: 0 0 var(--sp-3); font-size: var(--text-body); line-height: 1.5; color: var(--ink-soft); }
+.work-card-tags { display: flex; flex-wrap: wrap; gap: var(--sp-1); list-style: none; margin: 0; padding: 0; }
+.work-card-tags li { font-size: 14px; padding: 4px var(--sp-1); border: 1px solid var(--accent); color: var(--accent); }
+.work-card-status {
+  position: absolute; top: var(--sp-6); right: var(--sp-2);
+  font: var(--text-label)/1 var(--font-pixel); letter-spacing: 0.06em; color: var(--ink-soft);
+}
+
+/* ── Inner pages ───────────────────────────────────────────────────────────── */
+.page { max-width: 832px; margin: 0 auto; padding: var(--sp-12) var(--gutter); }
+.page-eyebrow { display: flex; align-items: center; gap: var(--sp-1); margin: 0 0 var(--sp-2); font: var(--text-label) var(--font-pixel); color: var(--ink-soft); }
+.page-title { font: 400 clamp(56px, 8vw, 96px)/1 var(--font-display); margin: 0 0 var(--sp-3); }
+.page-lede { font-size: 18px; line-height: 1.6; margin: 0 0 var(--sp-5); }
+.page-body { font-size: var(--text-body); line-height: 1.75; color: var(--ink-soft); max-width: 62ch; }
+.file-list { list-style: none; margin: 0; padding: 0; border-top: 1.5px solid var(--line-strong); }
+.file-row {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--sp-1) var(--sp-2);
+  padding: var(--sp-2) 0; border-bottom: 1px solid var(--line);
+}
+.file-row-name { font-weight: 700; font-size: var(--text-body); }
+a.file-row-name { color: var(--accent); text-decoration: none; }
+a.file-row-name:hover { text-decoration: underline; }
+.file-row-note { grid-column: 1; font-size: var(--text-body); color: var(--ink-soft); line-height: 1.5; }
+.file-row-tag {
+  grid-column: 2; grid-row: 1 / span 2; align-self: center;
+  font: var(--text-label) var(--font-pixel); letter-spacing: 0.06em; color: var(--accent);
+  border: 1px solid var(--accent); padding: var(--sp-1);
+}
+
+/* ── Footer ────────────────────────────────────────────────────────────────── */
+.site-footer {
+  border-top: 1px solid var(--line-strong); padding: var(--sp-10) var(--gutter);
+  background: var(--bg); transition: background-color 0.4s ease;
+}
+.footer-inner { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--sp-5); align-items: center; }
+.footer-name { margin: 0; font: 400 clamp(40px, 4.4vw, 56px)/1 var(--font-display); }
+.footer-invite { margin: 0; font-size: var(--text-body); line-height: 1.6; max-width: 40ch; color: var(--ink-soft); }
+.footer-contacts { margin: 0; display: grid; gap: var(--sp-2); }
+.footer-row { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: var(--sp-2); align-items: baseline; }
+.footer-row dt { font: var(--text-label) var(--font-pixel); letter-spacing: 0.06em; color: var(--ink-soft); }
+.footer-row dd { margin: 0; font-size: 18px; overflow-wrap: anywhere; }
+.footer-row a { color: var(--accent); text-underline-offset: 4px; text-decoration-thickness: 1px; }
+.footer-row a:hover { text-decoration-thickness: 2px; }
+
+/* ── Tablet / mobile (4pt grid via the tokens above) ───────────────────────── */
+@media (max-width: 899px) {
+  /* phones/tablets: name, icon row, README window, dock — stacked, left-aligned */
+  .desktop-hero {
+    grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto auto auto auto;
+    row-gap: var(--sp-4); align-content: center; min-height: calc(100svh - var(--taskbar-h));
+    padding: var(--sp-6) var(--gutter);
+  }
+  .hero-name { grid-column: 1; grid-row: 1; }
+  .desktop-hero { justify-content: stretch; }
+  .hero-icons {
+    display: flex; grid-column: 1; grid-row: 2; justify-self: stretch; flex-direction: row; align-items: flex-start;
+    justify-content: space-between; gap: var(--sp-1);
+  }
+  .hero-icons > li { grid-column: auto; grid-row: auto; }
+  .hero-window { grid-column: 1; grid-row: 3; margin-top: var(--sp-10); } /* room for the perched butterfly */
+  .contact-dock { grid-column: 1; grid-row: 5; padding-top: var(--sp-12); } /* room for the big butterfly */
+  .desktop-name { font-size: clamp(52px, 14vw, 96px); }
+  .desktop-file { width: 76px; padding: var(--sp-1) 0; }
+  .desktop-file svg { width: 48px; height: 48px; }
+  .contact-dock ul { gap: var(--sp-2); }
+  /* pop-up drops below on the horizontal icon row */
+  .thought-pop { right: 0; bottom: auto; top: calc(100% + var(--sp-2)); transform-origin: 100% 0; }
+  .readme-window .win-pane { padding: var(--sp-4); }
+  .readme-text { font-size: 20px; }
+  .work-grid { grid-template-columns: minmax(0, 1fr); }
+  .work-card-bar { order: 0; }
+  .work-card-status { position: static; order: 1; padding: var(--sp-3) var(--sp-4) 0; }
+  .work-card-body { order: 2; }
+  .footer-inner { grid-template-columns: minmax(0, 1fr); }
+}
+@media (min-width: 900px) and (max-width: 1100px) {
+  .desktop-hero { grid-template-columns: max-content minmax(0, 400px) 96px; column-gap: var(--sp-5); }
+  .readme-text { font-size: 20px; }
+}
+@media (max-width: 480px) {
+  .taskbar { font-size: 14px; gap: var(--sp-1); letter-spacing: 0; }
+  .taskbar-nav { gap: var(--sp-1); }
+  .taskbar-nav ul { gap: var(--sp-2); }
+  .taskbar-brand { gap: var(--sp-1); }
+  .theme-toggle { width: 32px; height: 32px; }
+  .footer-row { grid-template-columns: minmax(0, 1fr); gap: var(--sp-1); }
+}
+@media (max-width: 360px) {
+  .taskbar-brand span { display: none; } /* keep the butterfly as the home mark on tiny screens */
+}
+@media (prefers-reduced-motion: reduce) {
+  .light-overlay { animation: none; }
+  *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+}

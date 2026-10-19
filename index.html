@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Lauren Hsueh: a multidisciplinary designer making magic with art and technology." />
+    <title>Lauren Hsueh</title>
+    <!-- Fonts: Cesso (display) from Lauren's Adobe Fonts kit; Atkinson Hyperlegible Mono (UI) and
+         Silkscreen (tiny pixel labels) from Google Fonts.
+         Family names are set once in src/site/site.css (--font-display / --font-mono / --font-pixel). -->
+    <link rel="stylesheet" href="https://use.typekit.net/vvb4ptb.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Mono:wght@400;500;700&family=Silkscreen&display=swap" />
+    <script>
+      // apply the saved / OS theme before first paint so there is no flash
+      try {
+        var t = localStorage.getItem('lh-theme')
+        if (t !== 'light' && t !== 'dark') t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+        document.documentElement.dataset.theme = t
+      } catch (e) {}
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>

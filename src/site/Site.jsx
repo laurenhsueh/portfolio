@@ -2,13 +2,13 @@ import { lazy, Suspense, useEffect } from 'react'
 import './site.css'
 import Taskbar from './Taskbar'
 import Footer from './Footer'
-import { useTheme } from './useTheme'
-import { useHashRoute } from './useHashRoute'
+import { useTheme } from './hooks/useTheme'
+import { useHashRoute } from './hooks/useHashRoute'
 import Home from './pages/Home'
 import Garden from './pages/Garden'
 import About from './pages/About'
 
-const ButterflyLab = lazy(() => import('../ButterflyLab'))
+const ButterflyLab = lazy(() => import('../lab/ButterflyLab'))
 
 /** Figma's multiplayer-style arrow: pink fill, white outline, soft shadow. Tip at (4, 3). */
 function arrowCursor(fill) {

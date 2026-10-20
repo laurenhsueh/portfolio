@@ -1,17 +1,16 @@
 import { Component, lazy, Suspense, useMemo, useRef, useState } from 'react'
 import PixelIcon from '../PixelIcon'
 import ReadmeWindow from './ReadmeWindow'
-import Utilities from './Utilities'
+import ThoughtButton from './ThoughtButton'
 import DanceButton from './DanceButton'
 import ContactDock, { ContactItems } from './ContactDock'
-import PixelButterflies from './PixelButterflies'
-import { useReducedMotion } from '../useReducedMotion'
-import { usePerch } from '../perch'
+import PixelButterflies from '../butterflies/PixelButterflies'
+import { useReducedMotion } from '../hooks/useReducedMotion'
+import { usePerch } from '../butterflies/perch'
 import LightOverlay from './LightOverlay'
 
 // The ghost apparition butterflies (three.js) load in their own chunk.
-const GhostButterflies = lazy(() => import('./GhostButterflies'))
-
+const GhostButterflies = lazy(() => import('../butterflies/GhostButterflies'))
 
 function hasWebGL() {
   try {
@@ -30,9 +29,10 @@ class GhostBoundary extends Component {
 }
 
 /**
- * The landing "desktop" (Lauren's layout): name top-left, README window top-right, a
- * column of desktop icons on the right edge (Work, README, Dance, random thought),
- * and the contact dock bottom-left. On phones it stacks: name, icon row, window, dock.
+ * The landing "desktop" (Lauren's layout): name top-left, README window in the middle, a
+ * column of desktop icons on the right edge (README, Dance, random thought), and the
+ * contact dock bottom-left. On phones it stacks: name, icon row (README, Dance, LinkedIn,
+ * Email), README window.
  */
 export default function DesktopHero({ theme }) {
   const [readmeOpen, setReadmeOpen] = useState(true)
@@ -50,13 +50,7 @@ export default function DesktopHero({ theme }) {
     iconRef.current?.focus({ preventScroll: true })
   }
 
-  const openWork = (e) => {
-    e.preventDefault()
-    const el = document.getElementById('work')
-    if (!el) return
-    el.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'start' })
-    el.focus({ preventScroll: true })
-  }
+  const pixelButterflies = <PixelButterflies areaRef={heroRef} originRef={danceRef} reduced={reduced} />
 
   return (
     <section ref={heroRef} className="desktop-hero" aria-label="Lauren Hsueh: desktop">
@@ -71,12 +65,6 @@ export default function DesktopHero({ theme }) {
       </div>
 
       <ul className="hero-icons" role="list" aria-label="Desktop">
-        <li className="icon-slot desktop-only">
-          <a className="desktop-file" href="#/work" onClick={openWork} aria-label="Work: jump to projects">
-            <PixelIcon name="folder" size={56} />
-            <span className="desktop-file-label">Work</span>
-          </a>
-        </li>
         <li className="icon-slot">
           <button
             ref={iconRef}
@@ -91,7 +79,7 @@ export default function DesktopHero({ theme }) {
           </button>
         </li>
         <DanceButton ref={danceRef} />
-        <Utilities />
+        <ThoughtButton />
         {/* phones: the contacts join this row (Readme, Dance, LinkedIn, Mail; order set in CSS) */}
         <ContactItems className="phone-only" />
       </ul>
@@ -100,16 +88,13 @@ export default function DesktopHero({ theme }) {
 
       <LightOverlay heroRef={heroRef} anchorRef={windowRef} />
 
-      {(() => {
-        const pixel = <PixelButterflies active areaRef={heroRef} originRef={danceRef} reduced={reduced} />
-        return webgl ? (
-          <GhostBoundary fallback={pixel}>
-            <Suspense fallback={null}>
-              <GhostButterflies theme={theme} heroRef={heroRef} reduced={reduced} />
-            </Suspense>
-          </GhostBoundary>
-        ) : pixel
-      })()}
+      {webgl ? (
+        <GhostBoundary fallback={pixelButterflies}>
+          <Suspense fallback={null}>
+            <GhostButterflies theme={theme} heroRef={heroRef} reduced={reduced} />
+          </Suspense>
+        </GhostBoundary>
+      ) : pixelButterflies}
     </section>
   )
 }

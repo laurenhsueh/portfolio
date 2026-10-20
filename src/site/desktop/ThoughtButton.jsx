@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import PixelIcon from '../PixelIcon'
-import { THOUGHTS } from '../thoughts'
+import { THOUGHTS } from '../content/thoughts'
 import WindowChrome from './WindowChrome'
 
-/** The random thought, as an item of the desktop icon column. */
-export default function Utilities() {
+/** The random thought: a desktop icon that pops up a thought.txt window (desktop only). */
+export default function ThoughtButton() {
   const [thought, setThought] = useState(null) // index into THOUGHTS, or null when closed
   const order = useRef([])
   const popRef = useRef(null)

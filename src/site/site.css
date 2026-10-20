@@ -142,17 +142,17 @@ button { font: inherit; color: inherit; }
 .menu-toggle { display: none; }
 
 /* ── Desktop hero (Lauren's layout) ────────────────────────────────────────
-   desktop:  [ name        ][ README window (centered) ][ icons ]
-             [             ][                          ][ icons ]
-             [ contact dock][                          ][       ]            */
+   desktop:  [ name        ][ README window (centered) ][ README  ]
+             [             ][                          ][ Dance   ]
+             [ contact dock                            ][ Thought ]          */
 .desktop-hero {
   /* clip (not hidden): focus inside can't scroll the desktop sideways */
   position: relative; overflow: hidden; overflow: clip;
   display: grid;
   /* one compact group, centered both ways: name | README | icon column.
-     Rows follow the four desktop icons, so the contacts can share THOUGHT's row. */
+     Rows follow the three desktop icons, so the contacts can share THOUGHT's row. */
   grid-template-columns: max-content minmax(0, 520px) 96px;
-  grid-template-rows: repeat(4, auto);
+  grid-template-rows: repeat(3, auto);
   justify-content: center; align-content: center;
   column-gap: var(--sp-10); row-gap: var(--sp-3);
   min-height: calc(100svh - var(--taskbar-h));
@@ -161,17 +161,17 @@ button { font: inherit; color: inherit; }
 }
 .hero-name { grid-column: 1; grid-row: 1 / span 2; align-self: start; position: relative; z-index: 5; }
 /* the README sits centered and a little lower, leaving air above it for the small butterfly */
-.hero-window { grid-column: 2; grid-row: 1 / span 3; align-self: start; position: relative; z-index: 5; margin-top: var(--sp-10); }
+.hero-window { grid-column: 2; grid-row: 1 / span 2; align-self: start; position: relative; z-index: 5; margin-top: var(--sp-10); }
 .hero-icons { display: contents; list-style: none; margin: 0; padding: 0; } /* items join the hero grid */
 .hero-icons > li { grid-column: 3; position: relative; z-index: 5; align-self: start; }
 .hero-icons > li:nth-child(1) { grid-row: 1; }
 .hero-icons > li:nth-child(2) { grid-row: 2; }
 .hero-icons > li:nth-child(3) { grid-row: 3; }
-.hero-icons > li:nth-child(4) { grid-row: 4; }
-.hero-icons > li.is-raised { z-index: 7; } /* thought open: above the contact dock (z 5) */
+.hero-icons > li.is-raised { z-index: 7; } /* pop-up open: above the README and contact dock (z 5) */
 .phone-only { display: none !important; }
-/* contacts share THOUGHT's row: same top edge, same label baseline */
-.contact-dock { grid-column: 1 / span 2; grid-row: 4; align-self: start; }
+/* contact dock: shares THOUGHT's row (same top edge, same label baseline) */
+.contact-dock { grid-column: 1 / span 2; grid-row: 3; align-self: start; position: relative; z-index: 5; }
+.contact-dock ul { display: flex; gap: var(--sp-3); list-style: none; margin: 0; padding: 0; }
 
 .desktop-name {
   margin: 0; font-family: var(--font-display); font-weight: 400;
@@ -179,7 +179,7 @@ button { font: inherit; color: inherit; }
 }
 .desktop-name span { display: block; }
 
-/* desktop icons: every icon (files, utilities, contacts) is a pixel icon + label underneath */
+/* desktop icons: every icon (files, Dance, Thought, contacts) is a pixel icon + label underneath */
 .icon-slot { position: relative; display: flex; justify-content: center; }
 .desktop-file {
   display: flex; flex-direction: column; align-items: center; gap: var(--sp-1);
@@ -196,7 +196,7 @@ button { font: inherit; color: inherit; }
 .desktop-file.is-open .desktop-file-label { background: var(--accent); color: #fff; }
 .desktop-file:active svg { transform: translateY(1px); }
 
-/* ── Retro pink OS windows (README, thought pop-up) ─────────────────────────── */
+/* ── Retro pink OS windows (README, thought, now playing) ──────────────────── */
 .win {
   background: var(--win-body);
   border: 1px solid var(--win-edge);
@@ -212,7 +212,6 @@ button { font: inherit; color: inherit; }
   background: var(--win-bar); color: var(--win-bar-ink);
   border-bottom: 1px solid var(--win-edge); user-select: none;
 }
-.win-bar.is-small { height: 28px; }
 .win-title { margin: 0; font: 400 var(--text-label)/1 var(--font-pixel); letter-spacing: 0.08em; }
 .win-buttons { display: flex; gap: 4px; }
 .win-btn {
@@ -243,8 +242,8 @@ button { font: inherit; color: inherit; }
 .win-button:hover, .win-button:focus-visible { background: var(--accent); color: #fff; }
 .win-button:active { box-shadow: inset -1px -1px 0 var(--win-hi), inset 1px 1px 0 var(--win-lo); }
 
-/* README + thought pop-up share one look: pink glow, no offset shadow */
-.readme-window, .thought-pop {
+/* README and the pop-ups share one look: pink glow, no offset shadow */
+.readme-window, .thought-pop, .now-playing {
   box-shadow:
     inset 1px 1px 0 var(--win-hi), inset -1px -1px 0 var(--win-lo),
     0 0 48px var(--win-glow), 0 0 120px var(--win-glow);
@@ -268,10 +267,9 @@ button { font: inherit; color: inherit; }
   position: absolute; z-index: 6; right: calc(100% + var(--sp-2)); bottom: 0; width: min(320px, 80vw);
   animation: pop-in 0.22s cubic-bezier(0.2, 0.9, 0.3, 1.2); transform-origin: 100% 100%;
 }
-.thought-text { margin: 0 0 var(--sp-2); font-size: var(--text-body); line-height: 1.5; }
-@keyframes pop-in { from { opacity: 0; transform: scale(0.92); } }
 /* "another": the new thought fades up into place */
-.thought-text { animation: thought-swap 0.24s ease; }
+.thought-text { margin: 0 0 var(--sp-2); font-size: var(--text-body); line-height: 1.5; animation: thought-swap 0.24s ease; }
+@keyframes pop-in { from { opacity: 0; transform: scale(0.92); } }
 @keyframes thought-swap { from { opacity: 0; transform: translateY(4px); } }
 
 /* Dance: a record that "spins" by stepping through 4 pixel frames (glint moves a quarter turn) */
@@ -283,16 +281,10 @@ button { font: inherit; color: inherit; }
 .dance-button.is-spinning .record-frame.f2 { animation-delay: -0.4s; }
 .dance-button.is-spinning .record-frame.f3 { animation-delay: -0.2s; }
 @keyframes record-frame { 0%, 24.9% { visibility: visible; } 25%, 100% { visibility: hidden; } }
-@media (prefers-reduced-motion: reduce) {
-  .dance-button.is-spinning .record-frame { animation: none !important; }
-}
-/* "now playing" window, to the left of the Dance icon */
+/* "now playing" window, to the left of the Dance icon (desktop; phones show "Stop dance") */
 .now-playing {
   position: absolute; z-index: 6; right: calc(100% + var(--sp-2)); top: 0; width: max-content; max-width: 80vw;
   animation: pop-in 0.22s cubic-bezier(0.2, 0.9, 0.3, 1.2); transform-origin: 100% 0;
-  box-shadow:
-    inset 1px 1px 0 var(--win-hi), inset -1px -1px 0 var(--win-lo),
-    0 0 48px var(--win-glow), 0 0 120px var(--win-glow);
 }
 .dance-label-stop { display: none; }
 .now-playing-text {
@@ -304,10 +296,6 @@ button { font: inherit; color: inherit; }
   white-space: pre; font: 12px/1.2 'Apple Symbols', 'Segoe UI Symbol', 'Noto Sans Symbols 2', system-ui, sans-serif;
   color: inherit; /* same as the song name: white on the dark window */
 }
-
-/* contact dock, anchored to the desktop's bottom edge */
-.contact-dock { position: relative; z-index: 5; padding: 0; }
-.contact-dock ul { display: flex; gap: var(--sp-3); list-style: none; margin: 0; padding: 0; }
 
 /* ── Light overlay: Lauren's light image on the butterflies' diagonal ─────────
    Under the butterflies (z 4) and every desktop item (z 5). Edges fade out with a mask so
@@ -358,7 +346,7 @@ button { font: inherit; color: inherit; }
     radial-gradient(26% 30% at 40% 78%, rgba(214, 196, 255, 0.22), transparent 72%);
   filter: blur(18px);
 }
-:root[data-theme='light'] .light-overlay-glow { display: none; } /* `lighten` handles light mode */
+:root[data-theme='light'] .light-overlay-glow { display: none; } /* light mode's own image needs no boost */
 @keyframes light-breathe {
   0%, 100% { opacity: var(--light-opacity); }
   50% { opacity: calc(var(--light-opacity) * 0.86); }
@@ -370,8 +358,8 @@ button { font: inherit; color: inherit; }
 .ghost-butterflies { position: absolute; inset: 0; pointer-events: none; }
 .ghost-layer { position: absolute; inset: 0; pointer-events: none; animation: ghost-in 0.8s ease; }
 .ghost-butterflies canvas { pointer-events: none !important; }
-/* The lab look (glow 0.3, halo 1, smoke 0.1 in GhostButterflies LOOK) is rendered in the
-   canvas. The lab also runs a bloom pass; this soft drop-shadow stands in for that bloom. */
+/* The lab look (glow, halo, smoke: butterflies/lookParams.js) is rendered in the canvas. The
+   lab also runs a bloom pass; this soft drop-shadow stands in for that bloom. */
 :root[data-theme='dark'] .ghost-butterflies canvas {
   filter: drop-shadow(0 0 6px rgba(255, 190, 222, 0.7)) drop-shadow(0 0 22px rgba(232, 93, 158, 0.45));
 }
@@ -390,7 +378,6 @@ button { font: inherit; color: inherit; }
 .work { background: var(--bg-alt); padding: var(--sp-12) var(--gutter) var(--sp-15); transition: background-color 0.4s ease; }
 .section-head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--sp-2); flex-wrap: wrap; margin-bottom: var(--sp-5); }
 .section-title { margin: 0; font: 400 clamp(48px, 6vw, 80px)/1 var(--font-display); }
-.section-note { margin: 0; font: var(--text-label) var(--font-pixel); letter-spacing: 0.05em; color: var(--ink-soft); }
 .work-grid {
   list-style: none; margin: 0; padding: 0;
   display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-4);
@@ -415,14 +402,9 @@ button { font: inherit; color: inherit; }
 .work-card-role { margin: 0 0 var(--sp-3); font-size: var(--text-body); line-height: 1.5; color: var(--ink-soft); }
 .work-card-tags { display: flex; flex-wrap: wrap; gap: var(--sp-1); list-style: none; margin: 0; padding: 0; }
 .work-card-tags li { font-size: 14px; padding: 4px var(--sp-1); border: 1px solid var(--accent); color: var(--accent); }
-.work-card-status {
-  position: absolute; top: var(--sp-6); right: var(--sp-2);
-  font: var(--text-label)/1 var(--font-pixel); letter-spacing: 0.06em; color: var(--ink-soft);
-}
 
 /* ── Inner pages ───────────────────────────────────────────────────────────── */
 .page { max-width: 832px; margin: 0 auto; padding: var(--sp-12) var(--gutter); }
-.page-eyebrow { display: flex; align-items: center; gap: var(--sp-1); margin: 0 0 var(--sp-2); font: var(--text-label) var(--font-pixel); color: var(--ink-soft); }
 .page-title { font: 400 clamp(56px, 8vw, 96px)/1 var(--font-display); margin: 0 0 var(--sp-3); }
 .page-lede { font-size: 18px; line-height: 1.6; margin: 0 0 var(--sp-5); }
 .page-body { font-size: var(--text-body); line-height: 1.75; color: var(--ink-soft); max-width: 62ch; }
@@ -448,7 +430,6 @@ a.file-row-name:hover { text-decoration: underline; }
 }
 .footer-inner { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--sp-5); align-items: center; }
 .footer-name { margin: 0; font: 400 clamp(40px, 4.4vw, 56px)/1 var(--font-display); }
-.footer-invite { margin: 0; font-size: var(--text-body); line-height: 1.6; max-width: 40ch; color: var(--ink-soft); }
 .footer-contacts { margin: 0; display: grid; gap: var(--sp-2); }
 .footer-row { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: var(--sp-2); align-items: baseline; }
 .footer-row dt { font: var(--text-label) var(--font-pixel); letter-spacing: 0.06em; color: var(--ink-soft); }
@@ -458,41 +439,32 @@ a.file-row-name:hover { text-decoration: underline; }
 
 /* ── Tablet / mobile (4pt grid via the tokens above) ───────────────────────── */
 @media (max-width: 899px) {
-  /* phones/tablets: name, icon row, README window, dock — stacked, left-aligned */
+  /* phones/tablets: name, icon row, README window, stacked and left-aligned. The bottom
+     padding leaves room for the big butterfly; the README's top margin, for the perched one. */
   .desktop-hero {
-    grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto auto auto auto;
-    row-gap: var(--sp-4); align-content: center; min-height: calc(100svh - var(--taskbar-h));
-    padding: var(--sp-6) var(--gutter);
+    grid-template-columns: minmax(0, 1fr); grid-template-rows: repeat(3, auto);
+    justify-content: stretch; row-gap: var(--sp-4); align-content: center;
+    min-height: calc(100svh - var(--taskbar-h));
+    padding: var(--sp-6) var(--gutter) calc(var(--sp-12) + var(--sp-10));
   }
   .hero-name { grid-column: 1; grid-row: 1; }
-  .desktop-hero { justify-content: stretch; }
+  .hero-window { grid-column: 1; grid-row: 3; margin-top: var(--sp-10); }
+  .desktop-name { font-size: clamp(52px, 14vw, 96px); }
+  /* one icon row: README, Dance, LinkedIn, Email (Thought and the dock are desktop-only) */
   .hero-icons {
     display: flex; grid-column: 1; grid-row: 2; justify-self: stretch; flex-direction: row; align-items: flex-start;
-    justify-content: space-between; gap: var(--sp-1);
+    justify-content: space-between; gap: 0; position: relative; z-index: 6;
   }
   .hero-icons > li { grid-column: auto; grid-row: auto; }
-  /* phone icon row: Readme, Thought, LinkedIn, Mail (Work + the jar live elsewhere) */
-  .desktop-only { display: none !important; }
-  .phone-only { display: flex !important; }
-  .contact-dock { display: none; }
-  .hero-icons { position: relative; z-index: 6; }
-  .hero-icons > li.thought-slot, .hero-icons > li.dance-slot { position: static; } /* pop-ups anchor to the whole row */
-  /* row order: Readme, Dance, LinkedIn, Mail (Thought is desktop-only) */
-  .hero-icons > li.thought-slot { display: none; }
+  .hero-icons > li.thought-slot, .contact-dock { display: none; }
   .hero-icons > li.dance-slot { order: 2; }
   .hero-icons > li.phone-only { order: 3; }
-  .hero-window { grid-column: 1; grid-row: 3; margin-top: var(--sp-10); } /* room for the perched butterfly */
-  .desktop-hero { padding-bottom: calc(var(--sp-12) + var(--sp-10)); } /* room for the big butterfly */
-  .desktop-name { font-size: clamp(52px, 14vw, 96px); }
-  /* five icons share the phone row: narrower slots, tighter labels */
+  .phone-only { display: flex !important; }
+  /* narrower slots and tighter labels so the row fits a 375px phone */
   .desktop-file { width: 64px; padding: var(--sp-1) 0; }
   .desktop-file-label { letter-spacing: 0; padding: var(--sp-1) 4px; }
-  .hero-icons { gap: 0; }
   .desktop-file svg, .record { width: 48px; height: 48px; }
-  .contact-dock ul { gap: var(--sp-2); }
-  /* pop-up drops below on the horizontal icon row */
-  .thought-pop { left: 0; right: auto; bottom: auto; top: calc(100% + var(--sp-2)); width: min(320px, 100%); transform-origin: 30% 0; }
-  /* phones: no "now playing" window; while playing, the label reads "Stop dance" instead */
+  /* no "now playing" window; while playing, the label reads "Stop dance" instead */
   .now-playing { display: none; }
   .dance-button.is-open .dance-label { display: none; }
   .dance-button.is-open .dance-label-stop { display: inline; white-space: nowrap; }
@@ -531,11 +503,7 @@ a.file-row-name:hover { text-decoration: underline; }
   .taskbar.is-menu-open .taskbar-nav ul li:nth-child(2) { transition-delay: 0.04s; }
   .taskbar.is-menu-open .taskbar-nav ul li:nth-child(3) { transition-delay: 0.08s; }
   .readme-window .win-pane { padding: var(--sp-4); }
-  .readme-text { font-size: 20px; }
   .work-grid { grid-template-columns: minmax(0, 1fr); }
-  .work-card-bar { order: 0; }
-  .work-card-status { position: static; order: 1; padding: var(--sp-3) var(--sp-4) 0; }
-  .work-card-body { order: 2; }
   .footer-inner { grid-template-columns: minmax(0, 1fr); }
 }
 @media (min-width: 900px) and (max-width: 1100px) {
@@ -549,5 +517,6 @@ a.file-row-name:hover { text-decoration: underline; }
 }
 @media (prefers-reduced-motion: reduce) {
   .light-overlay { animation: none; }
+  .dance-button.is-spinning .record-frame { animation: none !important; }
   *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
 }

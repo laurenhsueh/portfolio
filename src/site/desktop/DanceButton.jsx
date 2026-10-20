@@ -1,27 +1,35 @@
 import { forwardRef, useEffect, useRef, useState } from 'react'
 import PixelIcon from '../PixelIcon'
 import WindowChrome from './WindowChrome'
-import { SONG } from '../music'
-import { analyzeBeat } from '../beat'
-import { setBeat, startDance, stopDance } from '../dance'
+import { SONG } from '../content/music'
+import { analyzeBeat } from '../music/beat'
+import { setBeat, startDance, stopDance } from '../music/dance'
 
 // a little bunny after the song name (decorative)
 const BUNNY = ['    /)/)', '  ( ᴗ͈ ᴗ͈)', 'c( づ★‧₊˚⋆'].join('\n')
 
-// The song's tempo + first beat, found once from the audio file (see beat.js).
-let beatPromise = null
-function loadBeat() {
-  beatPromise ??= fetch(SONG.src)
-    .then((r) => r.arrayBuffer())
-    .then(analyzeBeat)
-    .then((b) => { setBeat(b.bpm, b.offset); return b })
-    .catch(() => { beatPromise = null }) // keep the default tempo; try again next time
-  return beatPromise
+// The song is downloaded once (starting on hover/focus/press): the same bytes become the
+// player's source (a blob URL) and, when the browser is idle, feed the beat analysis.
+let songPromise = null
+let songUrl = null // set once downloaded; until then the player streams SONG.src directly
+function loadSong() {
+  songPromise ??= fetch(SONG.src)
+    .then((r) => {
+      if (!r.ok) throw new Error(`song: ${r.status}`)
+      return r.arrayBuffer()
+    })
+    .then((buf) => {
+      songUrl = URL.createObjectURL(new Blob([buf], { type: 'audio/mpeg' })) // copies, before decoding detaches buf
+      whenIdle(() => analyzeBeat(buf).then((b) => setBeat(b.bpm, b.offset)).catch(() => {})) // else: default tempo
+    })
+    .catch(() => { songPromise = null }) // try again next time
+  return songPromise
 }
+const whenIdle = (fn) => (window.requestIdleCallback ? requestIdleCallback(fn, { timeout: 1500 }) : setTimeout(fn, 200))
 
 /**
  * The record player desktop icon: plays Lauren's song (public/music) in a small "now playing"
- * window and makes the butterflies dance to its beat (see dance.js). Clicking again, or the
+ * window and makes the butterflies dance to its beat (see music/dance.js). Clicking again, or the
  * window's ×, stops the music and the dance. The song loops while it's on.
  */
 const DanceButton = forwardRef(function DanceButton(_, btnRef) {
@@ -31,7 +39,9 @@ const DanceButton = forwardRef(function DanceButton(_, btnRef) {
 
   const getAudio = () => {
     if (!audio.current) {
-      const a = new Audio(SONG.src)
+      // the downloaded copy if it's ready (it usually is: hover starts the download); otherwise
+      // stream the file, so the press still plays straight away
+      const a = new Audio(songUrl ?? SONG.src)
       a.loop = true
       a.preload = 'auto'
       a.addEventListener('playing', () => { startDance(() => a.currentTime); setSpinning(true) })
@@ -43,7 +53,7 @@ const DanceButton = forwardRef(function DanceButton(_, btnRef) {
 
   const start = () => {
     setOpen(true)
-    loadBeat()
+    loadSong()
     // play straight from the click so the browser allows the sound
     getAudio().play().catch(() => setOpen(false))
   }
@@ -67,8 +77,9 @@ const DanceButton = forwardRef(function DanceButton(_, btnRef) {
         type="button"
         className={`desktop-file dance-button ${open ? 'is-open' : ''} ${spinning ? 'is-spinning' : ''}`}
         onClick={open ? stop : start}
-        onPointerEnter={loadBeat}
-        onFocus={loadBeat}
+        onPointerEnter={loadSong}
+        onPointerDown={loadSong}
+        onFocus={loadSong}
         aria-pressed={open}
         aria-label={open ? 'Stop the music' : `Dance: play ${SONG.title} and make the butterflies dance`}
       >

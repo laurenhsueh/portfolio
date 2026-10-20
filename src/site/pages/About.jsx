@@ -1,4 +1,4 @@
-import { README_TEXT } from '../contact'
+import { README_TEXT } from '../content/contact'
 
 export default function About() {
   return (

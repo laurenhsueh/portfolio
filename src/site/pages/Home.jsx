@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import DesktopHero from '../desktop/DesktopHero'
-import WorkSection from '../WorkSection'
+import WorkSection from './WorkSection'
 
 export default function Home({ route, theme }) {
   // '#/work' lands on the home page and glides down to the Work section

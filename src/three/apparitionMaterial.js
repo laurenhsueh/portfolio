@@ -156,7 +156,7 @@ void main() {
   #include <colorspace_fragment>
 }`
 
-export const APPARITION_PALETTE = {
+const APPARITION_PALETTE = {
   core: '#ffe6f1', // pale pink-white
   mid: '#f3a6cb', // soft pink
   edge: '#c9a4e4', // lavender-pink haze

@@ -1,4 +1,4 @@
-import { CONTACT } from './contact'
+import { CONTACT } from './content/contact'
 
 /** Plain, readable contact info: no hover-only content, nothing tiny. */
 export default function Footer() {

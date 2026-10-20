@@ -1,5 +1,5 @@
 // Hand-drawn 16×16 pixel icons rendered as crisp SVG rects (one rect per horizontal run).
-//   '#' accent pink (#DB5B90)   'd' deep pink shade   'w' paper (theme aware)   '.' empty
+//   '#' accent pink   'd' deep pink shade   'w' paper   '.' empty   (colours follow the theme tokens)
 const ICONS = {
   document: [
     '..########......',
@@ -71,24 +71,6 @@ const ICONS = {
     '.......#######dd',
     '........#####dd.',
     '.........ddddd..',
-    '................',
-  ],
-  folder: [
-    '................',
-    '................',
-    '.#####..........',
-    '#wwwww#########.',
-    '#wwwwwwwwwwwww#.',
-    '###############.',
-    '#wwwwwwwwwwwww#.',
-    '#wwwwwwwwwwwww#.',
-    '#wwwwwwwwwwwww#.',
-    '#wwwwwwwwwwwww#.',
-    '#wwwwwwwwwwwww#.',
-    '#wwwwwwwwwwwww#.',
-    '#wwwwwwwwwwwww#.',
-    '###############d',
-    '.dddddddddddddd.',
     '................',
   ],
   butterfly: [

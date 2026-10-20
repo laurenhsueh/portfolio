@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { README_TEXT } from '../contact'
+import { README_TEXT } from '../content/contact'
 import WindowChrome from './WindowChrome'
 
 /** The README "application" window. Open on first load; × closes it, the desktop icon reopens it. */

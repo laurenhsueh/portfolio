@@ -4,12 +4,12 @@ import PixelIcon from '../PixelIcon'
 const COUNT = 2
 
 /**
- * Fallback for butterfly mode when WebGL is unavailable (the real mode is GhostButterflies):
- * a few pixel butterflies flutter out of the Dance button and drift gently around
+ * Fallback for the ghost butterflies when WebGL is unavailable or they fail to load:
+ * a couple of pixel butterflies flutter out of the Dance button and drift gently around
  * the desktop. Positions are written straight to the DOM in a rAF loop (no React state per
  * frame). With reduced motion they simply appear, resting, without flying or flapping.
  */
-export default function PixelButterflies({ active, areaRef, originRef, reduced }) {
+export default function PixelButterflies({ areaRef, originRef, reduced }) {
   const els = useRef([])
   const seeds = useRef(
     Array.from({ length: COUNT }, (_, i) => ({
@@ -22,7 +22,6 @@ export default function PixelButterflies({ active, areaRef, originRef, reduced }
   )
 
   useEffect(() => {
-    if (!active) return
     const area = areaRef.current
     if (!area) return
     let raf = 0
@@ -54,9 +53,8 @@ export default function PixelButterflies({ active, areaRef, originRef, reduced }
     }
     raf = requestAnimationFrame(tick)
     return () => cancelAnimationFrame(raf)
-  }, [active, areaRef, originRef, reduced])
+  }, [areaRef, originRef, reduced])
 
-  if (!active) return null
   return (
     <div className={`pixel-butterflies ${reduced ? 'is-still' : ''}`} aria-hidden="true">
       {seeds.current.map((s, i) => (

@@ -1,4 +1,4 @@
-import { PROJECTS } from './projects'
+import { PROJECTS } from '../content/projects'
 
 /** Featured work, right below the desktop. A card links once its case study has a page. */
 export default function WorkSection() {

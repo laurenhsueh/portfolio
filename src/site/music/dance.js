@@ -1,6 +1,6 @@
 // ─────────────────────────────────────────────────────────────────────────────
 //  Dance state, shared between the Dance button (UI + audio) and the butterflies (three.js).
-//  Like perch.js it's a plain mutable object, so the render loop can read it every frame
+//  Like butterflies/perch.js it's a plain mutable object, so the render loop can read it every frame
 //  without React re-renders.
 //
 //    dance.playing   true while the song is playing

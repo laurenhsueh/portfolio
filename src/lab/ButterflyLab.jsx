@@ -6,7 +6,7 @@ import { EffectComposer, Bloom, Noise, Vignette } from '@react-three/postprocess
 import { BlendFunction } from 'postprocessing'
 import { Leva, useControls, button, folder } from 'leva'
 import Butterfly from './Butterfly'
-import { NODE_DEFAULTS, SCENE } from './wingMath'
+import { NODE_DEFAULTS, SCENE } from '../three/wingMath'
 
 const KEY_LIGHT = [4, 6, 5]
 

@@ -1,5 +1,5 @@
 import PixelIcon from '../PixelIcon'
-import { CONTACT } from '../contact'
+import { CONTACT } from '../content/contact'
 
 const ITEMS = [
   { key: 'linkedin', icon: 'linkedin', label: 'LinkedIn', href: CONTACT.linkedin, external: true, a11y: 'LinkedIn profile' },

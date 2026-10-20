@@ -1,40 +1,24 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+// ─────────────────────────────────────────────────────────────────────────────
+//  How the two ghost butterflies move: pure motion and choreography, no three.js.
+//
+//  Two roles: "hover" (the big one, floating below-left of the README) and "perch" (the small
+//  one, which lands on the README's title bar; see perch.js). The butterflies are identical, so
+//  a line-dance swap just trades roles (ROLES). Each frame stepWorld() advances both roles'
+//  poses once (whichever canvas renders first), and each butterfly renders the pose of its role,
+//  or a blend between the two while swapping.
+// ─────────────────────────────────────────────────────────────────────────────
 import * as THREE from 'three'
-import { Canvas, useFrame, useThree } from '@react-three/fiber'
-import { useGLTF } from '@react-three/drei'
-import { precompute, evaluateWings, NODE_DEFAULTS, SCENE } from '../../wingMath'
-import { createApparitionMaterial } from '../../apparitionMaterial'
-import { createHaloTexture } from '../../wingMaterial'
-import { SmokeSystem, findEmitters } from '../../Smoke'
-import { getPerch } from '../perch'
-import { dance, beatNow } from '../dance'
-import { BUTTERFLY_LOOK } from './lookParams'
+import { NODE_DEFAULTS } from '../../three/wingMath'
+import { getPerch } from './perch'
+import { layout, refreshLayout } from './layout'
+import { dance, beatNow } from '../music/dance'
 
-// Butterfly mode: two of Lauren's pink ghost "apparition" butterflies (same GLB, Geometry
-// Nodes flap and approved material as the lab), each on its own transparent canvas so it can
-// sit in front of or behind the README window.
-//   • the "perch" role uses the reusable land → fly-off behaviour (see ../perch.js)
-//   • the "hover" role floats almost in place, gliding a little along its heading
-// The two butterflies are identical, so they can trade roles: while music plays (../dance.js)
-// they dance, and every few bars they swap places, growing / shrinking as they pass in front of
-// / behind the README.
-const GLB = '/butterflybaked.glb'
-const FOV = 30
-const CAM_Z = 10
-const KEY_LIGHT = new THREE.Vector3(3, 5, 6).normalize()
-const _v = new THREE.Vector3()
-const _c = new THREE.Vector3()
 const HALF_PI = Math.PI / 2
 
-// Look, in the butterfly lab's own units (Lauren's picks): glow 0.3, halo 1, smoke 0.1.
-const LOOK = BUTTERFLY_LOOK
-const HALO_TEX = typeof document !== 'undefined' ? createHaloTexture() : null
-
 // Model space: head = +Y, back = +Z. rot.z turns the head in screen space
-// (0 = up, +π/2 = left, −π/4 = up-right).
-const BUTTERFLIES = [
-  {
-    kind: 'hover',
+// (0 = up, +π/2 = left, −π/4 = up-right). Spans are wingspans in CSS pixels.
+export const ROLE_CFG = {
+  hover: {
     // large, below-left of the README, facing diagonally up-right.
     // `follow`: while that perch is away (README closed) it drifts to `alt` (the README's
     // spot) and comes closer (`altScale`), filling the empty space; it returns when it's back.
@@ -54,22 +38,20 @@ const BUTTERFLIES = [
     bottomClear: 48,
     dir: [0.7, -0.7], rot: [0.32, 0.25, -Math.PI / 4], flap: 0.55,
   },
-  {
-    kind: 'perch',
-    perch: 'readme',
+  perch: {
+    perchId: 'readme',
     span: (w, narrow) => (narrow ? w * 0.3 : THREE.MathUtils.clamp(w * 0.12, 150, 200)),
-    flap: 0.65,
   },
-]
+}
 
 const TIMING = { flyIn: 3.2, flyOut: 2.0, followDelay: 0.9, follow: 3.2 }
 // wings: full flap in flight; perched, they fold up together (seen side-on) with only a
 // whisper of flutter, via the Geometry Nodes Map Range output (radians)
-const WING = { fly: [NODE_DEFAULTS.mapToMin, NODE_DEFAULTS.mapToMax], rest: [1.04, 1.4] }
+export const WING = { fly: [NODE_DEFAULTS.mapToMin, NODE_DEFAULTS.mapToMax], rest: [1.04, 1.4] }
 const FLAP = { fly: 1.1, rest: 0.45 }
 
 // dancing: frames per wing-flap cycle (one sine period of the Geometry Nodes flap)
-const FLAP_CYCLE = 2 * Math.PI * NODE_DEFAULTS.frameDivisor
+export const FLAP_CYCLE = 2 * Math.PI * NODE_DEFAULTS.frameDivisor
 // The dance is a repeating 4-bar phrase (16 beats), so moves take turns and never collide:
 //   bar 1 (beats 0–3)   groove: the big one sways, the small one hops
 //   bar 2 (beats 4–7)   groove + the big one's twirl (beats 5–7, every other phrase)
@@ -77,22 +59,23 @@ const FLAP_CYCLE = 2 * Math.PI * NODE_DEFAULTS.frameDivisor
 //   bar 4 (beats 12–15) the swap (README open); it lands on the next phrase's beat 0
 const PHRASE = 16
 const TWIRL = { at: 5, beats: 2, settle: 0.5 }
+// the big one also opens every dance with a twirl, a quarter beat after the music starts
+const OPENING_TWIRL_DELAY = 0.25
 const SWAP = { at: 12, beats: 4 }
 const HOP = { beats: 0.6, height: 0.13, dip: 0.02, dipBeats: 0.15 } // lands on bar beats 1 and 3
 const phraseRand = (n) => { const v = Math.sin(n * 12.9898 + 4.1) * 43758.5453; return v - Math.floor(v) }
 
-const ROLE_CFG = { hover: BUTTERFLIES[0], perch: BUTTERFLIES[1] }
-const otherRole = (r) => (r === 'hover' ? 'perch' : 'hover')
+export const otherRole = (r) => (r === 'hover' ? 'perch' : 'hover')
 // which role each butterfly plays; reversed when a swap completes
-const ROLES = ['hover', 'perch']
+export const ROLES = ['hover', 'perch']
 // Shared world: each role's motion and the swap, stepped once per animation frame (by
 // whichever canvas renders first) so both butterflies see the same state.
-const W = {}
-function resetWorld() {
+export const W = {}
+export function resetWorld() {
   ROLES[0] = 'hover'
   ROLES[1] = 'perch'
   Object.assign(W, {
-    last: -1, t: 0, dl: 0, beat: 0,
+    last: -1, t: 0, dl: 0, beat: 0, wasPlaying: false,
     // dance clock in beats: runs at the song's tempo, phase-locked to the audio while it plays,
     // and keeps going smoothly after a stop or a song loop so moves in progress can finish
     db: 0,
@@ -106,20 +89,11 @@ function resetWorld() {
 resetWorld() // ready before the first frame, even right after a hot reload
 
 const clamp01 = (t) => Math.min(1, Math.max(0, t))
-const easeOut = (t) => 1 - (1 - t) ** 3
-const easeInOut = (t) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2)
-/** Downbeat lift (fraction of span): on bar beat 1, softer on 3; rises fast, settles slowly. */
-function downbeatLift(db) {
-  const inBar = ((db % 4) + 4) % 4
-  const which = Math.floor(inBar)
-  if (which !== 0 && which !== 2) return 0
-  const u = inBar - which
-  const pulse = u < 0.35 ? easeOut(u / 0.35) : 1 - easeIn((u - 0.35) / 0.65)
-  return (which === 0 ? 0.03 : 0.015) * pulse
-}
 const ease = (t) => t * t * (3 - 2 * t)
 const easeIn = (t) => t * t
-const lerp = (a, b, t) => a + (b - a) * t
+const easeOut = (t) => 1 - (1 - t) ** 3
+const easeInOut = (t) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2)
+export const lerp = (a, b, t) => a + (b - a) * t
 function bez(a, c, b, t) {
   const u = 1 - t
   return [u * u * a[0] + 2 * u * t * c[0] + t * t * b[0], u * u * a[1] + 2 * u * t * c[1] + t * t * b[1]]
@@ -130,10 +104,14 @@ function angLerp(a, b, t) {
   return a + d * t
 }
 
-/** World-space size of the visible plane at z = 0 for the current canvas. */
-function viewExtents(size) {
-  const h = 2 * CAM_Z * Math.tan(THREE.MathUtils.degToRad(FOV / 2))
-  return { w: h * (size.width / size.height), h }
+/** Downbeat lift (fraction of span): on bar beat 1, softer on 3; rises fast, settles slowly. */
+function downbeatLift(db) {
+  const inBar = ((db % 4) + 4) % 4
+  const which = Math.floor(inBar)
+  if (which !== 0 && which !== 2) return 0
+  const u = inBar - which
+  const pulse = u < 0.35 ? easeOut(u / 0.35) : 1 - easeIn((u - 0.35) / 0.65)
+  return (which === 0 ? 0.03 : 0.015) * pulse
 }
 
 /**
@@ -159,10 +137,14 @@ function flutterPath(from, ctrl, to, k, spanPx, t, seed = 0) {
   }
 }
 
-/** Advance the shared world once per animation frame (both canvases call this). */
-function stepWorld(now, dt, x) {
+/**
+ * Advance the shared world once per animation frame (both canvases call this; the second call
+ * in the same frame is a no-op). `x`: { canvas, width, narrow, reduced }.
+ */
+export function stepWorld(now, dt, x) {
   if (now - W.last < 4) return // the other canvas already stepped this frame
   W.last = now
+  refreshLayout(x.canvas, ROLE_CFG.perch.perchId)
   W.t += dt
   // dance level: eases in and out over about 2s
   W.dl += ((dance.playing ? 1 : 0) - W.dl) * (1 - Math.exp(-dt * 2))
@@ -176,19 +158,19 @@ function stepWorld(now, dt, x) {
   }
   stepHover(dt, x)
   stepPerch(dt, x)
-  stepSwap(dt, x)
+  stepSwap(x)
 }
 
 /** The hover role: big, below-left of the README; drifts into its spot when it closes. */
 function stepHover(dt, x) {
   const H = W.hover
   const cfg = ROLE_CFG.hover
-  const { c, rel, narrow, reduced } = x
+  const { narrow, reduced } = x
+  const c = layout.canvas
   const motion = reduced ? 0 : 1
   const t = W.t
   const spanPx = cfg.span(x.width, narrow)
-  const win = x.hero?.querySelector('.readme-window')
-  const r = win ? rel(win) : { left: c.width * 0.4, right: c.width * 0.75, top: c.height * 0.25, bottom: c.height * 0.5, width: c.width * 0.35, height: c.height * 0.25 }
+  const r = layout.readme ?? { left: c.width * 0.4, right: c.width * 0.75, top: c.height * 0.25, bottom: c.height * 0.5, width: c.width * 0.35, height: c.height * 0.25 }
   // home ↔ alternate spot, tied to whether the followed perch is present
   const away = cfg.follow ? !getPerch(cfg.follow)?.present : false
   if (away !== H.wantAway) { H.wantAway = away; H.since = 0 }
@@ -206,13 +188,8 @@ function stepHover(dt, x) {
     H.fade = 1
   }
   const m = ease(clamp01(H.m))
-  // live layout landmarks: right edge of the name, left edge of the icon column
-  const nameEl = x.hero?.querySelector('.desktop-name')
-  // visible icons only: hidden (display: none) ones report left = 0
-  const iconEls = x.hero ? [...x.hero.querySelectorAll('.hero-icons > li')].filter((e) => e.getClientRects().length) : []
-  const L = nameEl && iconEls.length
-    ? { nameRight: rel(nameEl).right, iconsLeft: Math.min(...iconEls.map((e) => rel(e).left)) }
-    : null
+  // layout landmarks: right edge of the name, left edge of the icon column
+  const L = layout.nameRight != null && layout.iconsLeft != null ? { nameRight: layout.nameRight, iconsLeft: layout.iconsLeft } : null
   const home = cfg.at(r, c, spanPx, narrow)
   const alt = cfg.alt ? cfg.alt(r, c, spanPx, narrow, L) : home
   let px = lerp(home[0], alt[0], m)
@@ -266,6 +243,11 @@ function stepHover(dt, x) {
     py -= dl * spanPx * downbeatLift(db)
     flap *= 1 + 0.25 * dl
   }
+  // opening twirl: something to catch the eye the moment the music starts
+  if (dance.playing && !W.wasPlaying && !reduced && !H.twirl && !W.swap.active) {
+    H.twirl = { start: db + OPENING_TWIRL_DELAY, dir: 1 }
+  }
+  W.wasPlaying = dance.playing
   // twirl: latched when it starts so it always finishes (even if the music stops meanwhile)
   // (a late start on slow frames catches up on the same timeline instead of being skipped)
   if (!H.twirl && H.twirlDone !== phrase && phrase % 2 === 1 && pb >= TWIRL.at && pb < TWIRL.at + 1
@@ -293,11 +275,12 @@ function stepHover(dt, x) {
 function stepPerch(dt, x) {
   const P = W.perch
   const cfg = ROLE_CFG.perch
-  const { c, rel, reduced } = x
+  const { reduced } = x
+  const c = layout.canvas
   const spanPx = cfg.span(x.width, x.narrow)
-  const perch = getPerch(cfg.perch)
+  const perch = getPerch(cfg.perchId)
   const present = !!(perch?.present && perch.el)
-  const r = perch?.el ? rel(perch.el) : null
+  const r = perch?.el ? layout.perch : null
   const spot = r
     ? [r.left + r.width * perch.spot.x, r.top + r.height * perch.spot.y - spanPx * 0.03]
     : [c.width * 0.7, c.height * 0.25]
@@ -398,7 +381,7 @@ function stepPerch(dt, x) {
 }
 
 /** Line-dance swap: every 4 bars the two trade roles (places and sizes) over 1 bar. */
-function stepSwap(dt, x) {
+function stepSwap(x) {
   const s = W.swap
   if (s.active) {
     // driven by the dance clock (which keeps running after a stop), so it always finishes and
@@ -426,7 +409,7 @@ function stepSwap(dt, x) {
 }
 
 /** Blend a butterfly from role pose A into role pose B (k: 0 → 1) along a bowed arc. */
-function blendPoses(A, B, k) {
+export function blendPoses(A, B, k) {
   const e = ease(k)
   const vx = B.x - A.x
   const vy = B.y - A.y
@@ -448,248 +431,3 @@ function blendPoses(A, B, k) {
     smoke: A.smoke || B.smoke,
   }
 }
-
-function GhostButterfly({ index, theme, reduced, heroRef, layerRef }) {
-  const gltf = useGLTF(GLB)
-  const groupRef = useRef()
-  const { size, gl } = useThree()
-
-  const { root, wings, mats, smoke } = useMemo(() => {
-    const root = gltf.scene.clone(true)
-    let wings = null
-    let body = null
-    root.traverse((o) => {
-      if (!o.isMesh) return
-      if (o.name === 'wings') wings = o
-      else if (o.name === 'butterfly') body = o
-    })
-    const map = (wings || body)?.material.map ?? null
-    const mats = {
-      wing: createApparitionMaterial(map, { layer: 0 }),
-      body: createApparitionMaterial(map, { layer: 0, body: 1 }),
-      haze: createApparitionMaterial(map, { layer: 1 }),
-    }
-    if (wings) {
-      wings.geometry = wings.geometry.clone()
-      wings.frustumCulled = false
-      wings.material = mats.wing
-      const haze = new THREE.Mesh(wings.geometry, mats.haze)
-      haze.frustumCulled = false
-      haze.renderOrder = -1
-      wings.add(haze)
-    }
-    if (body) body.material = mats.body
-    // the lab's smoke + glowing dust, at the approved smoke amount (0.3): ethereal + a bit techy
-    const smoke = wings && map?.image ? new SmokeSystem(findEmitters(wings.geometry, map.image)) : null
-    return { root, wings, mats, smoke }
-  }, [gltf])
-
-  useEffect(() => () => {
-    Object.values(mats).forEach((m) => m.dispose())
-    wings?.geometry.dispose()
-    smoke?.dispose()
-  }, [mats, wings, smoke])
-
-  const halo = useMemo(() => {
-    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: HALO_TEX, transparent: true, depthWrite: false }))
-    sp.renderOrder = -2
-    sp.material.userData.base = 0.3
-    return sp
-  }, [])
-  useEffect(() => () => halo.material.dispose(), [halo])
-
-  const field = useMemo(
-    () => wings && precompute(Float32Array.from(wings.geometry.attributes.position.array), NODE_DEFAULTS),
-    [wings],
-  )
-
-  // approved apparition defaults: iridescence 1, glow 0.3 (×1.15 mapping), haze 0.8,
-  // with extra glow here because this overlay has no bloom pass.
-  useEffect(() => {
-    const light = theme === 'light'
-    for (const [m, op] of [[mats.wing, 1], [mats.body, 1], [mats.haze, 0.8]]) {
-      const u = m.uniforms
-      u.uIri.value = 1
-      u.uGlow.value = LOOK.glow * 1.15 // lab slider mapping
-      u.uOpacity.value = op
-      u.uLight.value = light ? 1 : 0
-      m.blending = light ? THREE.NormalBlending : THREE.AdditiveBlending
-      m.needsUpdate = true
-    }
-    smoke?.setLook('apparition', theme)
-    // the lab's halo sprite (apparition style): pink glow behind the butterfly
-    const hm = halo.material
-    if (light) {
-      hm.blending = THREE.NormalBlending
-    } else {
-      // pure additive light that leaves the canvas alpha alone, so it glows over the page
-      // instead of compositing as a grey disc on the transparent canvas
-      hm.blending = THREE.CustomBlending
-      hm.blendEquation = THREE.AddEquation
-      hm.blendSrc = THREE.SrcAlphaFactor
-      hm.blendDst = THREE.OneFactor
-      hm.blendSrcAlpha = THREE.ZeroFactor
-      hm.blendDstAlpha = THREE.OneFactor
-    }
-    hm.color.set(light ? '#fff6fb' : '#ffc4df') // light mode: a near-white halo so they stand out
-    hm.userData.base = LOOK.halo * (light ? 0.85 : 0.3) // light mode: brighter white halo to lift off the page
-    hm.needsUpdate = true
-  }, [theme, mats, smoke, halo])
-
-  const st = useMemo(
-    () => ({ t: index * 7.3, frame: SCENE.frameStart + index * 41, params: { ...NODE_DEFAULTS }, outline: null }),
-    [index],
-  )
-
-  useFrame(({ camera }, rawDt) => {
-    const g = groupRef.current
-    if (!g || !wings || !field) return
-    const dt = Math.min(rawDt, 1 / 20)
-    const motion = reduced ? 0 : 1
-    st.t += dt
-    const t = st.t
-
-    const c = gl.domElement.getBoundingClientRect()
-    const rel = (el) => {
-      const b = el.getBoundingClientRect()
-      return { left: b.left - c.left, right: b.right - c.left, top: b.top - c.top, bottom: b.bottom - c.top, width: b.width, height: b.height }
-    }
-    stepWorld(performance.now(), dt, { c, rel, width: size.width, narrow: size.width < 900, hero: heroRef?.current, reduced })
-
-    const role = ROLES[index]
-    const sw = W.swap
-    let p = W[role].pose
-    if (!p) return
-    if (sw.active && W[otherRole(role)].pose) p = blendPoses(p, W[otherRole(role)].pose, sw.k)
-
-    // layer: whoever is (becoming) the hover butterfly flies in front of the README (z 5);
-    // the percher, or the one heading back to the perch, goes behind it
-    const z = (sw.active ? otherRole(role) : role) === 'hover' ? '6' : '4'
-    if (layerRef?.current && layerRef.current.style.zIndex !== z) layerRef.current.style.zIndex = z
-
-    const { w, h } = viewExtents(size)
-    const px = THREE.MathUtils.clamp(p.x, p.span * 0.1, c.width - p.span * 0.1)
-    const py = p.y
-    g.scale.setScalar(((p.span / size.height) * h) / 5) // the model is ~5 units wide
-    g.rotation.set(p.rot[0], p.rot[1], p.rot[2])
-    g.position.set((px / c.width - 0.5) * w, (0.5 - py / c.height) * h, 0)
-    g.visible = p.fade > 0.01
-    g.updateWorldMatrix(true, true)
-
-    // (skipped while dancing: the swing and twirls would skew the measurement)
-    if (role === 'hover' && !sw.active && W.dl < 0.05) {
-      // where the VISIBLE wings sit on screen: project a sample of the alpha-picked outline
-      // points (the plane's corners are transparent, so its bounding box would lie)
-      if (!st.outline) {
-        const e = smoke?.edges ?? []
-        st.outline = e.filter((_, k) => k % Math.max(1, Math.floor(e.length / 96)) === 0)
-      }
-      const arr = wings.geometry.attributes.position.array
-      let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity
-      for (const vi of st.outline) {
-        _c.set(arr[vi * 3], arr[vi * 3 + 1], arr[vi * 3 + 2]).applyMatrix4(wings.matrixWorld).project(camera)
-        const sx = (_c.x * 0.5 + 0.5) * c.width
-        const sy = (0.5 - _c.y * 0.5) * c.height
-        minX = Math.min(minX, sx); maxX = Math.max(maxX, sx)
-        minY = Math.min(minY, sy); maxY = Math.max(maxY, sy)
-      }
-      if (!st.outline.length) { minX = maxX = px; minY = maxY = py }
-      // offset of the visible centre from the pivot, smoothed so it never jitters
-      const k = 1 - Math.exp(-dt * 3)
-      const H = W.hover
-      H.visDx = lerp(H.visDx, THREE.MathUtils.clamp((minX + maxX) / 2 - px, -p.span, p.span), k)
-      H.visDy = lerp(H.visDy, THREE.MathUtils.clamp((minY + maxY) / 2 - py, -p.span, p.span), k)
-    }
-
-    // halo sits just behind the butterfly; lab size ratio (9 units for a 5-unit wingspan)
-    halo.position.set(g.position.x, g.position.y, -0.6)
-    halo.scale.setScalar(g.scale.x * 9)
-
-    // flap: full in flight, folded with a whisper of flutter on the perch; perched dancing
-    // parts the folded wings a little (`open`)
-    st.params.mapToMin = lerp(WING.fly[0], WING.rest[0], p.rest) - p.open * 0.6
-    st.params.mapToMax = lerp(WING.fly[1], WING.rest[1], p.rest) - p.open * 0.35
-    st.frame += dt * SCENE.fps * p.flap * motion
-    const lock = W.dl * p.lock
-    if (lock > 0.001 && !reduced) {
-      // dancing in the air: one slow flap every 2 beats, phase-locked to the beat
-      const tempoFps = (FLAP_CYCLE * 0.5 * dance.bpm) / 60
-      st.frame += dt * (tempoFps - SCENE.fps * p.flap) * lock
-      const target = W.db * 0.5 * FLAP_CYCLE + SCENE.frameStart
-      let diff = (target - st.frame) % FLAP_CYCLE
-      if (diff > FLAP_CYCLE / 2) diff -= FLAP_CYCLE
-      if (diff < -FLAP_CYCLE / 2) diff += FLAP_CYCLE
-      st.frame += diff * (1 - Math.exp(-dt * 2)) * lock
-    }
-    const pos = wings.geometry.attributes.position
-    evaluateWings(field, st.frame, st.params, pos.array)
-    pos.needsUpdate = true
-    wings.geometry.computeVertexNormals()
-
-    if (smoke) {
-      smoke.update(reduced ? 0 : dt, wings, { amount: p.smoke ? LOOK.smoke : 0, life: 3.2, burst: 0, pixelRatio: gl.getPixelRatio() })
-    }
-
-    _v.copy(KEY_LIGHT).transformDirection(camera.matrixWorldInverse)
-    // dancing: a soft glow lift on beat 1 of each bar (the only dance move with reduced motion)
-    const kick = W.dl * 0.175 * Math.max(0, Math.cos((Math.PI * 2 * W.db) / 4)) ** 8
-    const pulse = (1 + 0.12 * Math.sin(t * 1.1) + 0.05 * Math.sin(t * 2.7 + 1)) * (1 + kick)
-    for (const [m, op] of [[mats.wing, 1], [mats.body, 1], [mats.haze, 0.8]]) {
-      const u = m.uniforms
-      u.uLightDir.value.copy(_v)
-      u.uTime.value = t
-      u.uPulse.value = pulse
-      u.uOpacity.value = op * p.fade
-    }
-    halo.material.opacity = halo.material.userData.base * pulse * p.fade
-    halo.visible = p.fade > 0.01
-  })
-
-  return (
-    <>
-      <primitive object={halo} />
-      <group ref={groupRef}>
-        <primitive object={root} />
-      </group>
-      {smoke && <primitive object={smoke.group} />}
-    </>
-  )
-}
-
-export default function GhostButterflies({ theme, reduced, heroRef }) {
-  const wrapRef = useRef(null)
-  const layer0 = useRef(null)
-  const layer1 = useRef(null)
-  const [visible, setVisible] = useState(true)
-  useState(resetWorld) // fresh roles + motion each time the desktop mounts
-
-  // stop rendering while the desktop is scrolled out of view
-  useEffect(() => {
-    const el = wrapRef.current
-    if (!el || !('IntersectionObserver' in window)) return
-    const io = new IntersectionObserver(([e]) => setVisible(e.isIntersecting), { threshold: 0 })
-    io.observe(el)
-    return () => io.disconnect()
-  }, [])
-
-  // one canvas per butterfly, so each can be layered in front of / behind the README
-  return (
-    <div ref={wrapRef} className="ghost-butterflies" aria-hidden="true">
-      {[layer0, layer1].map((ref, i) => (
-        <div key={i} ref={ref} className="ghost-layer" style={{ zIndex: ROLES[i] === 'hover' ? 6 : 4 }}>
-          <Canvas
-            frameloop={visible ? 'always' : 'never'}
-            dpr={[1, 1.75]}
-            camera={{ fov: FOV, position: [0, 0, CAM_Z], near: 0.1, far: 50 }}
-            gl={{ alpha: true, antialias: true, powerPreference: 'low-power' }}
-            style={{ pointerEvents: 'none' }}
-          >
-            <GhostButterfly index={i} theme={theme} reduced={reduced} heroRef={heroRef} layerRef={ref} />
-          </Canvas>
-        </div>
-      ))}
-    </div>
-  )
-}
-
-useGLTF.preload(GLB)

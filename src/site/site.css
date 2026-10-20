@@ -286,17 +286,24 @@ button { font: inherit; color: inherit; }
 @media (prefers-reduced-motion: reduce) {
   .dance-button.is-spinning .record-frame { animation: none !important; }
 }
-/* "now playing" window with the Spotify mini-player, to the left of the Dance icon */
+/* "now playing" window, to the left of the Dance icon */
 .now-playing {
-  position: absolute; z-index: 6; right: calc(100% + var(--sp-2)); top: 0; width: min(340px, 80vw);
+  position: absolute; z-index: 6; right: calc(100% + var(--sp-2)); top: 0; width: max-content; max-width: 80vw;
   animation: pop-in 0.22s cubic-bezier(0.2, 0.9, 0.3, 1.2); transform-origin: 100% 0;
   box-shadow:
     inset 1px 1px 0 var(--win-hi), inset -1px -1px 0 var(--win-lo),
     0 0 48px var(--win-glow), 0 0 120px var(--win-glow);
 }
-.now-playing-embed { min-height: 80px; border: 1px solid var(--win-edge); background: var(--win-pane); }
-.now-playing-embed iframe { display: block; border: 0; border-radius: 0; }
-.now-playing-error { margin: 0; padding: var(--sp-2); font-size: var(--text-body); line-height: 1.5; }
+.dance-label-stop { display: none; }
+.now-playing-text {
+  display: flex; align-items: center; gap: var(--sp-3); margin: 0; padding: var(--sp-2) var(--sp-3);
+  font-size: var(--text-body); line-height: 1.4; white-space: nowrap;
+}
+/* the bunny after the song name: symbol fonts first, since the site's mono font has no ᴗ eyes */
+.bunny {
+  white-space: pre; font: 12px/1.2 'Apple Symbols', 'Segoe UI Symbol', 'Noto Sans Symbols 2', system-ui, sans-serif;
+  color: inherit; /* same as the song name: white on the dark window */
+}
 
 /* contact dock, anchored to the desktop's bottom edge */
 .contact-dock { position: relative; z-index: 5; padding: 0; }
@@ -357,8 +364,11 @@ button { font: inherit; color: inherit; }
   50% { opacity: calc(var(--light-opacity) * 0.86); }
 }
 
-/* butterfly mode: ghost butterflies overlay (pixel ones are the no-WebGL fallback) */
-.ghost-butterflies { position: absolute; inset: 0; z-index: 4; pointer-events: none; animation: ghost-in 0.8s ease; }
+/* ghost butterflies (pixel ones are the no-WebGL fallback). No z-index or animation on the
+   wrapper: it must not form a stacking context, so each butterfly's layer can sit in front of
+   (z 6) or behind (z 4) the README window (z 5). GhostButterflies sets the layer's z-index. */
+.ghost-butterflies { position: absolute; inset: 0; pointer-events: none; }
+.ghost-layer { position: absolute; inset: 0; pointer-events: none; animation: ghost-in 0.8s ease; }
 .ghost-butterflies canvas { pointer-events: none !important; }
 /* The lab look (glow 0.3, halo 1, smoke 0.1 in GhostButterflies LOOK) is rendered in the
    canvas. The lab also runs a bloom pass; this soft drop-shadow stands in for that bloom. */
@@ -467,8 +477,8 @@ a.file-row-name:hover { text-decoration: underline; }
   .contact-dock { display: none; }
   .hero-icons { position: relative; z-index: 6; }
   .hero-icons > li.thought-slot, .hero-icons > li.dance-slot { position: static; } /* pop-ups anchor to the whole row */
-  /* row order: Readme, Thought, Dance, LinkedIn, Mail */
-  .hero-icons > li.thought-slot { order: 1; }
+  /* row order: Readme, Dance, LinkedIn, Mail (Thought is desktop-only) */
+  .hero-icons > li.thought-slot { display: none; }
   .hero-icons > li.dance-slot { order: 2; }
   .hero-icons > li.phone-only { order: 3; }
   .hero-window { grid-column: 1; grid-row: 3; margin-top: var(--sp-10); } /* room for the perched butterfly */
@@ -482,7 +492,10 @@ a.file-row-name:hover { text-decoration: underline; }
   .contact-dock ul { gap: var(--sp-2); }
   /* pop-up drops below on the horizontal icon row */
   .thought-pop { left: 0; right: auto; bottom: auto; top: calc(100% + var(--sp-2)); width: min(320px, 100%); transform-origin: 30% 0; }
-  .now-playing { left: 0; right: 0; top: calc(100% + var(--sp-2)); width: auto; transform-origin: 50% 0; }
+  /* phones: no "now playing" window; while playing, the label reads "Stop dance" instead */
+  .now-playing { display: none; }
+  .dance-button.is-open .dance-label { display: none; }
+  .dance-button.is-open .dance-label-stop { display: inline; white-space: nowrap; }
 
   /* hamburger menu: the nav links become a full-screen overlay under the header controls */
   .taskbar-nav { gap: var(--sp-2); }

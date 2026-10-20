@@ -92,7 +92,7 @@ export default function DesktopHero({ theme }) {
         </li>
         <DanceButton ref={danceRef} />
         <Utilities />
-        {/* phones: the contacts join this row (Readme, Thought, Dance, LinkedIn, Mail; order set in CSS) */}
+        {/* phones: the contacts join this row (Readme, Dance, LinkedIn, Mail; order set in CSS) */}
         <ContactItems className="phone-only" />
       </ul>
 

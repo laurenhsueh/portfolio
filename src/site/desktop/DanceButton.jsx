@@ -1,12 +1,8 @@
 import { forwardRef, useEffect, useRef, useState } from 'react'
 import PixelIcon from '../PixelIcon'
-import WindowChrome from './WindowChrome'
 import { SONG } from '../content/music'
 import { analyzeBeat } from '../music/beat'
 import { setBeat, startDance, stopDance } from '../music/dance'
-
-// a little bunny after the song name (decorative)
-const BUNNY = ['    /)/)', '  ( ᴗ͈ ᴗ͈)', 'c( づ★‧₊˚⋆'].join('\n')
 
 // The song is downloaded once (starting on hover/focus/press): the same bytes become the
 // player's source (a blob URL) and, when the browser is idle, feed the beat analysis.
@@ -27,10 +23,14 @@ function loadSong() {
 }
 const whenIdle = (fn) => (window.requestIdleCallback ? requestIdleCallback(fn, { timeout: 1500 }) : setTimeout(fn, 200))
 
+// notes that drift up out of the record while it plays (pixel icon, start offset in px)
+const NOTES = [['note', 0], ['notes', 10], ['note', -6]]
+
 /**
- * The record player desktop icon: plays Lauren's song (public/music) in a small "now playing"
- * window and makes the butterflies dance to its beat (see music/dance.js). Clicking again, or the
- * window's ×, stops the music and the dance. The song loops while it's on.
+ * The record player desktop icon: plays Lauren's song (public/music) and makes the butterflies
+ * dance to its beat (see music/dance.js). While it plays the record spins, little notes float up
+ * out of it and the label reads "Stop dance"; pressing it again stops the music and the dance.
+ * The song loops while it's on.
  */
 const DanceButton = forwardRef(function DanceButton(_, btnRef) {
   const [open, setOpen] = useState(false)
@@ -70,8 +70,7 @@ const DanceButton = forwardRef(function DanceButton(_, btnRef) {
   useEffect(() => () => { audio.current?.pause(); stopDance() }, [])
 
   return (
-    // raised while open so the window sits above the README and the contact dock
-    <li className={`icon-slot dance-slot ${open ? 'is-raised' : ''}`}>
+    <li className="icon-slot dance-slot">
       <button
         ref={btnRef}
         type="button"
@@ -87,25 +86,14 @@ const DanceButton = forwardRef(function DanceButton(_, btnRef) {
           {[0, 1, 2, 3].map((k) => (
             <PixelIcon key={k} name={`record${k}`} size={56} className={`record-frame f${k}`} />
           ))}
+          {spinning && NOTES.map(([name, x], i) => (
+            <span key={i} className={`record-note n${i}`} style={{ '--note-x': `${x}px` }}>
+              <PixelIcon name={name} size={16} />
+            </span>
+          ))}
         </span>
-        <span className="desktop-file-label">
-          {/* phones have no "now playing" window: the label itself says how to stop */}
-          <span className="dance-label">Dance</span>
-          <span className="dance-label-stop">Stop dance</span>
-        </span>
+        <span className="desktop-file-label">{open ? 'Stop dance' : 'Dance'}</span>
       </button>
-
-      {open && (
-        <div className="now-playing win" role="dialog" aria-labelledby="now-playing-title">
-          <WindowChrome title="now playing" titleId="now-playing-title" closeLabel="Stop the music" onClose={stop} />
-          <div className="win-body">
-            <p className="win-pane now-playing-text">
-              <span aria-live="polite">{SONG.title}</span>
-              <span className="bunny" aria-hidden="true">{BUNNY}</span>
-            </p>
-          </div>
-        </div>
-      )}
     </li>
   )
 })

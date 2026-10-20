@@ -149,6 +149,44 @@ const ICONS = {
   ],
 }
 
+// music notes that float up out of the record while it plays
+ICONS.note = [
+  '................',
+  '.......#........',
+  '.......##.......',
+  '.......#.#......',
+  '.......#..#.....',
+  '.......#..#.....',
+  '.......#........',
+  '.......#........',
+  '.......#........',
+  '....####........',
+  '...#####........',
+  '...####.........',
+  '....##..........',
+  '................',
+  '................',
+  '................',
+]
+ICONS.notes = [
+  '................',
+  '....##########..',
+  '....##########..',
+  '....#........#..',
+  '....#........#..',
+  '....#........#..',
+  '....#........#..',
+  '....#........#..',
+  '.####.....####..',
+  '#####....#####..',
+  '####.....####...',
+  '.##.......##....',
+  '................',
+  '................',
+  '................',
+  '................',
+]
+
 // vinyl record, 4 frames: the glint steps a quarter turn each frame, so the spin stays on the
 // pixel grid (rotating the SVG would blur it and swing the shadow around)
 for (let k = 0; k < 4; k++) {
@@ -177,7 +215,7 @@ function withShadow(rows) {
   })
   return g.map((r) => r.join(''))
 }
-for (const name of ['sun', 'moon', 'thought', 'record0', 'record1', 'record2', 'record3']) ICONS[name] = withShadow(ICONS[name])
+for (const name of ['sun', 'moon', 'thought', 'note', 'notes', 'record0', 'record1', 'record2', 'record3']) ICONS[name] = withShadow(ICONS[name])
 
 const FILL = { '#': 'var(--accent)', d: 'var(--accent-deep)', w: 'var(--icon-paper)' }
 

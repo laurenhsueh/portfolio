@@ -142,15 +142,15 @@ void main() {
     float fres = pow(max(1.0 - NdV, 0.0), 2.0);
     vec3 glass = mix(uColRose, uColLav, smoothstep(0.3, 0.85, smoke) * 0.5 + fromBody * 0.2);
     glass = mix(glass, texPink * uColRose / max(uColRose.r, 1e-3), 0.25 * (1.0 - spots));
-    // deeper rose where the glass turns edge-on gives it depth against the light background
-    glass = mix(glass, uColRose * 0.78, clamp(fres * 0.6 + (1.0 - smoke) * 0.15, 0.0, 0.6));
+    // deeper rose where the glass turns edge-on gives it depth (and contrast) on the light page
+    glass = mix(glass, uColRose * 0.72, clamp(fres * 0.8 + (1.0 - smoke) * 0.2, 0.0, 0.7));
     glass = mix(glass, uColPearl, clamp(inner * 0.3 + veins * 0.45 + spec, 0.0, 0.85));
     glass = mix(glass, glass * 0.45 + mix(spectrum(film), vec3(1.0, 0.82, 0.92), 0.4) * 0.65,
                 clamp(hit * uIri, 0.0, 1.0) * 0.6);
     glass *= 1.0 - spots * 0.3 * (1.0 - uBody);
     glass = mix(glass, uColRose * 0.85, uBody * 0.55);
     outCol = glass * (0.9 + 0.1 * uPulse);
-    a *= (0.5 + inner * 0.2 + spec * 0.3 + fres * 0.2) * mix(1.0, 0.6, uLayer);
+    a *= (0.65 + inner * 0.2 + spec * 0.3 + fres * 0.2) * mix(1.0, 0.6, uLayer);
   }
   gl_FragColor = vec4(outCol, clamp(a, 0.0, 1.0));
   #include <colorspace_fragment>

@@ -35,7 +35,7 @@ export const ROLE_CFG = {
     // after the small butterfly starts its approach to the README
     introDelay: 0.4,
     // keep the lowest wingtip at least this far above the hero's bottom border
-    bottomClear: 48,
+    bottomClear: 64,
     dir: [0.7, -0.7], rot: [0.32, 0.25, -Math.PI / 4], flap: 0.55,
   },
   perch: {
@@ -57,12 +57,18 @@ export const FLAP_CYCLE = 2 * Math.PI * NODE_DEFAULTS.frameDivisor
 //   bar 2 (beats 4–7)   groove + the big one's twirl (beats 5–7, every other phrase)
 //   bar 3 (beats 8–11)  groove
 //   bar 4 (beats 12–15) the swap (README open); it lands on the next phrase's beat 0
+// With the README closed the small one isn't perched, so when the music starts it flies back
+// to dance beside the big one (a duet), and in bar 4 the two circle once around each other.
 const PHRASE = 16
 const TWIRL = { at: 5, beats: 2, settle: 0.5 }
 // the big one also opens every dance with a twirl, a quarter beat after the music starts
 const OPENING_TWIRL_DELAY = 0.25
 const SWAP = { at: 12, beats: 4 }
 const HOP = { beats: 0.6, height: 0.13, dip: 0.02, dipBeats: 0.15 } // lands on bar beats 1 and 3
+// duet geometry, as fractions of the big one's span: each one's distance from the shared centre,
+// the small one's lift, how flat the circle is (squash), and how much the front one grows
+const DUET = { big: 0.22, small: 0.58, lift: 0.12, squash: 0.35, depth: 0.12, heading: Math.PI / 4 }
+const ORBIT = { at: 12, beats: 4 }
 const phraseRand = (n) => { const v = Math.sin(n * 12.9898 + 4.1) * 43758.5453; return v - Math.floor(v) }
 
 export const otherRole = (r) => (r === 'hover' ? 'perch' : 'hover')
@@ -81,8 +87,11 @@ export function resetWorld() {
     db: 0,
     // hover-follow state: m = 0 at home, 1 at the alternate spot; intro = load fly-in clock
     hover: { m: 0, wantAway: false, since: 0, fade: 1, intro: 0, visDx: 0, visDy: 0, twirl: null, twirlDone: -1, pose: null },
-    // perch state machine: away → in → landed → out → away
-    perch: { mode: 'away', k: 0, from: [0, 0], ctrl: [0, 0], pos: null, prevPos: null, heading: HALF_PI, rest: 0, side: 1, fade: 0, hop: null, pose: null },
+    // perch state machine: away → in → landed | duet → out → away (`target`: where `in` is headed)
+    perch: { mode: 'away', target: null, k: 0, from: [0, 0], ctrl: [0, 0], pos: null, prevPos: null, heading: HALF_PI, rest: 0, side: 1, fade: 0, hop: null, pose: null },
+    // duet (README closed + music): w = how far the big one has made room (0..1); orbit = the
+    // beat its circle started; s = depth along the circle (> 0: the small one is in front)
+    duet: { w: 0, orbit: null, orbitDone: -1, s: 0, front: null, spot: null },
     swap: { active: false, k: 0, start: 0, end: -Infinity, done: -1 },
   })
 }
@@ -206,6 +215,37 @@ function stepHover(dt, x) {
   // lowest wingtip ≈ centre + 0.42 × the (scaled) span in this pose
   const reach = spanPx * lerp(1, cfg.altScale ?? 1, m) * 0.42
   py = THREE.MathUtils.clamp(py, spanPx * 0.3, c.height - (cfg.bottomClear ?? 0) - reach)
+  const db = W.db
+  const phrase = Math.floor(db / PHRASE)
+  const pb = db - phrase * PHRASE // beat within the phrase
+  // duet: while the small one comes to dance beside it, the big one makes room (it slides left
+  // of their shared centre), and in bar 4 the two circle once around that centre. The small
+  // one's spot (D.spot) is the mirror image, for stepPerch.
+  const D = W.duet
+  const P = W.perch
+  const joining = P.mode === 'duet' || (P.mode === 'in' && P.target === 'duet')
+  D.w += ((joining ? 1 : 0) - D.w) * (1 - Math.exp(-dt * 2))
+  if (!D.orbit && P.mode === 'duet' && D.orbitDone !== phrase && pb >= ORBIT.at && pb < ORBIT.at + ORBIT.beats / 2
+    && W.dl > 0.5 && !reduced && !H.twirl) {
+    D.orbit = phrase * PHRASE + ORBIT.at // latched, so it always comes all the way round
+    D.orbitDone = phrase
+  }
+  let theta = 0
+  if (D.orbit != null) {
+    const u = (db - D.orbit) / ORBIT.beats
+    if (u < 1) theta = Math.PI * 2 * easeInOut(clamp01(u))
+    else D.orbit = null
+  }
+  const ox = Math.cos(theta)
+  const oy = Math.sin(theta) * DUET.squash
+  D.s = Math.sin(theta) // > 0: the small one is lower on screen = nearer, so it's in front
+  D.front = D.orbit != null ? (D.s > 0 ? 'perch' : 'hover') : null
+  D.spot = [
+    THREE.MathUtils.clamp(px + ox * DUET.small * spanPx, spanPx * 0.2, c.width - spanPx * 0.2),
+    py + oy * DUET.small * spanPx - DUET.lift * spanPx,
+  ]
+  px -= ox * DUET.big * spanPx * D.w
+  py -= oy * DUET.big * spanPx * D.w
   let fade = H.fade
   let rx = cfg.rot[0] + Math.sin(t * 0.31 * motion) * 0.03
   let ry = cfg.rot[1] + Math.sin(t * 0.23 * motion + 1.7) * 0.07
@@ -231,9 +271,6 @@ function stepHover(dt, x) {
   }
   // dancing: smooth and flowing, a pendulum swing once per bar, leaning into it, with a lift on
   // the downbeats and, every other phrase, a slow twirl carried out of the end of a swing
-  const db = W.db
-  const phrase = Math.floor(db / PHRASE)
-  const pb = db - phrase * PHRASE // beat within the phrase
   if (W.dl > 0.001 && !reduced) {
     const dl = W.dl
     const amp = 1 + 0.2 * (phraseRand(phrase) - 0.5) // ±10% per phrase, so it never feels mechanical
@@ -266,12 +303,16 @@ function stepHover(dt, x) {
     }
   }
   H.pose = {
-    x: px, y: py, span: spanPx * lerp(1, cfg.altScale ?? 1, m), rot: [rx, ry, rz],
+    x: px, y: py, span: spanPx * lerp(1, cfg.altScale ?? 1, m) * (1 - DUET.depth * 0.6 * D.s * D.w), rot: [rx, ry, rz],
     rest: 0, open: 0, fade, flap, lock: 1, smoke: true,
   }
 }
 
-/** The perch role: lands on the README's title bar, flies off when it closes. */
+/**
+ * The perch role: lands on the README's title bar and flies off when it closes. With the README
+ * closed, it comes back while the music plays to dance beside the big one (the duet), and flies
+ * off again when the music stops.
+ */
 function stepPerch(dt, x) {
   const P = W.perch
   const cfg = ROLE_CFG.perch
@@ -281,25 +322,35 @@ function stepPerch(dt, x) {
   const perch = getPerch(cfg.perchId)
   const present = !!(perch?.present && perch.el)
   const r = perch?.el ? layout.perch : null
-  const spot = r
+  const perchSpot = r
     ? [r.left + r.width * perch.spot.x, r.top + r.height * perch.spot.y - spanPx * 0.03]
     : [c.width * 0.7, c.height * 0.25]
+  // where it wants to be: on the perch, dancing beside the big one, or nowhere (flown off)
+  const target = present ? 'perch' : dance.playing ? 'duet' : null
+  const spot = target === 'duet' && W.duet.spot ? W.duet.spot : perchSpot
   const faceLeft = (perch?.facing ?? 'left') === 'left'
   const offIn = [c.width + spanPx, -spanPx * 0.6] // arrives from the upper right
   const offOut = [spot[0] - c.width * 0.55, -spanPx] // leaves up and to the left
 
   if (reduced) {
-    // no flight: appear on the perch / fade away
-    P.mode = present ? 'landed' : 'away'
-    P.fade += ((present ? 1 : 0) - P.fade) * (1 - Math.exp(-dt * 5))
-    P.pos = spot
+    // no flight: appear in place / fade away
+    P.mode = target === 'perch' ? 'landed' : target === 'duet' ? 'duet' : 'away'
+    P.fade += ((target ? 1 : 0) - P.fade) * (1 - Math.exp(-dt * 5))
+    if (target) P.pos = spot
   } else {
-    if (present && (P.mode === 'away' || P.mode === 'out')) {
-      P.from = P.mode === 'out' && P.pos ? P.pos : offIn
-      P.ctrl = [lerp(P.from[0], spot[0], 0.25), Math.min(P.from[1], spot[1]) - spanPx * 0.6]
+    const flyTo = (tgt, from) => {
+      P.target = tgt
+      P.from = from
+      P.ctrl = [lerp(from[0], spot[0], 0.25), Math.min(from[1], spot[1]) - spanPx * 0.6]
       P.mode = 'in'
       P.k = 0
-    } else if (!present && (P.mode === 'landed' || P.mode === 'in')) {
+    }
+    if (target) {
+      if (P.mode === 'away') flyTo(target, offIn)
+      else if (P.mode === 'out') flyTo(target, P.pos ?? offIn)
+      else if (P.mode === 'in' && P.target !== target) flyTo(target, P.pos) // changed its mind mid-flight
+      else if ((P.mode === 'landed' && target === 'duet') || (P.mode === 'duet' && target === 'perch')) flyTo(target, P.pos)
+    } else if (P.mode === 'landed' || P.mode === 'in' || P.mode === 'duet') {
       P.from = P.pos ?? spot
       P.ctrl = [lerp(P.from[0], offOut[0], 0.35), P.from[1] - spanPx * 0.9]
       P.mode = 'out'
@@ -309,37 +360,45 @@ function stepPerch(dt, x) {
       P.k = Math.min(1, P.k + dt / TIMING.flyIn)
       const f = flutterPath(P.from, P.ctrl, spot, P.k, spanPx, W.t, 2.1)
       P.pos = [f.x, f.y]
-      if (P.k >= 1) P.mode = 'landed'
+      if (P.k >= 1) P.mode = P.target === 'perch' ? 'landed' : 'duet'
     } else if (P.mode === 'out') {
       P.k = Math.min(1, P.k + dt / TIMING.flyOut)
       P.pos = bez(P.from, P.ctrl, offOut, easeIn(P.k))
       if (P.k >= 1) P.mode = 'away'
-    } else if (P.mode === 'landed') {
-      P.pos = spot // stay put on the (possibly moving) element
+    } else if (P.mode === 'landed' || P.mode === 'duet') {
+      P.pos = spot // stay with the (possibly moving) perch / partner
     }
     P.fade = P.mode === 'away' ? 0 : 1
   }
 
   const [px, py] = P.pos ?? offIn
   const prev = P.prevPos ?? [px, py]
-  const flying = P.mode === 'in' || P.mode === 'out'
-  // heading follows the flight path; once down it settles facing the perch direction
   const vx = px - prev[0]
   const vy = -(py - prev[1])
-  // arriving: it flies in sideways, already in its perched profile (body along the bar, facing
-  // the perch direction), so landing is just folding the wings, with no roll or turn at the end.
-  // Leaving: it rolls back toward the viewer and heads along its path.
+  const pathHeading = Math.hypot(vx, vy) > 0.3 ? Math.atan2(vy, vx) - HALF_PI : null
+  // Arriving at the perch: it flies in sideways, already in its perched profile (body along the
+  // bar, facing the perch direction), so landing is just folding the wings, with no roll at the end.
+  // Joining the duet or leaving: back to the viewer, heading along its path; in the duet it faces
+  // up and toward the big one (a mirror of the big one's up-right heading).
   const leaving = P.mode === 'out'
-  const rest = faceLeft ? HALF_PI : -HALF_PI
-  const want = leaving && Math.hypot(vx, vy) > 0.3 ? Math.atan2(vy, vx) - HALF_PI : rest
-  P.heading = angLerp(P.heading, want, 1 - Math.exp(-dt * (leaving ? 6 : 3)))
+  const duet = P.mode === 'duet' || (P.mode === 'in' && P.target === 'duet')
+  const travelling = leaving || (duet && P.mode === 'in')
+  const settled = duet ? DUET.heading : faceLeft ? HALF_PI : -HALF_PI
+  const want = travelling && pathHeading != null ? pathHeading : settled
+  P.heading = angLerp(P.heading, want, 1 - Math.exp(-dt * (travelling ? 6 : 3)))
   P.prevPos = [px, py]
-  P.rest += ((flying ? 0 : 1) - P.rest) * (1 - Math.exp(-dt * 2.5)) // wings: flap in flight, fold on the perch
-  P.side += ((leaving ? 0 : 1) - P.side) * (1 - Math.exp(-dt * 4)) // body: profile unless leaving
+  P.rest += ((P.mode === 'landed' ? 1 : 0) - P.rest) * (1 - Math.exp(-dt * 2.5)) // wings: folded only on the perch
+  P.side += ((leaving || duet ? 0 : 1) - P.side) * (1 - Math.exp(-dt * 4)) // body: profile for the perch
   let rz = P.heading
   let open = 0
   let flap = lerp(FLAP.fly, FLAP.rest, P.rest)
   let hopY = 0
+  // dancing in the duet: light and bouncy beside its partner, leaning opposite the big one's
+  // swing, with a little lift on the downbeats
+  if (W.dl > 0.001 && !reduced && P.mode === 'duet') {
+    rz += W.dl * 0.12 * Math.sin((Math.PI * 2 * W.db) / 4)
+    hopY = W.dl * spanPx * downbeatLift(W.db) * 3
+  }
   // dancing while perched: light and bouncy. It leans opposite the big one's swing (partners),
   // flutters, and hops: a tiny dip, a push-off with the wings flicking open, and a landing
   // right on bar beats 1 and 3, wings folding as it touches down
@@ -369,7 +428,7 @@ function stepPerch(dt, x) {
   // profile (side = 1): rolled side-on (back up), body along the bar, so the folded wings stand
   // above it. Leaving (side → 0): back to the viewer. A whisper of sway while resting.
   P.pose = {
-    x: px, y: py - hopY, span: spanPx,
+    x: px, y: py - hopY, span: spanPx * (duet ? 1 + DUET.depth * W.duet.s : 1),
     rot: [
       lerp(0.25, -HALF_PI + 0.18, P.side),
       lerp(0.15, 0.3, P.side) * (faceLeft ? 1 : -1) + Math.sin(W.t * 0.4) * 0.03 * P.rest,

@@ -156,7 +156,8 @@ button { font: inherit; color: inherit; }
   justify-content: center; align-content: center;
   column-gap: var(--sp-10); row-gap: var(--sp-3);
   min-height: calc(100svh - var(--taskbar-h));
-  padding: var(--sp-8) var(--gutter);
+  /* more room below than above: the group sits a touch high, leaving the big butterfly air */
+  padding: var(--sp-6) var(--gutter) var(--sp-12);
   border-bottom: 1px solid var(--line-strong);
 }
 .hero-name { grid-column: 1; grid-row: 1 / span 2; align-self: start; position: relative; z-index: 5; }
@@ -196,7 +197,7 @@ button { font: inherit; color: inherit; }
 .desktop-file.is-open .desktop-file-label { background: var(--accent); color: #fff; }
 .desktop-file:active svg { transform: translateY(1px); }
 
-/* ── Retro pink OS windows (README, thought, now playing) ──────────────────── */
+/* ── Retro pink OS windows (README, thought pop-up) ─────────────────────────── */
 .win {
   background: var(--win-body);
   border: 1px solid var(--win-edge);
@@ -242,8 +243,8 @@ button { font: inherit; color: inherit; }
 .win-button:hover, .win-button:focus-visible { background: var(--accent); color: #fff; }
 .win-button:active { box-shadow: inset -1px -1px 0 var(--win-hi), inset 1px 1px 0 var(--win-lo); }
 
-/* README and the pop-ups share one look: pink glow, no offset shadow */
-.readme-window, .thought-pop, .now-playing {
+/* README + thought pop-up share one look: pink glow, no offset shadow */
+.readme-window, .thought-pop {
   box-shadow:
     inset 1px 1px 0 var(--win-hi), inset -1px -1px 0 var(--win-lo),
     0 0 48px var(--win-glow), 0 0 120px var(--win-glow);
@@ -281,20 +282,21 @@ button { font: inherit; color: inherit; }
 .dance-button.is-spinning .record-frame.f2 { animation-delay: -0.4s; }
 .dance-button.is-spinning .record-frame.f3 { animation-delay: -0.2s; }
 @keyframes record-frame { 0%, 24.9% { visibility: visible; } 25%, 100% { visibility: hidden; } }
-/* "now playing" window, to the left of the Dance icon (desktop; phones show "Stop dance") */
-.now-playing {
-  position: absolute; z-index: 6; right: calc(100% + var(--sp-2)); top: 0; width: max-content; max-width: 80vw;
-  animation: pop-in 0.22s cubic-bezier(0.2, 0.9, 0.3, 1.2); transform-origin: 100% 0;
+/* while it plays, little pixel notes drift up out of the record and fade, one after another */
+.dance-button .desktop-file-label { white-space: nowrap; } /* "Stop dance" */
+.record-note {
+  position: absolute; left: 50%; top: 2px; width: 16px; height: 16px; margin-left: -8px;
+  opacity: 0; pointer-events: none;
+  animation: note-float 2.7s ease-out infinite;
 }
-.dance-label-stop { display: none; }
-.now-playing-text {
-  display: flex; align-items: center; gap: var(--sp-3); margin: 0; padding: var(--sp-2) var(--sp-3);
-  font-size: var(--text-body); line-height: 1.4; white-space: nowrap;
-}
-/* the bunny after the song name: symbol fonts first, since the site's mono font has no ᴗ eyes */
-.bunny {
-  white-space: pre; font: 12px/1.2 'Apple Symbols', 'Segoe UI Symbol', 'Noto Sans Symbols 2', system-ui, sans-serif;
-  color: inherit; /* same as the song name: white on the dark window */
+.desktop-file .record-note svg { display: block; width: 16px; height: 16px; transform: none; }
+.record-note.n0 { --note-dx: 14px; }
+.record-note.n1 { --note-dx: -12px; animation-delay: 0.9s; }
+.record-note.n2 { --note-dx: 8px; animation-delay: 1.8s; }
+@keyframes note-float {
+  0% { opacity: 0; transform: translate(var(--note-x), 4px) scale(0.8) rotate(-6deg); }
+  25% { opacity: 0.65; }
+  100% { opacity: 0; transform: translate(calc(var(--note-x) + var(--note-dx)), -30px) scale(1) rotate(6deg); }
 }
 
 /* ── Light overlay: Lauren's light image on the butterflies' diagonal ─────────
@@ -364,8 +366,9 @@ button { font: inherit; color: inherit; }
   filter: drop-shadow(0 0 6px rgba(255, 190, 222, 0.7)) drop-shadow(0 0 22px rgba(232, 93, 158, 0.45));
 }
 :root[data-theme='light'] .ghost-butterflies canvas {
-  /* a lighter, whiter glow so the butterflies lift off the light overlay */
-  filter: drop-shadow(0 0 6px rgba(255, 255, 255, 1)) drop-shadow(0 0 18px rgba(255, 255, 255, 0.95)) drop-shadow(0 0 36px rgba(255, 214, 234, 0.6));
+  /* a crisp deep-pink edge and a soft pink glow: contrast on the light page without the white
+     wash a light glow would put over the README text */
+  filter: drop-shadow(0 0 1.5px rgba(185, 62, 120, 0.55)) drop-shadow(0 0 14px rgba(232, 93, 158, 0.3));
 }
 @keyframes ghost-in { from { opacity: 0; } }
 .pixel-butterflies { position: absolute; inset: 0; z-index: 4; pointer-events: none; }
@@ -464,10 +467,6 @@ a.file-row-name:hover { text-decoration: underline; }
   .desktop-file { width: 64px; padding: var(--sp-1) 0; }
   .desktop-file-label { letter-spacing: 0; padding: var(--sp-1) 4px; }
   .desktop-file svg, .record { width: 48px; height: 48px; }
-  /* no "now playing" window; while playing, the label reads "Stop dance" instead */
-  .now-playing { display: none; }
-  .dance-button.is-open .dance-label { display: none; }
-  .dance-button.is-open .dance-label-stop { display: inline; white-space: nowrap; }
 
   /* hamburger menu: the nav links become a full-screen overlay under the header controls */
   .taskbar-nav { gap: var(--sp-2); }
@@ -518,5 +517,6 @@ a.file-row-name:hover { text-decoration: underline; }
 @media (prefers-reduced-motion: reduce) {
   .light-overlay { animation: none; }
   .dance-button.is-spinning .record-frame { animation: none !important; }
+  .record-note { display: none; }
   *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
 }

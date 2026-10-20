@@ -106,8 +106,10 @@ function GhostButterfly({ index, theme, reduced, layerRef }) {
       hm.blendSrcAlpha = THREE.ZeroFactor
       hm.blendDstAlpha = THREE.OneFactor
     }
-    hm.color.set(light ? '#fff6fb' : '#ffc4df') // light mode: a near-white halo so they stand out
-    hm.userData.base = LOOK.halo * (light ? 0.85 : 0.3) // light mode: brighter white halo to lift off the page
+    // light mode: a faint pink halo, small and soft, so it never washes out the README text
+    hm.color.set(light ? '#f7c9de' : '#ffc4df')
+    hm.userData.base = LOOK.halo * 0.3
+    hm.userData.size = light ? 6 : 9 // × the model scale (the lab's ratio is 9 for a 5-unit wingspan)
     hm.needsUpdate = true
   }, [theme, mats, smoke, halo])
 
@@ -134,8 +136,9 @@ function GhostButterfly({ index, theme, reduced, layerRef }) {
     if (sw.active && W[otherRole(role)].pose) p = blendPoses(p, W[otherRole(role)].pose, sw.k)
 
     // layer: whoever is (becoming) the hover butterfly flies in front of the README (z 5);
-    // the percher, or the one heading back to the perch, goes behind it
-    const z = (sw.active ? otherRole(role) : role) === 'hover' ? '6' : '4'
+    // the percher, or the one heading back to the perch, goes behind it. While the duet circles,
+    // whichever is passing in front of the other is drawn on top.
+    const z = (W.duet.front ? role === W.duet.front : (sw.active ? otherRole(role) : role) === 'hover') ? '6' : '4'
     if (layerRef?.current && layerRef.current.style.zIndex !== z) layerRef.current.style.zIndex = z
 
     const h = VIEW_H
@@ -173,9 +176,9 @@ function GhostButterfly({ index, theme, reduced, layerRef }) {
       H.visDy = lerp(H.visDy, THREE.MathUtils.clamp((minY + maxY) / 2 - py, -p.span, p.span), k)
     }
 
-    // halo sits just behind the butterfly; lab size ratio (9 units for a 5-unit wingspan)
+    // halo sits just behind the butterfly
     halo.position.set(g.position.x, g.position.y, -0.6)
-    halo.scale.setScalar(g.scale.x * 9)
+    halo.scale.setScalar(g.scale.x * (halo.material.userData.size ?? 9))
 
     // flap: full in flight, folded with a whisper of flutter on the perch; perched dancing
     // parts the folded wings a little (`open`)

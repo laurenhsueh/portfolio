@@ -5,7 +5,7 @@ const COUNT = 2
 
 /**
  * Fallback for butterfly mode when WebGL is unavailable (the real mode is GhostButterflies):
- * a few pixel butterflies flutter out of the jar and drift gently around
+ * a few pixel butterflies flutter out of the Dance button and drift gently around
  * the desktop. Positions are written straight to the DOM in a rAF loop (no React state per
  * frame). With reduced motion they simply appear, resting, without flying or flapping.
  */
@@ -41,7 +41,7 @@ export default function PixelButterflies({ active, areaRef, originRef, reduced }
         // home position somewhere on the desktop, wandering on slow layered sines
         const tx = (s.ax + Math.sin(t * 0.13 * s.sx + s.a) * 0.08) * W + Math.sin(t * 0.47 + s.b) * 26
         const ty = (s.ay + Math.sin(t * 0.11 * s.sy + s.c) * 0.08) * H + Math.sin(t * 0.61 + s.a) * 18
-        // fly out of the jar over ~1.6s
+        // fly out of the Dance button over ~1.6s
         const k = reduced ? 1 : Math.min(1, Math.max(0, (t - s.delay) / 1.6))
         const e = 1 - Math.pow(1 - k, 3)
         const x = ox + (tx - ox) * e

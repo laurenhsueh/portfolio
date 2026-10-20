@@ -3,8 +3,8 @@ import PixelIcon from '../PixelIcon'
 import { THOUGHTS } from '../thoughts'
 import WindowChrome from './WindowChrome'
 
-/** The butterfly jar and the random thought, as items of the desktop icon column. */
-export default function Utilities({ butterflies, onToggleButterflies, jarRef }) {
+/** The random thought, as an item of the desktop icon column. */
+export default function Utilities() {
   const [thought, setThought] = useState(null) // index into THOUGHTS, or null when closed
   const order = useRef([])
   const popRef = useRef(null)
@@ -36,21 +36,8 @@ export default function Utilities({ butterflies, onToggleButterflies, jarRef }) 
 
   return (
     <>
-      <li className="icon-slot">
-        <button
-          ref={jarRef}
-          type="button"
-          className={`desktop-file ${butterflies ? 'is-open' : ''}`}
-          onClick={onToggleButterflies}
-          aria-pressed={butterflies}
-          aria-label={butterflies ? 'Butterfly jar: catch the butterflies' : 'Butterfly jar: release the butterflies'}
-        >
-          <PixelIcon name="jar" size={56} />
-          <span className="desktop-file-label">{butterflies ? 'Catch' : 'Release'}</span>
-        </button>
-      </li>
-
-      <li className="icon-slot">
+      {/* raised while open so the pop-up sits above the contact dock and stays clickable */}
+      <li className={`icon-slot thought-slot ${thought !== null ? 'is-raised' : ''}`}>
         <button
           ref={btnRef}
           type="button"
@@ -74,7 +61,7 @@ export default function Utilities({ butterflies, onToggleButterflies, jarRef }) 
             />
             <div className="win-body">
               <div className="win-pane">
-                <p className="thought-text" aria-live="polite">{THOUGHTS[thought]}</p>
+                <p key={thought} className="thought-text" aria-live="polite">{THOUGHTS[thought]}</p>
                 <div className="win-actions">
                   <button type="button" className="win-button" onClick={nextThought}>another</button>
                 </div>

@@ -2,13 +2,14 @@ import { Component, lazy, Suspense, useMemo, useRef, useState } from 'react'
 import PixelIcon from '../PixelIcon'
 import ReadmeWindow from './ReadmeWindow'
 import Utilities from './Utilities'
-import ContactDock from './ContactDock'
+import DanceButton from './DanceButton'
+import ContactDock, { ContactItems } from './ContactDock'
 import PixelButterflies from './PixelButterflies'
 import { useReducedMotion } from '../useReducedMotion'
 import { usePerch } from '../perch'
 import LightOverlay from './LightOverlay'
 
-// The ghost apparition butterflies (three.js) load only when butterfly mode is first opened.
+// The ghost apparition butterflies (three.js) load in their own chunk.
 const GhostButterflies = lazy(() => import('./GhostButterflies'))
 
 
@@ -30,16 +31,15 @@ class GhostBoundary extends Component {
 
 /**
  * The landing "desktop" (Lauren's layout): name top-left, README window top-right, a
- * column of desktop icons on the right edge (Work, README, butterfly jar, random thought),
+ * column of desktop icons on the right edge (Work, README, Dance, random thought),
  * and the contact dock bottom-left. On phones it stacks: name, icon row, window, dock.
  */
 export default function DesktopHero({ theme }) {
   const [readmeOpen, setReadmeOpen] = useState(true)
-  const [butterflies, setButterflies] = useState(true) // out by default
   const reduced = useReducedMotion()
   const webgl = useMemo(hasWebGL, [])
   const heroRef = useRef(null)
-  const jarRef = useRef(null)
+  const danceRef = useRef(null)
   const iconRef = useRef(null)
   const windowRef = useRef(null)
   // the top butterfly lands on the README's title bar, and flies off when it closes
@@ -71,7 +71,7 @@ export default function DesktopHero({ theme }) {
       </div>
 
       <ul className="hero-icons" role="list" aria-label="Desktop">
-        <li className="icon-slot">
+        <li className="icon-slot desktop-only">
           <a className="desktop-file" href="#/work" onClick={openWork} aria-label="Work: jump to projects">
             <PixelIcon name="folder" size={56} />
             <span className="desktop-file-label">Work</span>
@@ -82,22 +82,26 @@ export default function DesktopHero({ theme }) {
             ref={iconRef}
             type="button"
             className={`desktop-file ${readmeOpen ? 'is-open' : ''}`}
-            onClick={() => setReadmeOpen(true)}
-            aria-label={readmeOpen ? 'README: about me (open)' : 'Open README: about me'}
+            onClick={() => (readmeOpen ? closeReadme() : setReadmeOpen(true))}
+            aria-pressed={readmeOpen}
+            aria-label={readmeOpen ? 'Close README: about me' : 'Open README: about me'}
           >
             <PixelIcon name="document" size={56} />
             <span className="desktop-file-label">README</span>
           </button>
         </li>
-        <Utilities butterflies={butterflies} onToggleButterflies={() => setButterflies((b) => !b)} jarRef={jarRef} />
+        <DanceButton ref={danceRef} />
+        <Utilities />
+        {/* phones: the contacts join this row (Readme, Thought, Dance, LinkedIn, Mail; order set in CSS) */}
+        <ContactItems className="phone-only" />
       </ul>
 
       <ContactDock />
 
       <LightOverlay heroRef={heroRef} anchorRef={windowRef} />
 
-      {butterflies && (() => {
-        const pixel = <PixelButterflies active areaRef={heroRef} originRef={jarRef} reduced={reduced} />
+      {(() => {
+        const pixel = <PixelButterflies active areaRef={heroRef} originRef={danceRef} reduced={reduced} />
         return webgl ? (
           <GhostBoundary fallback={pixel}>
             <Suspense fallback={null}>

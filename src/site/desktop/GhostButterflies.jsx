@@ -7,6 +7,7 @@ import { createApparitionMaterial } from '../../apparitionMaterial'
 import { createHaloTexture } from '../../wingMaterial'
 import { SmokeSystem, findEmitters } from '../../Smoke'
 import { getPerch } from '../perch'
+import { dance, beatNow } from '../dance'
 import { BUTTERFLY_LOOK } from './lookParams'
 
 // Butterfly mode: two of Lauren's pink ghost "apparition" butterflies (same GLB, Geometry
@@ -42,6 +43,9 @@ const BUTTERFLIES = [
     alt: (r, c, span, narrow, L) =>
       narrow ? [c.width * 0.5, r.top + r.height * 0.55] : [L ? (L.nameRight + L.iconsLeft) / 2 : c.width * 0.5, r.top + r.height * 0.6],
     altScale: 1.2,
+    // on load it flies in from off-screen bottom-left (along its up-right heading), a beat
+    // after the small butterfly starts its approach to the README
+    introDelay: 0.4,
     // keep the lowest wingtip at least this far above the hero's bottom border
     bottomClear: 48,
     dir: [0.7, -0.7], rot: [0.32, 0.25, -Math.PI / 4], flap: 0.55,
@@ -59,6 +63,11 @@ const TIMING = { flyIn: 2.6, flyOut: 2.0, followDelay: 0.9, follow: 3.2 }
 // whisper of flutter, via the Geometry Nodes Map Range output (radians)
 const WING = { fly: [NODE_DEFAULTS.mapToMin, NODE_DEFAULTS.mapToMax], rest: [1.04, 1.4] }
 const FLAP = { fly: 1.1, rest: 0.45 }
+
+// dancing: frames per wing-flap cycle (one sine period of the Geometry Nodes flap)
+const FLAP_CYCLE = 2 * Math.PI * NODE_DEFAULTS.frameDivisor
+// each butterfly's own dance spot this frame, so the other knows where to go when they swap
+const SPOTS = []
 
 const ease = (t) => t * t * (3 - 2 * t)
 const easeIn = (t) => t * t
@@ -177,6 +186,10 @@ function GhostButterfly({ index, theme, reduced, heroRef }) {
       pos: null, prevPos: null, heading: HALF_PI, rest: 0, fade: index === 0 ? 1 : 0,
       // hover-follow state: m = 0 at home, 1 at the alternate spot
       m: 0, wantAway: false, since: 0,
+      // hover intro (fly-in on load): seconds since mount
+      intro: 0,
+      // dance level: 0 = normal, 1 = fully dancing (eased ~1s in and out)
+      dl: 0,
     }),
     [index],
   )
@@ -202,6 +215,10 @@ function GhostButterfly({ index, theme, reduced, heroRef }) {
 
     let px, py
     let fade = 1
+    let base // this butterfly's own spot to dance around
+    st.dl += ((dance.playing ? 1 : 0) - st.dl) * (1 - Math.exp(-dt * 4))
+    const dl = st.dl
+    const beat = dl > 0.001 ? beatNow() : 0
 
     if (cfg.kind === 'hover') {
       const win = heroRef?.current?.querySelector('.readme-window')
@@ -226,7 +243,8 @@ function GhostButterfly({ index, theme, reduced, heroRef }) {
       // live layout landmarks: right edge of the name, left edge of the icon column
       const hero = heroRef?.current
       const nameEl = hero?.querySelector('.desktop-name')
-      const iconEls = hero ? [...hero.querySelectorAll('.hero-icons > li')] : []
+      // visible icons only: hidden (display: none) ones report left = 0
+      const iconEls = hero ? [...hero.querySelectorAll('.hero-icons > li')].filter((e) => e.getClientRects().length) : []
       const L = nameEl && iconEls.length
         ? { nameRight: rel(nameEl).right, iconsLeft: Math.min(...iconEls.map((e) => rel(e).left)) }
         : null
@@ -248,6 +266,20 @@ function GhostButterfly({ index, theme, reduced, heroRef }) {
       // lowest wingtip ≈ centre + 0.42 × the (scaled) span in this pose
       const reach = spanPx * lerp(1, cfg.altScale ?? 1, m) * 0.42
       py = THREE.MathUtils.clamp(py, spanPx * 0.3, c.height - (cfg.bottomClear ?? 0) - reach)
+      base = [px, py]
+      // fly-in on load: a curved path from off-screen bottom-left onto the spot
+      if (cfg.introDelay != null && st.intro < cfg.introDelay + TIMING.flyIn) {
+        st.intro += dt
+        const k = THREE.MathUtils.clamp((st.intro - cfg.introDelay) / TIMING.flyIn, 0, 1)
+        if (reduced) {
+          fade *= k // no travel: fade in on the spot
+        } else {
+          const from = [-spanPx * 0.7, c.height + spanPx * 0.5]
+          const ctrl = [lerp(from[0], px, 0.2), lerp(from[1], py, 0.9)]
+          ;[px, py] = bez(from, ctrl, [px, py], ease(k))
+          if (k === 0) fade = 0
+        }
+      }
       g.rotation.set(
         cfg.rot[0] + Math.sin(t * 0.31 * motion) * 0.03,
         cfg.rot[1] + Math.sin(t * 0.23 * motion + 1.7) * 0.07,
@@ -262,6 +294,7 @@ function GhostButterfly({ index, theme, reduced, heroRef }) {
         ? [r.left + r.width * perch.spot.x, r.top + r.height * perch.spot.y - spanPx * 0.03]
         : [c.width * 0.7, c.height * 0.25]
       const faceLeft = (perch?.facing ?? 'left') === 'left'
+      base = [spot[0], spot[1] - spanPx * 0.3] // dancing: hovers just above its perch
       const offIn = [c.width + spanPx, -spanPx * 0.6] // arrives from the upper right
       const offOut = [spot[0] - c.width * 0.55, -spanPx] // leaves up and to the left
 
@@ -299,13 +332,14 @@ function GhostButterfly({ index, theme, reduced, heroRef }) {
       const prev = st.prevPos ?? st.pos ?? spot
       ;[px, py] = st.pos ?? offIn
       const flying = st.mode === 'in' || st.mode === 'out'
+      const dancing = dl > 0.3 // dancing: wings open, head up
       // heading follows the flight path; once down it settles facing the perch direction
       const vx = px - prev[0]
       const vy = -(py - prev[1])
-      const want = flying && Math.hypot(vx, vy) > 0.3 ? Math.atan2(vy, vx) - HALF_PI : faceLeft ? HALF_PI : -HALF_PI
+      const want = dancing ? 0 : flying && Math.hypot(vx, vy) > 0.3 ? Math.atan2(vy, vx) - HALF_PI : faceLeft ? HALF_PI : -HALF_PI
       st.heading = angLerp(st.heading, want, 1 - Math.exp(-dt * (flying ? 6 : 3)))
       st.prevPos = [px, py]
-      st.rest += ((flying ? 0 : 1) - st.rest) * (1 - Math.exp(-dt * 2.5))
+      st.rest += ((flying || dancing ? 0 : 1) - st.rest) * (1 - Math.exp(-dt * 2.5))
       // flying: back to the viewer, head along the path. Perched: rolled side-on (back up),
       // body along the bar, so the folded wings stand above it. A whisper of sway.
       g.rotation.set(
@@ -314,6 +348,39 @@ function GhostButterfly({ index, theme, reduced, heroRef }) {
         st.heading,
       )
       fade = st.fade
+      g.visible = fade > 0.01
+    }
+
+    // ── dance (see ../dance.js): line-dance swap every 8 beats, bob on each beat, sway ──
+    SPOTS[index] = base
+    if (dl > 0.001) {
+      let dx = base[0]
+      let dy = base[1]
+      if (!reduced) {
+        // 16-beat loop: 6 beats home, 2 beats crossing over, 6 beats in the other's spot, 2 back
+        const other = SPOTS[1 - index] ?? base
+        const s = ((beat % 16) + 16) % 16
+        const m = s < 6 ? 0 : s < 8 ? ease((s - 6) / 2) : s < 14 ? 1 : 1 - ease((s - 14) / 2)
+        const vx = other[0] - base[0]
+        const vy = other[1] - base[1]
+        const len = Math.hypot(vx, vy) || 1
+        // bow the path into an arc; mirrored per butterfly (their paths point opposite ways),
+        // so one passes over and the other under
+        const bow = Math.sin(Math.PI * m) * len * 0.28
+        dx += vx * m - (vy / len) * bow
+        dy += vy * m + (vx / len) * bow
+        dy -= Math.abs(Math.sin(Math.PI * beat)) * spanPx * 0.06 // bob on every beat
+      }
+      px = lerp(px, dx, dl)
+      py = lerp(py, dy, dl)
+      px = THREE.MathUtils.clamp(px, spanPx * 0.4, c.width - spanPx * 0.4)
+      py = THREE.MathUtils.clamp(py, spanPx * 0.3, c.height - spanPx * 0.42)
+      if (!reduced) {
+        // sway: one left-right rock per 2 beats, with a little twist for depth
+        g.rotation.z += dl * 0.25 * Math.sin(Math.PI * beat)
+        g.rotation.y += dl * 0.15 * Math.cos(Math.PI * beat)
+      }
+      fade = Math.max(fade, dl)
       g.visible = fade > 0.01
     }
 
@@ -352,18 +419,31 @@ function GhostButterfly({ index, theme, reduced, heroRef }) {
     st.params.mapToMax = lerp(WING.fly[1], WING.rest[1], rest)
     const rate = cfg.kind === 'perch' ? lerp(FLAP.fly, FLAP.rest, rest) : cfg.flap
     st.frame += dt * SCENE.fps * rate * motion
+    if (dl > 0.001 && !reduced) {
+      // dancing: one flap per beat (two on slow songs), phase-locked to the beat
+      const per = dance.bpm < 80 ? 2 : 1
+      const tempoFps = (FLAP_CYCLE * per * dance.bpm) / 60
+      st.frame += dt * (tempoFps - SCENE.fps * rate) * dl
+      const target = beat * per * FLAP_CYCLE + SCENE.frameStart
+      let diff = (target - st.frame) % FLAP_CYCLE
+      if (diff > FLAP_CYCLE / 2) diff -= FLAP_CYCLE
+      if (diff < -FLAP_CYCLE / 2) diff += FLAP_CYCLE
+      st.frame += diff * (1 - Math.exp(-dt * 3)) * dl
+    }
     const pos = wings.geometry.attributes.position
     evaluateWings(field, st.frame, st.params, pos.array)
     pos.needsUpdate = true
     wings.geometry.computeVertexNormals()
 
     if (smoke) {
-      const amount = cfg.kind === 'perch' && st.mode === 'away' ? 0 : LOOK.smoke
+      const amount = cfg.kind === 'perch' && st.mode === 'away' && dl < 0.5 ? 0 : LOOK.smoke
       smoke.update(reduced ? 0 : dt, wings, { amount, life: 3.2, burst: 0, pixelRatio: gl.getPixelRatio() })
     }
 
     _v.copy(KEY_LIGHT).transformDirection(camera.matrixWorldInverse)
-    const pulse = 1 + 0.12 * Math.sin(t * 1.1) + 0.05 * Math.sin(t * 2.7 + 1)
+    // dancing: an extra glow kick on every beat (the only dance move with reduced motion)
+    const kick = dl * 0.35 * Math.max(0, Math.cos(2 * Math.PI * beat)) ** 6
+    const pulse = (1 + 0.12 * Math.sin(t * 1.1) + 0.05 * Math.sin(t * 2.7 + 1)) * (1 + kick)
     for (const [m, op] of [[mats.wing, 1], [mats.body, 1], [mats.haze, 0.8]]) {
       const u = m.uniforms
       u.uLightDir.value.copy(_v)

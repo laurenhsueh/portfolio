@@ -109,24 +109,6 @@ const ICONS = {
     '................',
     '................',
   ],
-  jar: [
-    '................',
-    '....########....',
-    '....#dddddd#....',
-    '.....######.....',
-    '....#wwwwww#....',
-    '...#wwwwwwww#...',
-    '..#wwwwwwwwww#..',
-    '..#ww##w##www#..',
-    '..#www#d#wwww#..',
-    '..#ww##w##www#..',
-    '..#wwwwwwwwww#..',
-    '..#wwwwwwwwww#..',
-    '...#wwwwwwww#...',
-    '....########....',
-    '.....dddddd.....',
-    '................',
-  ],
   thought: [
     '................',
     '....######......',
@@ -145,34 +127,75 @@ const ICONS = {
     '................',
     '................',
   ],
+  // these are drawn flat; withShadow() below adds the shared 1px deep-pink drop shadow
   sun: [
-    '.......##.......',
-    '.......##.......',
-    '..##........##..',
-    '..##..####..##..',
-    '....########....',
+    '......##........',
+    '......##........',
+    '.##........##...',
+    '.##..####..##...',
+    '....######......',
+    '...########.....',
+    '##.########.##..',
+    '##.########.##..',
+    '...########.....',
+    '....######......',
+    '.##..####..##...',
+    '.##........##...',
+    '......##........',
+    '......##........',
+    '................',
+    '................',
+  ],
+  // crescent with pointed horns, a few craters and a little star
+  moon: [
+    '............#...',
+    '.....#.....###..',
+    '...##.......#...',
+    '..###...........',
+    '.####...........',
+    '.####...........',
+    '.####...........',
+    '.#d###..........',
+    '.#####..........',
+    '.######.........',
+    '.########.......',
+    '.##d#######...#.',
+    '..######d#####..',
     '...##########...',
-    '...##########...',
-    '##.##########.##',
-    '##.##########.##',
-    '...##########...',
-    '...##########...',
-    '....########....',
-    '..##..####..##..',
-    '..##........##..',
-    '.......##.......',
-    '.......##.......',
+    '.....######.....',
+    '................',
   ],
 }
 
-// moon: a disc minus an offset disc, snapped to the pixel grid
-ICONS.moon = Array.from({ length: 16 }, (_, y) =>
-  Array.from({ length: 16 }, (_, x) => {
-    const inA = (x - 7.5) ** 2 + (y - 7.5) ** 2 <= 6.6 ** 2
-    const inB = (x - 11.2) ** 2 + (y - 5.2) ** 2 <= 5.4 ** 2
-    return inA && !inB ? '#' : '.'
-  }).join(''),
-)
+// vinyl record, 4 frames: the glint steps a quarter turn each frame, so the spin stays on the
+// pixel grid (rotating the SVG would blur it and swing the shadow around)
+for (let k = 0; k < 4; k++) {
+  let glint = [[3, 3], [4, 2], [2, 4]]
+  for (let i = 0; i < k; i++) glint = glint.map(([x, y]) => [14 - y, x])
+  ICONS[`record${k}`] = Array.from({ length: 16 }, (_, y) =>
+    Array.from({ length: 16 }, (_, x) => {
+      const d2 = (x - 7) ** 2 + (y - 7) ** 2
+      if (x > 14 || y > 14 || d2 > 51) return '.'
+      if (d2 === 0) return '#' // spindle
+      if (d2 <= 5) return 'w' // label
+      if (glint.some(([gx, gy]) => gx === x && gy === y)) return 'w'
+      if (d2 >= 13 && d2 <= 18) return 'd' // groove
+      return '#'
+    }).join(''),
+  )
+}
+
+/** The shared icon style: every filled pixel casts a 1px deep-pink shadow down and right. */
+function withShadow(rows) {
+  const g = rows.map((r) => r.split(''))
+  rows.forEach((row, y) => {
+    ;[...row].forEach((c, x) => {
+      if ((c === '#' || c === 'w') && g[y + 1]?.[x + 1] === '.') g[y + 1][x + 1] = 'd'
+    })
+  })
+  return g.map((r) => r.join(''))
+}
+for (const name of ['sun', 'moon', 'thought', 'record0', 'record1', 'record2', 'record3']) ICONS[name] = withShadow(ICONS[name])
 
 const FILL = { '#': 'var(--accent)', d: 'var(--accent-deep)', w: 'var(--icon-paper)' }
 
@@ -193,6 +216,7 @@ function runs(rows) {
 }
 
 const CACHE = {}
+
 
 export default function PixelIcon({ name, size = 32, className, title }) {
   const rects = (CACHE[name] ??= runs(ICONS[name]))

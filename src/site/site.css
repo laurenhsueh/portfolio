@@ -8,7 +8,7 @@
   --sp-1: 8px;  --sp-2: 16px; --sp-3: 24px; --sp-4: 32px;  --sp-5: 40px;
   --sp-6: 48px; --sp-8: 64px; --sp-10: 80px; --sp-12: 96px; --sp-15: 120px;
   --gutter: 120px;
-  --taskbar-h: 48px;
+  --taskbar-h: 64px;
 
   /* type: body copy never goes below 16px */
   --text-body: 16px;
@@ -71,7 +71,7 @@
     --sp-1: 4px;  --sp-2: 12px; --sp-3: 16px; --sp-4: 24px;  --sp-5: 28px;
     --sp-6: 36px; --sp-8: 48px; --sp-10: 56px; --sp-12: 64px; --sp-15: 80px;
     --gutter: 20px;
-    --taskbar-h: 52px;
+    --taskbar-h: 60px;
   }
 }
 
@@ -92,6 +92,13 @@ a { color: inherit; }
 :focus-visible { outline: 2px dashed var(--accent); outline-offset: 4px; }
 button { font: inherit; color: inherit; }
 
+/* Figma-style arrow cursor in the accent pink, set as --cursor-arrow by Site.jsx so it
+   follows the theme (mouse/trackpad only; touch is untouched) */
+@media (hover: hover) and (pointer: fine) {
+  html, body { cursor: var(--cursor-arrow), auto; }
+  a, button, [role='button'], label, summary { cursor: var(--cursor-arrow), pointer !important; }
+}
+
 .skip-link {
   position: fixed; left: var(--sp-2); top: -64px; z-index: 50;
   font: 500 var(--text-body) var(--font-mono); color: var(--ink); background: var(--bg);
@@ -109,12 +116,13 @@ button { font: inherit; color: inherit; }
   transition: background-color 0.4s ease, border-color 0.4s ease;
 }
 .taskbar-brand {
-  display: inline-flex; align-items: center; gap: var(--sp-1); min-width: 0;
-  text-decoration: none; font-weight: 700; white-space: nowrap;
+  /* same type as the nav links: inherits the taskbar's font, size and letter-spacing */
+  display: inline-flex; align-items: center; min-width: 0;
+  text-decoration: none; white-space: nowrap;
+  transition: color 0.2s ease;
 }
+.taskbar-brand:hover { color: var(--accent); }
 .taskbar-brand span { overflow: hidden; text-overflow: ellipsis; }
-.taskbar-brand svg { flex: none; transition: transform 0.3s ease; }
-.taskbar-brand:hover svg { transform: translateY(-1px) rotate(-6deg); }
 .taskbar-nav { display: flex; align-items: center; gap: var(--sp-4); flex: none; }
 .taskbar-nav ul { display: flex; gap: var(--sp-4); list-style: none; margin: 0; padding: 0; }
 .taskbar-nav a {
@@ -131,6 +139,7 @@ button { font: inherit; color: inherit; }
 .theme-toggle:hover { border-color: var(--line-strong); background: var(--accent-tint); }
 .theme-toggle svg { transition: transform 0.4s ease; }
 .theme-toggle:active svg { transform: rotate(40deg) scale(0.88); }
+.menu-toggle { display: none; }
 
 /* ── Desktop hero (Lauren's layout) ────────────────────────────────────────
    desktop:  [ name        ][ README window (centered) ][ icons ]
@@ -150,13 +159,6 @@ button { font: inherit; color: inherit; }
   padding: var(--sp-8) var(--gutter);
   border-bottom: 1px solid var(--line-strong);
 }
-/* tiny pixel rivets where the desktop's bottom edge meets the page sides */
-.desktop-hero::before, .desktop-hero::after {
-  content: ''; position: absolute; bottom: -1px; width: 8px; height: 8px; background: var(--accent);
-}
-.desktop-hero::before { left: var(--gutter); }
-.desktop-hero::after { right: var(--gutter); }
-
 .hero-name { grid-column: 1; grid-row: 1 / span 2; align-self: start; position: relative; z-index: 5; }
 /* the README sits centered and a little lower, leaving air above it for the small butterfly */
 .hero-window { grid-column: 2; grid-row: 1 / span 3; align-self: start; position: relative; z-index: 5; margin-top: var(--sp-10); }
@@ -166,6 +168,8 @@ button { font: inherit; color: inherit; }
 .hero-icons > li:nth-child(2) { grid-row: 2; }
 .hero-icons > li:nth-child(3) { grid-row: 3; }
 .hero-icons > li:nth-child(4) { grid-row: 4; }
+.hero-icons > li.is-raised { z-index: 7; } /* thought open: above the contact dock (z 5) */
+.phone-only { display: none !important; }
 /* contacts share THOUGHT's row: same top edge, same label baseline */
 .contact-dock { grid-column: 1 / span 2; grid-row: 4; align-self: start; }
 
@@ -258,7 +262,7 @@ button { font: inherit; color: inherit; }
 }
 .readme-window .win-pane { padding: var(--sp-5); }
 .thought-pop .win-pane { padding: var(--sp-3) var(--sp-3) var(--sp-2); }
-.readme-text { margin: 0; font-size: 24px; line-height: 1.5; text-wrap: pretty; }
+.readme-text { margin: 0; font-size: 20px; line-height: 1.5; text-wrap: pretty; }
 /* thought pop-up opens up and to the LEFT of the right-edge column, so it stays on screen */
 .thought-pop {
   position: absolute; z-index: 6; right: calc(100% + var(--sp-2)); bottom: 0; width: min(320px, 80vw);
@@ -266,6 +270,33 @@ button { font: inherit; color: inherit; }
 }
 .thought-text { margin: 0 0 var(--sp-2); font-size: var(--text-body); line-height: 1.5; }
 @keyframes pop-in { from { opacity: 0; transform: scale(0.92); } }
+/* "another": the new thought fades up into place */
+.thought-text { animation: thought-swap 0.24s ease; }
+@keyframes thought-swap { from { opacity: 0; transform: translateY(4px); } }
+
+/* Dance: a record that "spins" by stepping through 4 pixel frames (glint moves a quarter turn) */
+.record { position: relative; display: block; width: 56px; height: 56px; }
+.record-frame { position: absolute; inset: 0; visibility: hidden; }
+.record-frame.f0 { visibility: visible; }
+.dance-button.is-spinning .record-frame { animation: record-frame 0.8s infinite; }
+.dance-button.is-spinning .record-frame.f1 { animation-delay: -0.6s; }
+.dance-button.is-spinning .record-frame.f2 { animation-delay: -0.4s; }
+.dance-button.is-spinning .record-frame.f3 { animation-delay: -0.2s; }
+@keyframes record-frame { 0%, 24.9% { visibility: visible; } 25%, 100% { visibility: hidden; } }
+@media (prefers-reduced-motion: reduce) {
+  .dance-button.is-spinning .record-frame { animation: none !important; }
+}
+/* "now playing" window with the Spotify mini-player, to the left of the Dance icon */
+.now-playing {
+  position: absolute; z-index: 6; right: calc(100% + var(--sp-2)); top: 0; width: min(340px, 80vw);
+  animation: pop-in 0.22s cubic-bezier(0.2, 0.9, 0.3, 1.2); transform-origin: 100% 0;
+  box-shadow:
+    inset 1px 1px 0 var(--win-hi), inset -1px -1px 0 var(--win-lo),
+    0 0 48px var(--win-glow), 0 0 120px var(--win-glow);
+}
+.now-playing-embed { min-height: 80px; border: 1px solid var(--win-edge); background: var(--win-pane); }
+.now-playing-embed iframe { display: block; border: 0; border-radius: 0; }
+.now-playing-error { margin: 0; padding: var(--sp-2); font-size: var(--text-body); line-height: 1.5; }
 
 /* contact dock, anchored to the desktop's bottom edge */
 .contact-dock { position: relative; z-index: 5; padding: 0; }
@@ -298,7 +329,8 @@ button { font: inherit; color: inherit; }
   mix-blend-mode: screen;
   /* softer than the raw image: less saturated rainbow, a little less bright */
   --light-opacity: 1.2;
-  filter: saturate(0.5) brightness(0.3) contrast(1.1);
+  /* sepia + hue-rotate pulls the white/grey light toward a subtle dusty pink */
+  filter: sepia(0.6) hue-rotate(285deg) saturate(1.5) brightness(0.3) contrast(1.1);
 }
 /* light: white light can't show on #F8F1F4 (lighten/screen ≈ invisible, multiply = grey
    smudge), so light mode uses its own transparent version of the same light: alpha follows
@@ -314,8 +346,8 @@ button { font: inherit; color: inherit; }
 .light-overlay-glow {
   position: absolute; inset: 0; z-index: -1;
   background:
-    radial-gradient(28% 34% at 80% 14%, rgba(255, 244, 250, 0.55), transparent 70%),
-    radial-gradient(30% 26% at 62% 46%, rgba(255, 200, 228, 0.28), transparent 72%),
+    radial-gradient(28% 34% at 80% 14%, rgba(255, 196, 226, 0.45), transparent 70%),
+    radial-gradient(30% 26% at 62% 46%, rgba(240, 140, 190, 0.26), transparent 72%),
     radial-gradient(26% 30% at 40% 78%, rgba(214, 196, 255, 0.22), transparent 72%);
   filter: blur(18px);
 }
@@ -429,14 +461,62 @@ a.file-row-name:hover { text-decoration: underline; }
     justify-content: space-between; gap: var(--sp-1);
   }
   .hero-icons > li { grid-column: auto; grid-row: auto; }
+  /* phone icon row: Readme, Thought, LinkedIn, Mail (Work + the jar live elsewhere) */
+  .desktop-only { display: none !important; }
+  .phone-only { display: flex !important; }
+  .contact-dock { display: none; }
+  .hero-icons { position: relative; z-index: 6; }
+  .hero-icons > li.thought-slot, .hero-icons > li.dance-slot { position: static; } /* pop-ups anchor to the whole row */
+  /* row order: Readme, Thought, Dance, LinkedIn, Mail */
+  .hero-icons > li.thought-slot { order: 1; }
+  .hero-icons > li.dance-slot { order: 2; }
+  .hero-icons > li.phone-only { order: 3; }
   .hero-window { grid-column: 1; grid-row: 3; margin-top: var(--sp-10); } /* room for the perched butterfly */
-  .contact-dock { grid-column: 1; grid-row: 5; padding-top: var(--sp-12); } /* room for the big butterfly */
+  .desktop-hero { padding-bottom: calc(var(--sp-12) + var(--sp-10)); } /* room for the big butterfly */
   .desktop-name { font-size: clamp(52px, 14vw, 96px); }
-  .desktop-file { width: 76px; padding: var(--sp-1) 0; }
-  .desktop-file svg { width: 48px; height: 48px; }
+  /* five icons share the phone row: narrower slots, tighter labels */
+  .desktop-file { width: 64px; padding: var(--sp-1) 0; }
+  .desktop-file-label { letter-spacing: 0; padding: var(--sp-1) 4px; }
+  .hero-icons { gap: 0; }
+  .desktop-file svg, .record { width: 48px; height: 48px; }
   .contact-dock ul { gap: var(--sp-2); }
   /* pop-up drops below on the horizontal icon row */
-  .thought-pop { right: 0; bottom: auto; top: calc(100% + var(--sp-2)); transform-origin: 100% 0; }
+  .thought-pop { left: 0; right: auto; bottom: auto; top: calc(100% + var(--sp-2)); width: min(320px, 100%); transform-origin: 30% 0; }
+  .now-playing { left: 0; right: 0; top: calc(100% + var(--sp-2)); width: auto; transform-origin: 50% 0; }
+
+  /* hamburger menu: the nav links become a full-screen overlay under the header controls */
+  .taskbar-nav { gap: var(--sp-2); }
+  .taskbar-brand, .theme-toggle, .menu-toggle { position: relative; z-index: 2; }
+  .menu-toggle {
+    display: grid; place-items: center; width: 40px; height: 40px; padding: 0;
+    background: none; border: 1px solid transparent; cursor: pointer;
+  }
+  .menu-toggle:hover { border-color: var(--line-strong); background: var(--accent-tint); }
+  .menu-toggle-box { position: relative; width: 22px; height: 16px; }
+  .menu-toggle-bar {
+    position: absolute; left: 0; width: 100%; height: 2px; background: var(--ink);
+    transition: transform 0.28s cubic-bezier(0.65, 0, 0.35, 1), opacity 0.2s ease, background-color 0.4s ease;
+  }
+  .menu-toggle-bar:nth-child(1) { top: 0; }
+  .menu-toggle-bar:nth-child(2) { top: 7px; }
+  .menu-toggle-bar:nth-child(3) { top: 14px; }
+  .taskbar.is-menu-open .menu-toggle-bar:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+  .taskbar.is-menu-open .menu-toggle-bar:nth-child(2) { opacity: 0; transform: scaleX(0.2); }
+  .taskbar.is-menu-open .menu-toggle-bar:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+  .taskbar-nav ul {
+    position: fixed; inset: 0; z-index: 1; width: 100vw; height: 100vh; height: 100dvh;
+    flex-direction: column; justify-content: center; gap: var(--sp-5);
+    padding: var(--taskbar-h) var(--gutter); background: var(--bg);
+    opacity: 0; visibility: hidden;
+    transition: opacity 0.28s ease, visibility 0s linear 0.28s, background-color 0.4s ease;
+  }
+  .taskbar.is-menu-open .taskbar-nav ul { opacity: 1; visibility: visible; transition: opacity 0.28s ease, visibility 0s; }
+  .taskbar-nav ul a { font: 400 clamp(48px, 14vw, 72px)/1 var(--font-display); letter-spacing: 0.01em; }
+  .taskbar-nav ul li { transform: translateY(12px); transition: transform 0.36s cubic-bezier(0.2, 0.8, 0.2, 1); }
+  .taskbar.is-menu-open .taskbar-nav ul li { transform: none; }
+  .taskbar.is-menu-open .taskbar-nav ul li:nth-child(2) { transition-delay: 0.04s; }
+  .taskbar.is-menu-open .taskbar-nav ul li:nth-child(3) { transition-delay: 0.08s; }
   .readme-window .win-pane { padding: var(--sp-4); }
   .readme-text { font-size: 20px; }
   .work-grid { grid-template-columns: minmax(0, 1fr); }
@@ -447,18 +527,12 @@ a.file-row-name:hover { text-decoration: underline; }
 }
 @media (min-width: 900px) and (max-width: 1100px) {
   .desktop-hero { grid-template-columns: max-content minmax(0, 400px) 96px; column-gap: var(--sp-5); }
-  .readme-text { font-size: 20px; }
 }
 @media (max-width: 480px) {
   .taskbar { font-size: 14px; gap: var(--sp-1); letter-spacing: 0; }
   .taskbar-nav { gap: var(--sp-1); }
-  .taskbar-nav ul { gap: var(--sp-2); }
-  .taskbar-brand { gap: var(--sp-1); }
-  .theme-toggle { width: 32px; height: 32px; }
+  .theme-toggle, .menu-toggle { width: 36px; height: 36px; }
   .footer-row { grid-template-columns: minmax(0, 1fr); gap: var(--sp-1); }
-}
-@media (max-width: 360px) {
-  .taskbar-brand span { display: none; } /* keep the butterfly as the home mark on tiny screens */
 }
 @media (prefers-reduced-motion: reduce) {
   .light-overlay { animation: none; }

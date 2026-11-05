@@ -281,16 +281,29 @@ export class SmokeSystem {
  * Emitter vertices from the texture alpha (the wing outline lives in the texture; the mesh is
  * a subdivided plane): `edges` on the outline, `surface` a sample of the wing interior.
  */
+const EMITTER_CACHE = new WeakMap() // image → emitters (every butterfly shares one model)
+
 export function findEmitters(geometry, image) {
+  const cached = EMITTER_CACHE.get(image)
+  if (cached) return cached
+  const found = scanEmitters(geometry, image)
+  EMITTER_CACHE.set(image, found)
+  return found
+}
+
+function scanEmitters(geometry, image) {
   const uv = geometry.attributes.uv.array
   const n = uv.length / 2
-  const W = image.width
-  const H = image.height
+  // read the alpha at no more than 512² (a full-size readback was the slowest part of setup;
+  // the edge test only needs a coarse mask)
+  const k = Math.min(1, 512 / Math.max(image.width, image.height))
+  const W = Math.max(1, Math.round(image.width * k))
+  const H = Math.max(1, Math.round(image.height * k))
   const c = document.createElement('canvas')
   c.width = W
   c.height = H
   const ctx = c.getContext('2d', { willReadFrequently: true })
-  ctx.drawImage(image, 0, 0)
+  ctx.drawImage(image, 0, 0, W, H)
   const data = ctx.getImageData(0, 0, W, H).data
   const alphaAt = (u, v) => {
     const x = Math.min(W - 1, Math.max(0, (u * W) | 0))

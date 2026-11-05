@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef } from 'react'
 import * as THREE from 'three'
-import { useFrame, useThree } from '@react-three/fiber'
-import { useGLTF } from '@react-three/drei'
+import { useFrame, useLoader, useThree } from '@react-three/fiber'
+// three's own loader (not drei's useGLTF), so the home page doesn't pull in three-stdlib
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { precompute, evaluateWings, NODE_DEFAULTS, SCENE } from '../../three/wingMath'
 import { createApparitionMaterial } from '../../three/apparitionMaterial'
 import { createHaloTexture } from '../../three/wingMaterial'
@@ -9,6 +10,7 @@ import { SmokeSystem, findEmitters } from '../../three/Smoke'
 import { dance, beatNow } from '../music/dance'
 import { BUTTERFLY_LOOK as LOOK } from './lookParams'
 import { createAfterimage } from './afterimage'
+import { lerp } from './math'
 
 // The ghost "apparition" butterfly (same GLB, material, halo and smoke as the Garden lab), for
 // the home page's DuetStage.jsx. `Flyer` is one butterfly that a choreographer moves every
@@ -28,7 +30,6 @@ const FLIGHT_BOB = 0.05 // bob per wingbeat, × the span
 const FLIGHT_WEAVE = 0.03 // slow side-to-side weave, × the span
 const FLIGHT_PITCH = 0.3
 const FLAP_CYCLE = 2 * Math.PI * NODE_DEFAULTS.frameDivisor // frames per wingbeat
-const lerp = (a, b, t) => a + (b - a) * t
 const FOV = 30
 const CAM_Z = 10
 export const CAMERA = { fov: FOV, position: [0, 0, CAM_Z], near: 0.1, far: 50 } // for the canvas hosting Flyers
@@ -36,6 +37,7 @@ const VIEW_H = 2 * CAM_Z * Math.tan(THREE.MathUtils.degToRad(FOV / 2))
 const KEY_LIGHT = new THREE.Vector3(3, 5, 6).normalize()
 const HALO_TEX = typeof document !== 'undefined' ? createHaloTexture() : null
 const _v = new THREE.Vector3()
+const FIELD_CACHE = new WeakMap() // gltf → precomputed wing field
 
 /** Downbeat lift (fraction of span), same shape as the home page's dance. */
 function downbeatLift(db) {
@@ -56,7 +58,7 @@ function downbeatLift(db) {
  * how much and how fast it hovers. `theme` 'light' switches to the iridescent pink-glass look (no bloom there).
  */
 export function Flyer({ drive, reduced, bob = 1, bobRate = 0.8, flapRate = 0.55, smokeAmount, haloGain = 1, theme = 'dark', haloSize = null }) {
-  const gltf = useGLTF(GLB)
+  const gltf = useLoader(GLTFLoader, GLB)
   const { size, gl } = useThree()
 
   const { root, wings, mats, smoke } = useMemo(() => {
@@ -138,7 +140,13 @@ export function Flyer({ drive, reduced, bob = 1, bobRate = 0.8, flapRate = 0.55,
     halo.material.dispose()
   }, [mats, wings, smoke, halo])
 
-  const field = useMemo(() => wings && precompute(Float32Array.from(wings.geometry.attributes.position.array), NODE_DEFAULTS), [wings])
+  // the rest-pose field depends only on the model, so every butterfly shares one
+  const field = useMemo(() => {
+    if (!wings) return null
+    let f = FIELD_CACHE.get(gltf)
+    if (!f) FIELD_CACHE.set(gltf, (f = precompute(Float32Array.from(wings.geometry.attributes.position.array), NODE_DEFAULTS)))
+    return f
+  }, [gltf, wings])
   const st = useMemo(() => ({ t: 0, frame: SCENE.frameStart, params: { ...NODE_DEFAULTS }, dl: 0, tick: 0, hold: 0, fly: 0 }), [])
   const mainRef = useRef() // position + a roll in the screen plane (drv.roll)
   const poseRef = useRef() // the body's pose + scale
@@ -258,9 +266,11 @@ export function Flyer({ drive, reduced, bob = 1, bobRate = 0.8, flapRate = 0.55,
 /**
  * Takes over rendering (priority 1) with the trail + bloom pipeline: every frame is stamped
  * into a short-lived trail (`cfg.life`, `cfg.blur`), then bloomed (`cfg.bloom`). `adjust(bloomPass)`,
- * if given, runs every frame before rendering, to retune the bloom live.
+ * if given, runs every frame before rendering, to retune the bloom live. `idle()`, if given and
+ * true, stops the (fullscreen) composer from drawing once the trail has cleared.
  */
-export function Afterimage({ cfg, reduced, adjust }) {
+export function Afterimage({ cfg, reduced, adjust, idle }) {
+  const idleFrames = useRef(0)
   const { gl, scene, camera, size, viewport } = useThree()
   const fx = useMemo(() => createAfterimage(gl, scene, camera, { bloom: cfg.bloom }), [gl, scene, camera, cfg.bloom])
   useEffect(() => { fx.setSize(size.width, size.height, viewport.dpr) }, [fx, size, viewport.dpr])
@@ -269,9 +279,12 @@ export function Afterimage({ cfg, reduced, adjust }) {
     const dt = Math.min(rawDt, 1 / 20)
     fx.trail.step(dt, { on: !reduced, life: cfg.life ?? 1.6, blur: cfg.blur }, reduced ? 0 : 0.8)
     adjust?.(fx.bloomPass) // e.g. a softer, wider bloom for a smaller butterfly
+    // nothing on screen: render a few more frames so the trail clears, then stop drawing
+    idleFrames.current = idle?.() ? idleFrames.current + 1 : 0
+    if (idleFrames.current > 12) return
     fx.render(dt)
   }, 1)
   return null
 }
 
-useGLTF.preload(GLB)
+useLoader.preload(GLTFLoader, GLB)

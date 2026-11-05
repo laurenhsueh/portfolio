@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { GARDEN_ITEMS } from '../content/garden'
 import { guide } from '../butterflies/guide'
+import { invalidateLayout } from '../butterflies/layout'
 
 // The home page's Garden: the garden projects orbit the middle of the stage on a tilted ring, like
 // the orbit on the desktop, and the scroll butterfly settles in that middle ([data-nest], an
@@ -51,6 +52,7 @@ export default function GardenSwirl({ reduced }) {
       const h = el.clientHeight
       const rx = Math.min(w * 0.42, 480)
       setGeo({ w, h, cx: w / 2, cy: h * 0.5, rx, ry: rx * 0.34, nest: Math.min(w * 0.4, h * 0.62, 400) })
+      invalidateLayout() // the butterfly's nest moved
     }
     measure()
     const ro = new ResizeObserver(measure)

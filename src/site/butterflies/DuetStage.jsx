@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Canvas, useFrame, useThree } from '@react-three/fiber'
+import { useFrame, useThree } from '@react-three/fiber'
 import { dance, beatNow } from '../music/dance'
-import { Flyer, Afterimage, CAMERA } from './StageButterfly'
+import { Flyer, Afterimage } from './StageButterfly'
+import ButterflyCanvas from './ButterflyCanvas'
+import { lerp, angLerp } from './math'
 import { guide } from './guide'
+import { pageRect } from './layout'
 import { DARK_BLOOM, LIGHT_HALO } from './lookParams'
 
-const lerp = (a, b, t) => a + (b - a) * t
 
 // The #/v4 stage: the big ghost butterfly hovering in its orbit, and a smaller one that comes
 // and goes. Both share one canvas, so on dark they get the same bloom pipeline as #/v3
@@ -46,13 +48,6 @@ const HIDDEN = { at: [0.5, 0.5], span: 0.3, fade: 0 } // before the first measur
 const BIG_ROT = [0.3, 0.15, -0.18]
 const SMALL_ROT = [0.32, 0.25, -Math.PI / 5]
 const BLOOM = DARK_BLOOM
-
-/** Shortest-way angle interpolation. */
-function angLerp(a, b, t) {
-  let d = ((b - a + Math.PI) % (Math.PI * 2)) - Math.PI
-  if (d < -Math.PI) d += Math.PI * 2
-  return a + d * t
-}
 
 function createDuet() {
   return {
@@ -186,8 +181,8 @@ function Director({ duet, sceneRef, reduced }) {
     S.depth = Math.sin(duet.theta) * dl
 
     // where the big one is on the page, for the scroll butterfly to take over from (GuideButterfly)
-    const hr = guide.heroEl?.getBoundingClientRect()
-    if (hr) guide.hero = { x: hr.left + window.scrollX + duet.big.x, y: hr.top + window.scrollY + duet.big.y, span: bigSpan }
+    const hr = guide.heroEl && pageRect(guide.heroEl) // cached page box (see ./layout.js)
+    if (hr) guide.hero = { x: hr.left + duet.big.x, y: hr.top + duet.big.y, span: bigSpan }
 
     sc.live = {
       big: { x: duet.big.x, y: duet.big.y, span: bigSpan },
@@ -263,17 +258,9 @@ export default function DuetStage({ sceneRef, reduced, theme }) {
 
   return (
     <div ref={wrapRef} className={`stage-butterfly duet-stage ${bloom ? 'is-afterimage' : 'is-light'}`} aria-hidden="true">
-      <Canvas
-        key={bloom ? 'bloom' : 'plain'} // the two looks need different GL contexts (opaque vs alpha)
-        frameloop={visible ? 'always' : 'never'}
-        dpr={bloom ? [1, 1.25] : [1, 1.75]}
-        camera={CAMERA}
-        gl={{ alpha: !bloom, antialias: !bloom, powerPreference: bloom ? 'default' : 'low-power' }}
-        onCreated={bloom ? ({ gl }) => gl.setClearColor('#000000', 1) : undefined}
-        style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}
-      >
+      <ButterflyCanvas bloom={bloom} frameloop={visible ? 'always' : 'never'}>
         <Stage sceneRef={sceneRef} reduced={reduced} theme={theme} />
-      </Canvas>
+      </ButterflyCanvas>
     </div>
   )
 }

@@ -1,4 +1,4 @@
-import { Component, lazy, Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import ReadmeWindow from './ReadmeWindow'
 import DanceButton from './DanceButton'
 import { ContactItems } from './ContactDock'
@@ -6,6 +6,8 @@ import { useReducedMotion } from '../hooks/useReducedMotion'
 import { ReadmeIcon, DanceIcon } from '../NeonIcons'
 
 const DuetStage = lazy(() => import('../butterflies/DuetStage'))
+import { useAfterPaint } from '../hooks/useAfterPaint'
+import SafeBoundary from '../SafeBoundary'
 
 // The big butterfly on desktop: centred in the open space between the name's right edge and
 // the icon column, level with the middle of the name + README block. Its wingspan is
@@ -38,12 +40,6 @@ function hasWebGL() {
 }
 
 /** No butterflies (rather than a broken page) if three.js fails. */
-class StageBoundary extends Component {
-  state = { failed: false }
-  static getDerivedStateFromError() { return { failed: true } }
-  render() { return this.state.failed ? null : this.props.children }
-}
-
 /**
  * The orbit lines. `part` 'back' is the planet circle and the far (upper) half of the ring,
  * drawn under the butterflies; 'front' is the near half, drawn over them, so the ring reads as
@@ -99,6 +95,7 @@ export default function OrbitDesktop({ theme }) {
   const [geo, setGeo] = useState(null)
   const reduced = useReducedMotion()
   const webgl = useMemo(hasWebGL, [])
+  const afterPaint = useAfterPaint()
   const heroRef = useRef(null)
   const nameRef = useRef(null)
   const windowRef = useRef(null)
@@ -266,12 +263,12 @@ export default function OrbitDesktop({ theme }) {
       onPointerCancel={onPointerUp}
     >
       <OrbitLines geo={geo} part="back" />
-      {webgl && (
-        <StageBoundary>
+      {webgl && afterPaint && ( // the 3D waits until the page has painted
+        <SafeBoundary>
           <Suspense fallback={null}>
             <DuetStage sceneRef={sceneRef} reduced={reduced} theme={theme} />
           </Suspense>
-        </StageBoundary>
+        </SafeBoundary>
       )}
       <OrbitLines geo={geo} part="front" />
 

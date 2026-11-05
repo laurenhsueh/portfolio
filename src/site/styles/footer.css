@@ -1,0 +1,13 @@
+/* ── Footer ────────────────────────────────────────────────────────────────── */
+.site-footer {
+  border-top: 1px solid var(--line-strong); padding: var(--sp-10) var(--gutter);
+  background: var(--bg); transition: background-color 0.4s ease;
+}
+.footer-inner { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--sp-5); align-items: center; }
+.footer-name { margin: 0; font: 400 clamp(40px, 4.4vw, 56px)/1 var(--font-display); }
+.footer-contacts { margin: 0; display: grid; gap: var(--sp-2); }
+.footer-row { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: var(--sp-2); align-items: baseline; }
+.footer-row dt { font: var(--text-label) var(--font-mono); letter-spacing: 0.06em; color: var(--ink-soft); }
+.footer-row dd { margin: 0; font-size: 18px; overflow-wrap: anywhere; }
+.footer-row a { color: var(--accent-ink); text-underline-offset: 4px; text-decoration-thickness: 1px; }
+.footer-row a:hover { text-decoration-thickness: 2px; }

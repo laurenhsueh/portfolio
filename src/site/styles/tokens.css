@@ -1,0 +1,115 @@
+/* ── Design tokens ─────────────────────────────────────────────────────────── */
+:root {
+  /* the only two typefaces: Cesso for display, Atkinson Hyperlegible Mono for everything else */
+  --font-display: 'cesso', serif;                        /* Adobe Fonts kit vvb4ptb */
+  --font-mono: 'Atkinson Hyperlegible Mono', monospace;  /* Google Fonts */
+
+  /* spacing: 8pt grid on desktop (multiples of 8). Redefined below 900px on a 4pt grid. */
+  --sp-1: 8px;  --sp-2: 16px; --sp-3: 24px; --sp-4: 32px;  --sp-5: 40px;
+  --sp-6: 48px; --sp-8: 64px; --sp-10: 80px; --sp-12: 96px; --sp-15: 120px;
+  --gutter: 120px;
+  --taskbar-h: 64px;
+  /* big screens: "1px" of the 1440 × 900 layout, scaled up to fill the screen (never down, at
+     most 1.6×, and limited by height so short wide screens don't overflow). The home hero is
+     sized in multiples of it, so it keeps its proportions instead of spreading apart. */
+  --u: max(1px, min(100vw / 1440, 100svh / 900, 1.6px));
+
+  /* type: body copy never goes below 16px */
+  --text-body: 16px;
+  --text-label: 12px;  /* small labels / chrome only */
+
+  --accent: #e85d9e;
+  /* the accent for text, outlines and indicators: 4.5:1+ on --bg / --bg-alt (#e85d9e is only
+     2.6:1 on the light page, so light mode uses a deeper pink, 4.8:1+ on every light surface; dark mode keeps the accent) */
+  --accent-ink: #9c3366;
+  --accent-tint: rgba(232, 93, 158, 0.1);
+  --bg: #f0e3ea;          /* pink-tinted, not white */
+  --bg-alt: #e6d3dd;      /* a deeper pink than --bg, so the Work section reads as its own band */
+  --taskbar: #e8d8e0;
+  --ink: #292329;
+  --ink-soft: #5f5159;     /* 6.0:1 on --bg */
+  --line: rgba(41, 35, 41, 0.24);         /* dividers */
+  --line-strong: rgba(41, 35, 41, 0.55);  /* container edges: 3.4:1+ on --bg and --window (WCAG 1.4.11) */
+  --window: #fffbfd;      /* cards: white on the deeper --bg-alt */
+  --titlebar: #ecd6e2;
+  --shadow-pixel: rgba(232, 93, 158, 0.22);
+  /* retro pink OS windows, derived from the accent */
+  --win-bar: #f2a3c7;        /* title bar */
+  --win-bar-ink: #7a2550;
+  --win-body: #f9dfeb;       /* window frame */
+  --win-pane: #fff7fb;       /* inset content area */
+  --win-edge: #d8679c;       /* darker pink outline */
+  --win-hi: rgba(255, 255, 255, 0.85);  /* bevel highlight */
+  --win-lo: rgba(184, 62, 120, 0.35);   /* bevel shade */
+  --win-glow: rgba(232, 93, 158, 0.32);
+  color-scheme: light;
+}
+:root[data-theme='dark'] {
+  --accent-ink: #e85d9e;  /* 5.4:1 on --bg */
+  --accent-tint: rgba(232, 93, 158, 0.14);
+  --bg: #1d191d;
+  --bg-alt: #221d22;
+  --taskbar: #151215;
+  --ink: #f4eaf0;
+  --ink-soft: #b5a6af;
+  --line: rgba(244, 234, 240, 0.11);
+  --line-strong: rgba(244, 234, 240, 0.24);
+  --window: #262026;
+  --titlebar: #2e272e;
+  --shadow-pixel: rgba(232, 93, 158, 0.3);
+  --win-bar: #c8508a;
+  --win-bar-ink: #fff2f8;
+  --win-body: #33232f;
+  --win-pane: #261a24;
+  --win-edge: #e85d9e;
+  --win-hi: rgba(255, 190, 222, 0.28);
+  --win-lo: rgba(0, 0, 0, 0.45);
+  --win-glow: rgba(232, 93, 158, 0.42);
+  color-scheme: dark;
+}
+/* past 1440 the page content is 1440 × --u wide and centred, its edges in line with the hero's */
+@media (min-width: 1440px) { :root { --gutter: max(calc(96 * var(--u)), calc(50vw - 624 * var(--u))); } }
+@media (max-width: 1299px) { :root { --gutter: 80px; } }
+@media (max-width: 1099px) { :root { --gutter: 48px; } }
+@media (max-width: 899px) {
+  :root {
+    /* mobile: 4pt grid */
+    --sp-1: 4px;  --sp-2: 12px; --sp-3: 16px; --sp-4: 24px;  --sp-5: 28px;
+    --sp-6: 36px; --sp-8: 48px; --sp-10: 56px; --sp-12: 64px; --sp-15: 80px;
+    --gutter: 20px;
+    --taskbar-h: 60px;
+  }
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html { scroll-padding-top: var(--taskbar-h); }
+html, body, #root { margin: 0; min-height: 100%; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: var(--text-body);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+  transition: background-color 0.4s ease, color 0.4s ease;
+}
+main:focus, section:focus { outline: none; }
+a { color: inherit; }
+:focus-visible { outline: 2px dashed var(--accent-ink); outline-offset: 4px; }
+/* text for screen readers only */
+.sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
+button { font: inherit; color: inherit; }
+
+/* Figma-style arrow cursor in the accent pink, set as --cursor-arrow by Site.jsx so it
+   follows the theme (mouse/trackpad only; touch is untouched) */
+@media (hover: hover) and (pointer: fine) {
+  html, body { cursor: var(--cursor-arrow), auto; }
+  a, button, [role='button'], label, summary { cursor: var(--cursor-arrow), pointer !important; }
+}
+
+.skip-link {
+  position: fixed; left: var(--sp-2); top: -64px; z-index: 50;
+  font: 500 var(--text-body) var(--font-mono); color: var(--ink); background: var(--bg);
+  border: 1.5px solid var(--accent-ink); padding: var(--sp-1) var(--sp-2); cursor: pointer;
+}
+.skip-link:focus-visible { top: calc(var(--taskbar-h) + var(--sp-1)); }

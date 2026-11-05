@@ -1,0 +1,57 @@
+/* ── Taskbar (menu bar) ────────────────────────────────────────────────────── */
+.taskbar {
+  position: sticky; top: 0; z-index: 30;
+  display: flex; align-items: center; justify-content: space-between; gap: var(--sp-2);
+  height: var(--taskbar-h); padding: 0 var(--gutter);
+  background: var(--taskbar); border-bottom: 1px solid var(--line);
+  font-size: var(--text-body); letter-spacing: 0.02em;
+  transition: background-color 0.4s ease, border-color 0.4s ease;
+}
+.taskbar-brand {
+  /* same type as the nav links: inherits the taskbar's font, size and letter-spacing */
+  display: inline-flex; align-items: center; min-width: 0;
+  text-decoration: none; white-space: nowrap;
+  transition: color 0.2s ease;
+}
+.taskbar-brand:hover { color: var(--accent-ink); }
+.taskbar-brand span { overflow: hidden; text-overflow: ellipsis; }
+.taskbar-nav { display: flex; align-items: center; gap: var(--sp-4); flex: none; }
+.taskbar-nav ul { display: flex; gap: var(--sp-4); list-style: none; margin: 0; padding: 0; }
+.taskbar-nav a {
+  text-decoration: none; padding: var(--sp-1) 0; border-bottom: 1.5px solid transparent;
+  transition: color 0.2s ease, border-color 0.2s ease;
+}
+.taskbar-nav a:hover { color: var(--accent-ink); }
+.taskbar-nav a[aria-current='page'] { border-bottom-color: var(--accent-ink); }
+.theme-toggle {
+  display: grid; place-items: center; width: 40px; height: 40px; padding: 0;
+  background: none; border: 1px solid transparent; cursor: pointer;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+.theme-toggle:hover { border-color: var(--line-strong); background: var(--accent-tint); }
+.theme-toggle svg { transition: transform 0.4s ease; }
+.theme-toggle:active svg { transform: rotate(40deg) scale(0.88); }
+.menu-toggle { display: none; }
+
+.desktop-name {
+  margin: 0; font-family: var(--font-display); font-weight: 400;
+  font-size: clamp(56px, 6vw, 96px); line-height: 0.92; letter-spacing: 0.01em;
+}
+.desktop-name span { display: block; }
+
+/* desktop icons: an icon + label underneath (the home page's glass look restyles the label) */
+.icon-slot { position: relative; display: flex; justify-content: center; }
+.desktop-file {
+  display: flex; flex-direction: column; align-items: center; gap: var(--sp-1);
+  width: 96px; padding: var(--sp-1); background: none; border: 0; cursor: pointer;
+  text-decoration: none; color: inherit;
+}
+.desktop-file svg { transition: transform 0.2s ease; }
+.desktop-file:hover svg, .desktop-file:focus-visible svg { transform: translateY(-2px); }
+.desktop-file-label {
+  font: var(--text-label)/1 var(--font-mono); letter-spacing: 0.05em; padding: var(--sp-1);
+  border: 1px solid transparent; text-transform: uppercase;
+}
+.desktop-file:hover .desktop-file-label, .desktop-file:focus-visible .desktop-file-label { border-color: var(--accent-ink); }
+.desktop-file.is-open .desktop-file-label { background: var(--accent-ink); color: #fff; }
+.desktop-file:active svg { transform: translateY(1px); }

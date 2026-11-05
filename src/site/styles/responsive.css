@@ -1,0 +1,58 @@
+/* ── Tablet / mobile (4pt grid via the tokens above) ───────────────────────── */
+@media (max-width: 899px) {
+  /* narrower slots and tighter labels so the row fits a 375px phone */
+  .desktop-file { width: 64px; padding: var(--sp-1) 0; }
+  .desktop-file-label { letter-spacing: 0; padding: var(--sp-1) 4px; }
+  .desktop-file svg { width: 48px; height: 48px; }
+
+  /* hamburger menu: the nav links become a full-screen overlay under the header controls */
+  .taskbar-nav { gap: var(--sp-2); }
+  .taskbar-brand, .theme-toggle, .menu-toggle { position: relative; z-index: 2; }
+  .menu-toggle {
+    display: grid; place-items: center; width: 40px; height: 40px; padding: 0;
+    background: none; border: 1px solid transparent; cursor: pointer;
+  }
+  .menu-toggle:hover { border-color: var(--line-strong); background: var(--accent-tint); }
+  .menu-toggle-box { position: relative; width: 22px; height: 16px; }
+  .menu-toggle-bar {
+    position: absolute; left: 0; width: 100%; height: 2px; background: var(--ink);
+    transition: transform 0.28s cubic-bezier(0.65, 0, 0.35, 1), opacity 0.2s ease, background-color 0.4s ease;
+  }
+  .menu-toggle-bar:nth-child(1) { top: 0; }
+  .menu-toggle-bar:nth-child(2) { top: 7px; }
+  .menu-toggle-bar:nth-child(3) { top: 14px; }
+  .taskbar.is-menu-open .menu-toggle-bar:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+  .taskbar.is-menu-open .menu-toggle-bar:nth-child(2) { opacity: 0; transform: scaleX(0.2); }
+  .taskbar.is-menu-open .menu-toggle-bar:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+  .taskbar-nav ul {
+    position: fixed; inset: 0; z-index: 1; width: 100vw; height: 100vh; height: 100dvh;
+    flex-direction: column; justify-content: center; gap: var(--sp-5);
+    padding: var(--taskbar-h) var(--gutter); background: var(--bg);
+    opacity: 0; visibility: hidden;
+    transition: opacity 0.28s ease, visibility 0s linear 0.28s, background-color 0.4s ease;
+  }
+  .taskbar.is-menu-open .taskbar-nav ul { opacity: 1; visibility: visible; transition: opacity 0.28s ease, visibility 0s; }
+  .taskbar-nav ul a { font: 400 clamp(48px, 14vw, 72px)/1 var(--font-display); letter-spacing: 0.01em; }
+  .taskbar-nav ul li { transform: translateY(12px); transition: transform 0.36s cubic-bezier(0.2, 0.8, 0.2, 1); }
+  .taskbar.is-menu-open .taskbar-nav ul li { transform: none; }
+  .taskbar.is-menu-open .taskbar-nav ul li:nth-child(2) { transition-delay: 0.04s; }
+  .taskbar.is-menu-open .taskbar-nav ul li:nth-child(3) { transition-delay: 0.08s; }
+  .readme-window .win-pane { padding: var(--sp-4); }
+  .work-card, .work-card:nth-child(even) { grid-template-columns: minmax(0, 1fr); gap: var(--sp-3); padding: var(--sp-3); }
+  .work-card:nth-child(even) .work-card-media { order: 0; }
+  .work-rail { display: none; }
+  .swirl-stage { height: min(120vw, 560px); }
+  .swirl-card { width: 140px; }
+  .swirl-card-name { font-size: 17px; }
+  .footer-inner { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 480px) {
+  .taskbar { font-size: 14px; gap: var(--sp-1); letter-spacing: 0; }
+  .taskbar-nav { gap: var(--sp-1); }
+  .theme-toggle, .menu-toggle { width: 36px; height: 36px; }
+  .footer-row { grid-template-columns: minmax(0, 1fr); gap: var(--sp-1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+}

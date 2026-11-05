@@ -224,27 +224,6 @@ function Director({ st, activeRef, reduced }) {
   return null
 }
 
-/**
- * Drives the canvas (frameloop 'demand') at the rate the moment needs: full speed while it flies
- * or hovers in the Garden, 30 fps while it rests folded on a card (only a flutter), and a slow
- * 12 fps check while the hero still has it (nothing to draw, just watching for the hand-off).
- */
-function FrameDriver({ st }) {
-  const invalidate = useThree((s) => s.invalidate)
-  useEffect(() => {
-    let raf = 0
-    let last = 0
-    const loop = (now) => {
-      raf = requestAnimationFrame(loop)
-      const fps = st.owner !== 'guide' ? 12 : st.trip || st.key === 'nest' ? 120 : 30
-      if (now - last >= 1000 / fps - 4) { last = now; invalidate() }
-    }
-    raf = requestAnimationFrame(loop)
-    return () => cancelAnimationFrame(raf)
-  }, [invalidate, st])
-  return null
-}
-
 function Stage({ activeRef, reduced, theme }) {
   const { size } = useThree()
   const st = useMemo(createState, [])
@@ -275,7 +254,7 @@ function Stage({ activeRef, reduced, theme }) {
   return (
     <>
       <Director st={st} activeRef={activeRef} reduced={reduced} />
-      <FrameDriver st={st} />
+
       {/* the hero's big butterfly's settings (DuetStage), with a shorter trail */}
       <Flyer drive={drive} bob={1.3} bobRate={1.25} reduced={reduced} theme={theme} flapRate={DARK_BLOOM.flapRate} smokeAmount={bloom ? GUIDE_BLOOM.smoke : undefined} haloGain={bloom ? 0.45 : LIGHT_HALO.gain} haloSize={bloom ? null : LIGHT_HALO.size} />
       {bloom && <Afterimage cfg={GUIDE_BLOOM} reduced={reduced} adjust={adjust} idle={() => st.owner !== 'guide' || st.fade < 0.01} />}
@@ -306,7 +285,7 @@ export default function GuideButterfly({ reduced, theme }) {
   // dark: an opaque black canvas with its own bloom, screen-blended onto the page (like the hero)
   return (
     <div className={`guide-stage ${bloom ? 'is-dark' : 'is-light'}${active ? '' : ' is-off'}`} aria-hidden="true">
-      <ButterflyCanvas bloom={bloom} frameloop={active ? 'demand' : 'never'}>{/* FrameDriver sets the pace */}
+      <ButterflyCanvas bloom={bloom} frameloop={active ? 'always' : 'never'}>
         <Stage activeRef={activeRef} reduced={reduced} theme={theme} />
       </ButterflyCanvas>
     </div>

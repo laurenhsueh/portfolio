@@ -6,6 +6,7 @@ import GardenSwirl from './GardenSwirl'
 import { useScrollToWork } from '../hooks/useScrollToWork'
 import { useReducedMotion } from '../hooks/useReducedMotion'
 import { useAfterPaint } from '../hooks/useAfterPaint'
+import { useNearViewport } from '../hooks/useNearViewport'
 
 const GuideButterfly = lazy(() => import('../butterflies/GuideButterfly'))
 
@@ -18,13 +19,15 @@ export default function Home({ route, theme }) {
   useScrollToWork(route, '/work')
   const reduced = useReducedMotion()
   const afterPaint = useAfterPaint()
+  // the scroll butterfly (a second WebGL canvas) only starts once Work is about to scroll in
+  const nearWork = useNearViewport('work', '50%')
 
   return (
     <>
       <OrbitDesktop theme={theme} />
       <WorkSection />
       <GardenSwirl reduced={reduced} />
-      {afterPaint && (
+      {afterPaint && nearWork && (
         <SafeBoundary>
           <Suspense fallback={null}>
             <GuideButterfly reduced={reduced} theme={theme} />

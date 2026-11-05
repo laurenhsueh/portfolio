@@ -1,32 +1,37 @@
 /* ── Design tokens ─────────────────────────────────────────────────────────── */
 :root {
-  --font-display: 'cesso', 'Georgia', serif;                  /* Adobe Fonts kit vvb4ptb */
-  --font-mono: 'Atkinson Hyperlegible Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
-  --font-pixel: 'Silkscreen', 'Atkinson Hyperlegible Mono', monospace; /* tiny retro labels only */
+  /* the only two typefaces: Cesso for display, Atkinson Hyperlegible Mono for everything else */
+  --font-display: 'cesso', serif;                        /* Adobe Fonts kit vvb4ptb */
+  --font-mono: 'Atkinson Hyperlegible Mono', monospace;  /* Google Fonts */
 
   /* spacing: 8pt grid on desktop (multiples of 8). Redefined below 900px on a 4pt grid. */
   --sp-1: 8px;  --sp-2: 16px; --sp-3: 24px; --sp-4: 32px;  --sp-5: 40px;
   --sp-6: 48px; --sp-8: 64px; --sp-10: 80px; --sp-12: 96px; --sp-15: 120px;
   --gutter: 120px;
   --taskbar-h: 64px;
+  /* big screens: "1px" of the 1440 × 900 layout, scaled up to fill the screen (never down, at
+     most 1.6×, and limited by height so short wide screens don't overflow). The home hero is
+     sized in multiples of it, so it keeps its proportions instead of spreading apart. */
+  --u: max(1px, min(100vw / 1440, 100svh / 900, 1.6px));
 
   /* type: body copy never goes below 16px */
   --text-body: 16px;
-  --text-label: 12px;  /* pixel labels / chrome only */
+  --text-label: 12px;  /* small labels / chrome only */
 
   --accent: #e85d9e;
-  --accent-deep: #b93e78;
+  /* the accent for text, outlines and indicators: 4.5:1+ on --bg / --bg-alt (#e85d9e is only
+     2.6:1 on the light page, so light mode uses a deeper pink, 4.8:1+ on every light surface; dark mode keeps the accent) */
+  --accent-ink: #9c3366;
   --accent-tint: rgba(232, 93, 158, 0.1);
-  --bg: #f8f1f4;
-  --bg-alt: #fcf8fa;
-  --taskbar: #eee2e8;
+  --bg: #f0e3ea;          /* pink-tinted, not white */
+  --bg-alt: #e6d3dd;      /* a deeper pink than --bg, so the Work section reads as its own band */
+  --taskbar: #e8d8e0;
   --ink: #292329;
-  --ink-soft: #6e6069;
-  --line: rgba(41, 35, 41, 0.13);
-  --line-strong: rgba(41, 35, 41, 0.26);
-  --window: #fffbfd;
-  --titlebar: #f5eaf0;
-  --icon-paper: #fffbfd;
+  --ink-soft: #5f5159;     /* 6.0:1 on --bg */
+  --line: rgba(41, 35, 41, 0.24);         /* dividers */
+  --line-strong: rgba(41, 35, 41, 0.55);  /* container edges: 3.4:1+ on --bg and --window (WCAG 1.4.11) */
+  --window: #fffbfd;      /* cards: white on the deeper --bg-alt */
+  --titlebar: #ecd6e2;
   --shadow-pixel: rgba(232, 93, 158, 0.22);
   /* retro pink OS windows, derived from the accent */
   --win-bar: #f2a3c7;        /* title bar */
@@ -40,7 +45,7 @@
   color-scheme: light;
 }
 :root[data-theme='dark'] {
-  --accent-deep: #9e3a6c;
+  --accent-ink: #e85d9e;  /* 5.4:1 on --bg */
   --accent-tint: rgba(232, 93, 158, 0.14);
   --bg: #1d191d;
   --bg-alt: #221d22;
@@ -51,7 +56,6 @@
   --line-strong: rgba(244, 234, 240, 0.24);
   --window: #262026;
   --titlebar: #2e272e;
-  --icon-paper: #2e272e;
   --shadow-pixel: rgba(232, 93, 158, 0.3);
   --win-bar: #c8508a;
   --win-bar-ink: #fff2f8;
@@ -63,6 +67,8 @@
   --win-glow: rgba(232, 93, 158, 0.42);
   color-scheme: dark;
 }
+/* past 1440 the page content is 1440 × --u wide and centred, its edges in line with the hero's */
+@media (min-width: 1440px) { :root { --gutter: max(calc(96 * var(--u)), calc(50vw - 624 * var(--u))); } }
 @media (max-width: 1299px) { :root { --gutter: 80px; } }
 @media (max-width: 1099px) { :root { --gutter: 48px; } }
 @media (max-width: 899px) {
@@ -89,7 +95,9 @@ body {
 }
 main:focus, section:focus { outline: none; }
 a { color: inherit; }
-:focus-visible { outline: 2px dashed var(--accent); outline-offset: 4px; }
+:focus-visible { outline: 2px dashed var(--accent-ink); outline-offset: 4px; }
+/* text for screen readers only */
+.sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
 button { font: inherit; color: inherit; }
 
 /* Figma-style arrow cursor in the accent pink, set as --cursor-arrow by Site.jsx so it
@@ -102,7 +110,7 @@ button { font: inherit; color: inherit; }
 .skip-link {
   position: fixed; left: var(--sp-2); top: -64px; z-index: 50;
   font: 500 var(--text-body) var(--font-mono); color: var(--ink); background: var(--bg);
-  border: 1.5px solid var(--accent); padding: var(--sp-1) var(--sp-2); cursor: pointer;
+  border: 1.5px solid var(--accent-ink); padding: var(--sp-1) var(--sp-2); cursor: pointer;
 }
 .skip-link:focus-visible { top: calc(var(--taskbar-h) + var(--sp-1)); }
 
@@ -121,7 +129,7 @@ button { font: inherit; color: inherit; }
   text-decoration: none; white-space: nowrap;
   transition: color 0.2s ease;
 }
-.taskbar-brand:hover { color: var(--accent); }
+.taskbar-brand:hover { color: var(--accent-ink); }
 .taskbar-brand span { overflow: hidden; text-overflow: ellipsis; }
 .taskbar-nav { display: flex; align-items: center; gap: var(--sp-4); flex: none; }
 .taskbar-nav ul { display: flex; gap: var(--sp-4); list-style: none; margin: 0; padding: 0; }
@@ -129,8 +137,8 @@ button { font: inherit; color: inherit; }
   text-decoration: none; padding: var(--sp-1) 0; border-bottom: 1.5px solid transparent;
   transition: color 0.2s ease, border-color 0.2s ease;
 }
-.taskbar-nav a:hover { color: var(--accent); }
-.taskbar-nav a[aria-current='page'] { border-bottom-color: var(--accent); }
+.taskbar-nav a:hover { color: var(--accent-ink); }
+.taskbar-nav a[aria-current='page'] { border-bottom-color: var(--accent-ink); }
 .theme-toggle {
   display: grid; place-items: center; width: 40px; height: 40px; padding: 0;
   background: none; border: 1px solid transparent; cursor: pointer;
@@ -141,46 +149,13 @@ button { font: inherit; color: inherit; }
 .theme-toggle:active svg { transform: rotate(40deg) scale(0.88); }
 .menu-toggle { display: none; }
 
-/* ── Desktop hero (Lauren's layout) ────────────────────────────────────────
-   desktop:  [ name        ][ README window (centered) ][ README  ]
-             [             ][                          ][ Dance   ]
-             [ contact dock                            ][ Thought ]          */
-.desktop-hero {
-  /* clip (not hidden): focus inside can't scroll the desktop sideways */
-  position: relative; overflow: hidden; overflow: clip;
-  display: grid;
-  /* one compact group, centered both ways: name | README | icon column.
-     Rows follow the three desktop icons, so the contacts can share THOUGHT's row. */
-  grid-template-columns: max-content minmax(0, 520px) 96px;
-  grid-template-rows: repeat(3, auto);
-  justify-content: center; align-content: center;
-  column-gap: var(--sp-10); row-gap: var(--sp-3);
-  min-height: calc(100svh - var(--taskbar-h));
-  /* more room below than above: the group sits a touch high, leaving the big butterfly air */
-  padding: var(--sp-6) var(--gutter) var(--sp-12);
-  border-bottom: 1px solid var(--line-strong);
-}
-.hero-name { grid-column: 1; grid-row: 1 / span 2; align-self: start; position: relative; z-index: 5; }
-/* the README sits centered and a little lower, leaving air above it for the small butterfly */
-.hero-window { grid-column: 2; grid-row: 1 / span 2; align-self: start; position: relative; z-index: 5; margin-top: var(--sp-10); }
-.hero-icons { display: contents; list-style: none; margin: 0; padding: 0; } /* items join the hero grid */
-.hero-icons > li { grid-column: 3; position: relative; z-index: 5; align-self: start; }
-.hero-icons > li:nth-child(1) { grid-row: 1; }
-.hero-icons > li:nth-child(2) { grid-row: 2; }
-.hero-icons > li:nth-child(3) { grid-row: 3; }
-.hero-icons > li.is-raised { z-index: 7; } /* pop-up open: above the README and contact dock (z 5) */
-.phone-only { display: none !important; }
-/* contact dock: shares THOUGHT's row (same top edge, same label baseline) */
-.contact-dock { grid-column: 1 / span 2; grid-row: 3; align-self: start; position: relative; z-index: 5; }
-.contact-dock ul { display: flex; gap: var(--sp-3); list-style: none; margin: 0; padding: 0; }
-
 .desktop-name {
   margin: 0; font-family: var(--font-display); font-weight: 400;
   font-size: clamp(56px, 6vw, 96px); line-height: 0.92; letter-spacing: 0.01em;
 }
 .desktop-name span { display: block; }
 
-/* desktop icons: every icon (files, Dance, Thought, contacts) is a pixel icon + label underneath */
+/* desktop icons: an icon + label underneath (the home page's glass look restyles the label) */
 .icon-slot { position: relative; display: flex; justify-content: center; }
 .desktop-file {
   display: flex; flex-direction: column; align-items: center; gap: var(--sp-1);
@@ -190,14 +165,14 @@ button { font: inherit; color: inherit; }
 .desktop-file svg { transition: transform 0.2s ease; }
 .desktop-file:hover svg, .desktop-file:focus-visible svg { transform: translateY(-2px); }
 .desktop-file-label {
-  font: var(--text-label)/1 var(--font-pixel); letter-spacing: 0.05em; padding: var(--sp-1);
+  font: var(--text-label)/1 var(--font-mono); letter-spacing: 0.05em; padding: var(--sp-1);
   border: 1px solid transparent; text-transform: uppercase;
 }
-.desktop-file:hover .desktop-file-label, .desktop-file:focus-visible .desktop-file-label { border-color: var(--accent); }
-.desktop-file.is-open .desktop-file-label { background: var(--accent); color: #fff; }
+.desktop-file:hover .desktop-file-label, .desktop-file:focus-visible .desktop-file-label { border-color: var(--accent-ink); }
+.desktop-file.is-open .desktop-file-label { background: var(--accent-ink); color: #fff; }
 .desktop-file:active svg { transform: translateY(1px); }
 
-/* ── Retro pink OS windows (README, thought pop-up) ─────────────────────────── */
+/* ── Windows (README) ───────────────────────────────────────────────────────── */
 .win {
   background: var(--win-body);
   border: 1px solid var(--win-edge);
@@ -213,7 +188,7 @@ button { font: inherit; color: inherit; }
   background: var(--win-bar); color: var(--win-bar-ink);
   border-bottom: 1px solid var(--win-edge); user-select: none;
 }
-.win-title { margin: 0; font: 400 var(--text-label)/1 var(--font-pixel); letter-spacing: 0.08em; }
+.win-title { margin: 0; font: 400 var(--text-label)/1 var(--font-mono); letter-spacing: 0.08em; }
 .win-buttons { display: flex; gap: 4px; }
 .win-btn {
   position: relative; display: grid; place-items: center; width: 20px; height: 20px; padding: 0;
@@ -221,30 +196,17 @@ button { font: inherit; color: inherit; }
   box-shadow: inset 1px 1px 0 var(--win-hi), inset -1px -1px 0 var(--win-lo);
   color: var(--win-edge); font: 700 15px/1 var(--font-mono);
 }
-.win-btn-min::after { content: ''; position: absolute; left: 5px; right: 5px; bottom: 5px; height: 2px; background: var(--win-edge); }
-.win-btn-max::after { content: ''; position: absolute; inset: 5px; border: 1.5px solid var(--win-edge); border-top-width: 3px; }
 .win-btn-close { cursor: pointer; }
 .win-btn-close span { translate: 0 -1px; }
-.win-btn-close:hover, .win-btn-close:focus-visible { background: var(--accent); color: #fff; }
-.win-btn-close:active { box-shadow: inset -1px -1px 0 var(--win-hi), inset 1px 1px 0 var(--win-lo); }
 .win-body { padding: var(--sp-1); }
 .win-pane {
   position: relative; background: var(--win-pane);
   border: 1px solid var(--win-edge);
   box-shadow: inset 1px 1px 0 var(--win-lo), inset -1px -1px 0 var(--win-hi);
 }
-.win-actions { display: flex; justify-content: center; }
-.win-button {
-  min-width: 96px; padding: var(--sp-1) var(--sp-3);
-  font: var(--text-label)/1 var(--font-pixel); letter-spacing: 0.06em; text-transform: uppercase;
-  color: var(--win-bar-ink); background: var(--win-bar); border: 1px solid var(--win-edge); cursor: pointer;
-  box-shadow: inset 1px 1px 0 var(--win-hi), inset -1px -1px 0 var(--win-lo);
-}
-.win-button:hover, .win-button:focus-visible { background: var(--accent); color: #fff; }
-.win-button:active { box-shadow: inset -1px -1px 0 var(--win-hi), inset 1px 1px 0 var(--win-lo); }
 
-/* README + thought pop-up share one look: pink glow, no offset shadow */
-.readme-window, .thought-pop {
+/* README: pink glow, no offset shadow (the home page's glass look overrides it below) */
+.readme-window {
   box-shadow:
     inset 1px 1px 0 var(--win-hi), inset -1px -1px 0 var(--win-lo),
     0 0 48px var(--win-glow), 0 0 120px var(--win-glow);
@@ -261,150 +223,108 @@ button { font: inherit; color: inherit; }
   transition: opacity 0.24s ease, transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1), visibility 0s, background-color 0.4s ease;
 }
 .readme-window .win-pane { padding: var(--sp-5); }
-.thought-pop .win-pane { padding: var(--sp-3) var(--sp-3) var(--sp-2); }
 .readme-text { margin: 0; font-size: 20px; line-height: 1.5; text-wrap: pretty; }
-/* thought pop-up opens up and to the LEFT of the right-edge column, so it stays on screen */
-.thought-pop {
-  position: absolute; z-index: 6; right: calc(100% + var(--sp-2)); bottom: 0; width: min(320px, 80vw);
-  animation: pop-in 0.22s cubic-bezier(0.2, 0.9, 0.3, 1.2); transform-origin: 100% 100%;
-}
-/* "another": the new thought fades up into place */
-.thought-text { margin: 0 0 var(--sp-2); font-size: var(--text-body); line-height: 1.5; animation: thought-swap 0.24s ease; }
-@keyframes pop-in { from { opacity: 0; transform: scale(0.92); } }
-@keyframes thought-swap { from { opacity: 0; transform: translateY(4px); } }
-
-/* Dance: a record that "spins" by stepping through 4 pixel frames (glint moves a quarter turn) */
-.record { position: relative; display: block; width: 56px; height: 56px; }
-.record-frame { position: absolute; inset: 0; visibility: hidden; }
-.record-frame.f0 { visibility: visible; }
-.dance-button.is-spinning .record-frame { animation: record-frame 0.8s infinite; }
-.dance-button.is-spinning .record-frame.f1 { animation-delay: -0.6s; }
-.dance-button.is-spinning .record-frame.f2 { animation-delay: -0.4s; }
-.dance-button.is-spinning .record-frame.f3 { animation-delay: -0.2s; }
-@keyframes record-frame { 0%, 24.9% { visibility: visible; } 25%, 100% { visibility: hidden; } }
-/* while it plays, little pixel notes drift up out of the record and fade, one after another */
-.dance-button .desktop-file-label { white-space: nowrap; } /* "Stop dance" */
-.record-note {
-  position: absolute; left: 50%; top: 2px; width: 16px; height: 16px; margin-left: -8px;
-  opacity: 0; pointer-events: none;
-  animation: note-float 2.7s ease-out infinite;
-}
-.desktop-file .record-note svg { display: block; width: 16px; height: 16px; transform: none; }
-.record-note.n0 { --note-dx: 14px; }
-.record-note.n1 { --note-dx: -12px; animation-delay: 0.9s; }
-.record-note.n2 { --note-dx: 8px; animation-delay: 1.8s; }
-@keyframes note-float {
-  0% { opacity: 0; transform: translate(var(--note-x), 4px) scale(0.8) rotate(-6deg); }
-  25% { opacity: 0.65; }
-  100% { opacity: 0; transform: translate(calc(var(--note-x) + var(--note-dx)), -30px) scale(1) rotate(6deg); }
-}
-
-/* ── Light overlay: Lauren's light image on the butterflies' diagonal ─────────
-   Under the butterflies (z 4) and every desktop item (z 5). Edges fade out with a mask so
-   the image never shows a rectangle. */
-.light-overlay {
-  position: absolute; z-index: 3; pointer-events: none;
-  background: center / 100% 100% no-repeat;
-  /* fade all four edges (intersected), so no side of the image ever shows */
-  -webkit-mask-image:
-    linear-gradient(to right, transparent 0%, #000 22%, #000 80%, transparent 100%),
-    linear-gradient(to bottom, transparent 0%, #000 14%, #000 92%, transparent 100%);
-  -webkit-mask-composite: source-in;
-          mask-image:
-    linear-gradient(to right, transparent 0%, #000 22%, #000 80%, transparent 100%),
-    linear-gradient(to bottom, transparent 0%, #000 14%, #000 92%, transparent 100%);
-          mask-composite: intersect;
-  --light-opacity: 1;
-  opacity: var(--light-opacity);
-  transition: opacity 0.4s ease;
-  animation: light-breathe 14s ease-in-out infinite;
-}
-/* dark: Lauren's dark-mode light image (mirrored), screened so only the light shows */
-:root[data-theme='dark'] .light-overlay {
-  background-image: url('/art/light-overlay-dark.png');
-  background-image: image-set(url('/art/light-overlay-dark.webp') type('image/webp'), url('/art/light-overlay-dark.png') type('image/png'));
-  mix-blend-mode: screen;
-  /* softer than the raw image: less saturated rainbow, a little less bright */
-  --light-opacity: 1.2;
-  /* sepia + hue-rotate pulls the white/grey light toward a subtle dusty pink */
-  filter: sepia(0.6) hue-rotate(285deg) saturate(1.5) brightness(0.3) contrast(1.1);
-}
-/* light: white light can't show on #F8F1F4 (lighten/screen ≈ invisible, multiply = grey
-   smudge), so light mode uses its own transparent version of the same light: alpha follows
-   the light, whites become pearly pink → lavender, rainbow hues are kept. Normal blending,
-   toned down a bit so it stays a whisper behind the README. */
-:root[data-theme='light'] .light-overlay {
-  --light-opacity: 0.5;
-  background-image: url('/art/light-overlay-light.png');
-  background-image: image-set(url('/art/light-overlay-light.webp') type('image/webp'), url('/art/light-overlay-light.png') type('image/png'));
-  mix-blend-mode: normal;
-}
-/* cheap brightness boost: a soft CSS mesh glow along the same diagonal (no WebGL) */
-.light-overlay-glow {
-  position: absolute; inset: 0; z-index: -1;
-  background:
-    radial-gradient(28% 34% at 80% 14%, rgba(255, 196, 226, 0.45), transparent 70%),
-    radial-gradient(30% 26% at 62% 46%, rgba(240, 140, 190, 0.26), transparent 72%),
-    radial-gradient(26% 30% at 40% 78%, rgba(214, 196, 255, 0.22), transparent 72%);
-  filter: blur(18px);
-}
-:root[data-theme='light'] .light-overlay-glow { display: none; } /* light mode's own image needs no boost */
-@keyframes light-breathe {
-  0%, 100% { opacity: var(--light-opacity); }
-  50% { opacity: calc(var(--light-opacity) * 0.86); }
-}
-
-/* ghost butterflies (pixel ones are the no-WebGL fallback). No z-index or animation on the
-   wrapper: it must not form a stacking context, so each butterfly's layer can sit in front of
-   (z 6) or behind (z 4) the README window (z 5). GhostButterflies sets the layer's z-index. */
-.ghost-butterflies { position: absolute; inset: 0; pointer-events: none; }
-.ghost-layer { position: absolute; inset: 0; pointer-events: none; animation: ghost-in 0.8s ease; }
-.ghost-butterflies canvas { pointer-events: none !important; }
-/* The lab look (glow, halo, smoke: butterflies/lookParams.js) is rendered in the canvas. The
-   lab also runs a bloom pass; this soft drop-shadow stands in for that bloom. */
-:root[data-theme='dark'] .ghost-butterflies canvas {
-  filter: drop-shadow(0 0 6px rgba(255, 190, 222, 0.7)) drop-shadow(0 0 22px rgba(232, 93, 158, 0.45));
-}
-:root[data-theme='light'] .ghost-butterflies canvas {
-  /* a crisp deep-pink edge and a soft pink glow: contrast on the light page without the white
-     wash a light glow would put over the README text */
-  filter: drop-shadow(0 0 1.5px rgba(185, 62, 120, 0.55)) drop-shadow(0 0 14px rgba(232, 93, 158, 0.3));
-}
-@keyframes ghost-in { from { opacity: 0; } }
-.pixel-butterflies { position: absolute; inset: 0; z-index: 4; pointer-events: none; }
-.pixel-butterfly { position: absolute; left: 0; top: 0; will-change: transform; transition: opacity 0.4s ease; }
-.pixel-butterfly-wings { display: block; animation: flap 0.6s ease-in-out infinite alternate; }
-.pixel-butterflies.is-still .pixel-butterfly-wings { animation: none; }
-@keyframes flap { from { transform: scaleX(1); } to { transform: scaleX(0.35); } }
+.dance-button .desktop-file-label { white-space: nowrap; } /* "stop dance" */
 
 /* ── Work ──────────────────────────────────────────────────────────────────── */
 .work { background: var(--bg-alt); padding: var(--sp-12) var(--gutter) var(--sp-15); transition: background-color 0.4s ease; }
 .section-head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--sp-2); flex-wrap: wrap; margin-bottom: var(--sp-5); }
 .section-title { margin: 0; font: 400 clamp(48px, 6vw, 80px)/1 var(--font-display); }
-.work-grid {
-  list-style: none; margin: 0; padding: 0;
-  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-4);
-}
+/* glass cards shared by Work and the Garden orbit */
+:root { --card-bg: rgba(255, 251, 253, 0.72); --card-edge: rgba(41, 35, 41, 0.16); --card-glow: rgba(232, 93, 158, 0.14);
+  --ph: linear-gradient(135deg, #efc6da 0%, #ecdcef 55%, #dccdf0 100%); --ph-edge: rgba(156, 51, 102, 0.22); }
+:root[data-theme='dark'] { --card-bg: rgba(38, 30, 38, 0.6); --card-edge: rgba(244, 234, 240, 0.13); --card-glow: rgba(232, 93, 158, 0.12);
+  --ph: linear-gradient(135deg, #3d2238 0%, #211726 55%, #2b1f3d 100%); --ph-edge: rgba(245, 194, 222, 0.18); }
+
+/* Work: a plain vertical stack, a sticky rail of dots on the right (butterfly = card in view) */
+.work-body { position: relative; }
+.work-stack { list-style: none; margin: 0 auto; padding: 0; max-width: 960px; display: flex; flex-direction: column; gap: var(--sp-12); }
 .work-card {
-  position: relative; display: flex; flex-direction: column;
-  background: var(--window); border: 1px solid var(--line-strong);
-  transition: border-color 0.2s ease, box-shadow 0.25s ease, transform 0.25s ease, background-color 0.4s ease;
+  position: relative; z-index: 1; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); gap: var(--sp-5); align-items: stretch;
+  padding: var(--sp-4); border-radius: 14px; background: var(--card-bg); border: 1px solid var(--card-edge);
+  /* light frosting, so the butterfly behind reads as a butterfly, softened, not a blur */
+  box-shadow: 0 0 40px var(--card-glow); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+  transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.35s ease, background-color 0.4s ease;
 }
-.work-card:hover { border-color: var(--accent); box-shadow: 8px 8px 0 var(--shadow-pixel); transform: translate(-2px, -2px); }
-.work-card-bar {
-  display: flex; justify-content: space-between; align-items: center; height: 40px; padding: 0 var(--sp-2);
-  background: var(--titlebar); border-bottom: 1px solid var(--line-strong);
-  font: var(--text-label)/1 var(--font-pixel); letter-spacing: 0.05em; color: var(--ink-soft);
-}
-.work-card-index { color: var(--accent); }
-.work-card-body { padding: var(--sp-4); flex: 1; }
-.work-card-title { margin: 0 0 var(--sp-2); font: 400 clamp(32px, 3vw, 40px)/1.05 var(--font-display); }
+/* alternate sides: every other card puts its image on the left */
+.work-card:nth-child(even) { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); }
+.work-card:nth-child(even) .work-card-media { order: -1; }
+.work-card:hover { transform: scale(1.025); box-shadow: 0 0 60px var(--card-glow); }
+.work-card-text { display: flex; flex-direction: column; min-width: 0; }
+.work-card-title { margin: 0 0 var(--sp-2); font: 400 clamp(32px, 3vw, 44px)/1.05 var(--font-display); }
 .work-card-title a { text-decoration: none; }
-.work-card-title a::after { content: ''; position: absolute; inset: 0; }
-.work-card-summary { margin: 0 0 var(--sp-2); font-size: var(--text-body); line-height: 1.6; max-width: 56ch; }
-.work-card-role { margin: 0 0 var(--sp-3); font-size: var(--text-body); line-height: 1.5; color: var(--ink-soft); }
-.work-card-tags { display: flex; flex-wrap: wrap; gap: var(--sp-1); list-style: none; margin: 0; padding: 0; }
-.work-card-tags li { font-size: 14px; padding: 4px var(--sp-1); border: 1px solid var(--accent); color: var(--accent); }
+.work-card-title a::after { content: ''; position: absolute; inset: 0; border-radius: inherit; }
+.work-card-meta { margin: 0 0 var(--sp-2); font-size: 14px; line-height: 1.5; color: var(--accent-ink); }
+.work-card-sep { margin: 0 0.6em; opacity: 0.7; }
+.work-card-line { margin: 0; font-size: var(--text-body); font-weight: 300; line-height: 1.6; color: var(--ink-soft); }
+.work-card-media { position: relative; aspect-ratio: 16 / 10; border-radius: 8px; overflow: hidden; align-self: center; }
+.work-card-media img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.media-ph { position: absolute; inset: 0; background: var(--ph); border: 1px dashed var(--ph-edge); border-radius: inherit; }
+.work-rail { position: absolute; top: 0; bottom: 0; right: calc(var(--gutter) * -0.5); width: 0; }
+.work-dots { position: sticky; z-index: 1; top: 50vh; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; gap: var(--sp-1); }
+.work-dot { display: grid; place-items: center; width: 32px; height: 32px; padding: 0; border: 0; background: none; border-radius: 50%; }
+.work-dot-pip { width: 6px; height: 6px; border-radius: 50%; background: var(--ink); opacity: 0.3; transition: opacity 0.2s ease, transform 0.2s ease; }
+.work-dot:hover .work-dot-pip { opacity: 0.7; transform: scale(1.3); }
+.work-dot .neon-icon { color: var(--accent-ink); }
+:root[data-theme='dark'] .work-dot .neon-icon { color: #f5c2de; }
+.work-dot.is-active .neon-icon { animation: dot-land 0.35s ease-out; }
+@keyframes dot-land { from { transform: scale(0.4) rotate(-20deg); opacity: 0; } to { transform: none; opacity: 1; } }
+
+/* Garden orbit (pages/GardenSwirl.jsx): hidden until the butterfly arrives, then rings → cards */
+.swirl { position: relative; padding: var(--sp-12) var(--gutter) var(--sp-12); overflow: hidden; }
+.swirl-head { display: flex; justify-content: center; text-align: center; margin-bottom: var(--sp-3); }
+.swirl-head-link { display: inline-flex; align-items: flex-start; gap: 10px; text-decoration: none; }
+.swirl-head-text { text-decoration: underline; text-decoration-color: transparent; text-decoration-thickness: 2px; text-underline-offset: 0.14em; transition: text-decoration-color 0.2s ease; }
+.swirl-head-link:hover .swirl-head-text, .swirl-head-link:focus-visible .swirl-head-text { text-decoration-color: currentColor; }
+.swirl-head-arrow { color: var(--accent-ink); margin-top: 0.12em; transition: transform 0.2s ease; }
+:root[data-theme='dark'] .swirl-head-arrow { color: #f5c2de; }
+.swirl-head-link:hover .swirl-head-arrow { transform: translate(3px, -3px); }
+.swirl-stage { position: relative; height: clamp(520px, 56vw, 680px); touch-action: pan-y; user-select: none; -webkit-user-select: none; }
+.swirl-rings { position: absolute; inset: 0; overflow: visible; pointer-events: none; opacity: 0; transform: scale(0.94); transition: opacity 0.8s ease, transform 1s ease; }
+.swirl-rings ellipse { fill: none; stroke: var(--accent-ink); stroke-opacity: 0.4; stroke-width: 1; }
+:root[data-theme='dark'] .swirl-rings ellipse { stroke: #f5c2de; stroke-opacity: 0.35; }
+.swirl-rings ellipse.is-faint { stroke: var(--ink); stroke-opacity: 0.14; }
+/* the invisible spot in the middle of the orbit where the butterfly settles */
+.swirl-nest { position: absolute; pointer-events: none; }
+.swirl-cards { list-style: none; margin: 0; padding: 0; }
+.swirl-slot { position: absolute; left: 0; top: 0; will-change: transform; }
+.swirl-card {
+  display: flex; flex-direction: column; gap: 6px; width: 184px; padding: 0 12px 12px; text-decoration: none; color: inherit;
+  border-radius: 12px; background: var(--card-bg); border: 1px solid var(--card-edge); box-shadow: 0 0 32px var(--card-glow);
+  backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+  opacity: 0; transform: scale(0.85); transition: opacity 0.6s ease, transform 0.7s cubic-bezier(0.2, 0.8, 0.2, 1), border-color 0.2s ease;
+  transition-delay: calc(0.3s + var(--i) * 0.09s);
+}
+.swirl-card:hover { border-color: var(--accent-ink); }
+.swirl-card-bar { display: flex; gap: 5px; height: 26px; align-items: center; margin: 0 -12px 2px; padding: 0 12px; border-bottom: 1px solid var(--card-edge); }
+.swirl-card-bar i { width: 8px; height: 8px; border-radius: 50%; border: 1px solid var(--ink-soft); opacity: 0.6; }
+.swirl-card-bar i:first-child { background: var(--accent); border-color: var(--accent); opacity: 1; }
+.swirl-card-media { display: block; aspect-ratio: 4 / 3; border-radius: 6px; overflow: hidden; background: var(--ph); border: 1px dashed var(--ph-edge); }
+.swirl-card-media img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.swirl-card-name { margin-top: 4px; font: 400 20px/1.1 var(--font-display); }
+.swirl-card-tag { font-size: 12px; color: var(--accent-ink); }
+.swirl.is-revealed .swirl-rings { opacity: 1; transform: none; }
+.swirl.is-revealed .swirl-card { opacity: 1; transform: none; }
+.swirl.is-revealed .swirl-card:hover { transition-delay: 0s; }
+.swirl-cursor {
+  position: absolute; left: 0; top: 0; z-index: 40; display: none; place-items: center; width: 76px; height: 76px; border-radius: 50%;
+  background: rgba(232, 93, 158, 0.9); color: #fff; font: 700 11px/1 var(--font-mono); letter-spacing: 0.12em; text-transform: uppercase;
+  box-shadow: 0 0 24px rgba(232, 93, 158, 0.5); pointer-events: none;
+}
+@media (hover: hover) and (pointer: fine) {
+  .swirl-stage, .swirl-stage a { cursor: none !important; }
+  .swirl-stage:hover .swirl-cursor { display: grid; }
+}
+
+/* the scroll butterfly's canvas (butterflies/GuideButterfly.jsx): fixed, behind the cards */
+/* z-index 0: above the section backgrounds but under the cards (z 1) and the front of the Garden orbit */
+.guide-stage { position: fixed; inset: 0; z-index: 0; pointer-events: none; transition: opacity 0.4s ease; }
+.guide-stage.is-off { opacity: 0; }
+.guide-stage.is-dark { mix-blend-mode: screen; } /* opaque black canvas with its own bloom: black vanishes, light adds */
+.guide-stage.is-dark canvas { filter: saturate(1.25); }
+.guide-stage.is-light canvas {
+  filter: saturate(1.25) drop-shadow(0 0 2px rgba(214, 70, 140, 0.5)) drop-shadow(0 0 14px rgba(232, 93, 158, 0.42)) drop-shadow(0 0 40px rgba(240, 120, 180, 0.32));
+}
 
 /* ── Inner pages ───────────────────────────────────────────────────────────── */
 .page { max-width: 832px; margin: 0 auto; padding: var(--sp-12) var(--gutter); }
@@ -417,13 +337,13 @@ button { font: inherit; color: inherit; }
   padding: var(--sp-2) 0; border-bottom: 1px solid var(--line);
 }
 .file-row-name { font-weight: 700; font-size: var(--text-body); }
-a.file-row-name { color: var(--accent); text-decoration: none; }
+a.file-row-name { color: var(--accent-ink); text-decoration: none; }
 a.file-row-name:hover { text-decoration: underline; }
 .file-row-note { grid-column: 1; font-size: var(--text-body); color: var(--ink-soft); line-height: 1.5; }
 .file-row-tag {
   grid-column: 2; grid-row: 1 / span 2; align-self: center;
-  font: var(--text-label) var(--font-pixel); letter-spacing: 0.06em; color: var(--accent);
-  border: 1px solid var(--accent); padding: var(--sp-1);
+  font: var(--text-label) var(--font-mono); letter-spacing: 0.06em; color: var(--accent-ink);
+  border: 1px solid var(--accent-ink); padding: var(--sp-1);
 }
 
 /* ── Footer ────────────────────────────────────────────────────────────────── */
@@ -435,38 +355,17 @@ a.file-row-name:hover { text-decoration: underline; }
 .footer-name { margin: 0; font: 400 clamp(40px, 4.4vw, 56px)/1 var(--font-display); }
 .footer-contacts { margin: 0; display: grid; gap: var(--sp-2); }
 .footer-row { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: var(--sp-2); align-items: baseline; }
-.footer-row dt { font: var(--text-label) var(--font-pixel); letter-spacing: 0.06em; color: var(--ink-soft); }
+.footer-row dt { font: var(--text-label) var(--font-mono); letter-spacing: 0.06em; color: var(--ink-soft); }
 .footer-row dd { margin: 0; font-size: 18px; overflow-wrap: anywhere; }
-.footer-row a { color: var(--accent); text-underline-offset: 4px; text-decoration-thickness: 1px; }
+.footer-row a { color: var(--accent-ink); text-underline-offset: 4px; text-decoration-thickness: 1px; }
 .footer-row a:hover { text-decoration-thickness: 2px; }
 
 /* ── Tablet / mobile (4pt grid via the tokens above) ───────────────────────── */
 @media (max-width: 899px) {
-  /* phones/tablets: name, icon row, README window, stacked and left-aligned. The bottom
-     padding leaves room for the big butterfly; the README's top margin, for the perched one. */
-  .desktop-hero {
-    grid-template-columns: minmax(0, 1fr); grid-template-rows: repeat(3, auto);
-    justify-content: stretch; row-gap: var(--sp-4); align-content: center;
-    min-height: calc(100svh - var(--taskbar-h));
-    padding: var(--sp-6) var(--gutter) calc(var(--sp-12) + var(--sp-10));
-  }
-  .hero-name { grid-column: 1; grid-row: 1; }
-  .hero-window { grid-column: 1; grid-row: 3; margin-top: var(--sp-10); }
-  .desktop-name { font-size: clamp(52px, 14vw, 96px); }
-  /* one icon row: README, Dance, LinkedIn, Email (Thought and the dock are desktop-only) */
-  .hero-icons {
-    display: flex; grid-column: 1; grid-row: 2; justify-self: stretch; flex-direction: row; align-items: flex-start;
-    justify-content: space-between; gap: 0; position: relative; z-index: 6;
-  }
-  .hero-icons > li { grid-column: auto; grid-row: auto; }
-  .hero-icons > li.thought-slot, .contact-dock { display: none; }
-  .hero-icons > li.dance-slot { order: 2; }
-  .hero-icons > li.phone-only { order: 3; }
-  .phone-only { display: flex !important; }
   /* narrower slots and tighter labels so the row fits a 375px phone */
   .desktop-file { width: 64px; padding: var(--sp-1) 0; }
   .desktop-file-label { letter-spacing: 0; padding: var(--sp-1) 4px; }
-  .desktop-file svg, .record { width: 48px; height: 48px; }
+  .desktop-file svg { width: 48px; height: 48px; }
 
   /* hamburger menu: the nav links become a full-screen overlay under the header controls */
   .taskbar-nav { gap: var(--sp-2); }
@@ -502,11 +401,13 @@ a.file-row-name:hover { text-decoration: underline; }
   .taskbar.is-menu-open .taskbar-nav ul li:nth-child(2) { transition-delay: 0.04s; }
   .taskbar.is-menu-open .taskbar-nav ul li:nth-child(3) { transition-delay: 0.08s; }
   .readme-window .win-pane { padding: var(--sp-4); }
-  .work-grid { grid-template-columns: minmax(0, 1fr); }
+  .work-card, .work-card:nth-child(even) { grid-template-columns: minmax(0, 1fr); gap: var(--sp-3); padding: var(--sp-3); }
+  .work-card:nth-child(even) .work-card-media { order: 0; }
+  .work-rail { display: none; }
+  .swirl-stage { height: min(120vw, 560px); }
+  .swirl-card { width: 140px; }
+  .swirl-card-name { font-size: 17px; }
   .footer-inner { grid-template-columns: minmax(0, 1fr); }
-}
-@media (min-width: 900px) and (max-width: 1100px) {
-  .desktop-hero { grid-template-columns: max-content minmax(0, 400px) 96px; column-gap: var(--sp-5); }
 }
 @media (max-width: 480px) {
   .taskbar { font-size: 14px; gap: var(--sp-1); letter-spacing: 0; }
@@ -515,8 +416,188 @@ a.file-row-name:hover { text-decoration: underline; }
   .footer-row { grid-template-columns: minmax(0, 1fr); gap: var(--sp-1); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .light-overlay { animation: none; }
-  .dance-button.is-spinning .record-frame { animation: none !important; }
-  .record-note { display: none; }
   *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+}
+
+/* ── Home: the orbit desktop ────────────────────────────────────────────────
+   Glass README + neon icons + the blooming ghost butterflies (desktop/OrbitDesktop.jsx,
+   butterflies/DuetStage.jsx). */
+/* the 3D butterfly fills whatever box it's given */
+.stage-butterfly { position: absolute; inset: 0; }
+/* the same bloom stand-in as the home page's butterflies */
+.stage-butterfly canvas {
+  pointer-events: none !important;
+  filter: drop-shadow(0 0 6px rgba(255, 190, 222, 0.7)) drop-shadow(0 0 22px rgba(232, 93, 158, 0.45));
+}
+/* afterimage mode: the canvas is opaque black with its own bloom, screened onto the page (black
+   vanishes, light adds), so no CSS glow; its stage must not isolate it from the page background */
+.stage-butterfly.is-afterimage canvas { filter: none; mix-blend-mode: screen; }
+/* neon line icons (icon set F) */
+.neon-icon { display: block; overflow: visible; color: var(--neon-ink, #f5c2de); filter: drop-shadow(0 0 5px rgba(219, 91, 144, 0.75)); transition: transform 0.2s ease, filter 0.2s ease; }
+.neon-glint { opacity: 0; transition: opacity 0.2s ease; }
+.neon-icon.is-spinning .neon-glint { opacity: 1; }
+.neon-icon.is-spinning .neon-record { transform-box: view-box; transform-origin: 30px 36px; animation: v-spin 1.8s linear infinite; }
+@keyframes v-spin { to { transform: rotate(360deg); } }
+
+/* glass tokens (they follow the site theme) */
+.orbit-desktop {
+  --glass-bg: rgba(255, 255, 255, 0.06);
+  --glass-edge: rgba(255, 255, 255, 0.24);
+  --glass-hair: rgba(255, 255, 255, 0.14);
+  --glass-glow: rgba(232, 93, 158, 0.2);
+  --neon-ink: #f5c2de;
+}
+:root[data-theme='light'] .orbit-desktop {
+  --glass-bg: rgba(255, 255, 255, 0.5);
+  --glass-edge: rgba(255, 255, 255, 0.95);
+  --glass-hair: rgba(41, 35, 41, 0.22);
+  --glass-glow: rgba(185, 62, 120, 0.14);
+  --neon-ink: #b03a72; /* 4.6:1 on --bg */
+}
+:root[data-theme='light'] .is-glass .neon-icon { filter: drop-shadow(0 0 4px rgba(232, 93, 158, 0.35)); }
+.is-glass .desktop-file:hover .neon-icon, .is-glass .desktop-file:focus-visible .neon-icon { filter: drop-shadow(0 0 8px rgba(219, 91, 144, 0.9)); }
+
+/* README window: frosted glass, round window buttons, plain type */
+.is-glass .readme-window {
+  background: var(--glass-bg); color: var(--ink);
+  border: 1px solid var(--glass-edge); border-radius: 16px; overflow: hidden;
+  -webkit-backdrop-filter: blur(26px); backdrop-filter: blur(26px);
+  box-shadow: 0 24px 80px var(--glass-glow);
+}
+.is-glass .win-bar { height: 40px; background: transparent; color: var(--ink); border-bottom: 1px solid var(--glass-hair); }
+.is-glass .win-title { font: 500 13px/1 var(--font-mono); letter-spacing: 0.02em; text-transform: lowercase; }
+.is-glass .win-buttons { align-items: center; gap: 6px; }
+.is-glass .win-body { padding: 0; }
+.is-glass .win-pane { background: transparent; border: 0; box-shadow: none; }
+
+/* labels: plain mono, no caps, no pixel box */
+.is-glass .desktop-file-label {
+  font: 500 12px/1 var(--font-mono); letter-spacing: 0.02em; text-transform: none;
+  padding: 5px 9px; border: 0; border-radius: 999px; color: var(--ink-soft);
+  transition: color 0.2s ease, background-color 0.2s ease;
+}
+.is-glass .desktop-file:hover .desktop-file-label, .is-glass .desktop-file:focus-visible .desktop-file-label { color: var(--ink); background: var(--accent-tint); }
+.is-glass .desktop-file.is-open .desktop-file-label { color: var(--ink); background: rgba(232, 93, 158, 0.22); }
+
+/* layout (Figma "B — Desktop with orbit") ─
+   [ name   ][                         ][ icons ]
+   [ README ][  big butterfly + orbit  ][       ]
+   The lines and the butterflies are absolute layers under the UI (z 5). Neither may set a
+   z-index: the bloom canvas is screen-blended onto the page (see .is-afterimage). */
+.orbit-desktop {
+  position: relative; overflow: hidden; overflow: clip;
+  display: grid;
+  /* everything in multiples of --u (see :root), so big screens get the same layout scaled up;
+     past 1440 × --u wide the side padding grows instead, keeping it centred */
+  grid-template-columns: minmax(0, calc(464 * var(--u))) minmax(0, 1fr) calc(104 * var(--u));
+  grid-template-rows: auto auto;
+  align-content: center; /* the name + README block sits mid-screen on tall monitors */
+  column-gap: calc(48 * var(--u));
+  /* it starts under the glass nav bar (so the glow passes beneath it) and pads down past it */
+  margin-top: calc(-1 * var(--taskbar-h)); min-height: 100svh;
+  padding: calc(var(--taskbar-h) + 48 * var(--u)) max(calc(88 * var(--u)), calc(50% - 632 * var(--u)))
+    calc(48 * var(--u)) max(calc(96 * var(--u)), calc(50% - 624 * var(--u)));
+  border-bottom: 1px solid var(--line-strong);
+}
+.orbit-name { text-transform: uppercase; grid-column: 1; grid-row: 1; position: relative; z-index: 5; font-size: clamp(64px, 9.4vw, calc(128 * var(--u))); line-height: 0.86; }
+.orbit-window { grid-column: 1; grid-row: 2; position: relative; z-index: 5; margin-top: calc(48 * var(--u)); }
+.orbit-icons {
+  grid-column: 3; grid-row: 1 / -1; align-self: start; position: relative; z-index: 5;
+  display: flex; flex-direction: column; gap: var(--sp-3); list-style: none; margin: 0; padding: var(--sp-3) 0 0;
+}
+/* the hero's README and icons grow with --u too (phones reset these below) */
+.orbit-icons { gap: calc(24 * var(--u)); padding-top: calc(24 * var(--u)); }
+.orbit-icons .desktop-file { width: calc(96 * var(--u)); }
+.orbit-icons .neon-icon { width: calc(56 * var(--u)); height: calc(56 * var(--u)); }
+.orbit-icons .desktop-file-label { font-size: calc(12 * var(--u)); padding: calc(5 * var(--u)) calc(9 * var(--u)); }
+.orbit-desktop .readme-text { font-size: calc(20 * var(--u)); }
+.orbit-space { display: none; }
+
+/* README: real glass over the big butterfly's left wing: a faint sheen, a bright top edge and
+   no outer glow, so the wing's glow and the orbit line show through it, blurred. An Apple-style
+   title bar, its buttons tucked toward the left corner (closer in than the pane's text inset). */
+.orbit-desktop .readme-window {
+  --pane-x: calc(40 * var(--u));
+  /* the sheen, over a faint dark tint so the text keeps its contrast where the glow passes under */
+  background: linear-gradient(140deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.03) 45%, rgba(255, 255, 255, 0.01)),
+    rgba(20, 15, 20, 0.32);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: calc(18 * var(--u));
+  -webkit-backdrop-filter: blur(14px) saturate(1.6); backdrop-filter: blur(14px) saturate(1.6);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), inset 0 0 0 1px rgba(255, 255, 255, 0.03);
+}
+:root[data-theme='light'] .orbit-desktop .readme-window {
+  /* whiter glass with a real edge (a white rim alone disappears on the pale pink page) */
+  background: linear-gradient(140deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.5) 50%, rgba(255, 255, 255, 0.4));
+  border-color: var(--line-strong);
+  box-shadow: inset 0 1px 0 #fff, 0 12px 40px rgba(120, 50, 90, 0.12);
+}
+.orbit-desktop .readme-window .win-pane { padding: calc(32 * var(--u)) var(--pane-x) calc(40 * var(--u)); }
+.orbit-desktop .win-bar.is-mac {
+  position: relative; justify-content: flex-start; gap: calc(16 * var(--u)); height: calc(44 * var(--u)); padding: 0 calc(16 * var(--u));
+  border-bottom: 1px solid var(--glass-hair);
+}
+/* the title bar is the README's handle: drag it to move the window (OrbitDesktop.jsx) */
+.orbit-desktop .orbit-window .win-bar { cursor: grab !important; touch-action: none; }
+.orbit-desktop .orbit-window.is-dragging .win-bar { cursor: grabbing !important; }
+.orbit-desktop .orbit-window.is-dragging .readme-window { box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 24px 60px rgba(0, 0, 0, 0.35); }
+:root[data-theme='light'] .orbit-desktop .orbit-window.is-dragging .readme-window { box-shadow: inset 0 1px 0 #fff, 0 24px 60px rgba(120, 50, 90, 0.22); }
+/* the title sits left, just after the buttons */
+.orbit-desktop .win-bar.is-mac .win-title { pointer-events: none; color: var(--ink-soft); font-size: calc(13 * var(--u)); }
+.orbit-desktop .win-bar.is-mac .win-buttons { display: flex; align-items: center; gap: calc(8 * var(--u)); }
+.orbit-desktop .win-bar.is-mac .win-btn {
+  width: calc(12 * var(--u)); height: calc(12 * var(--u)); padding: 0; border-radius: 50%; opacity: 1; box-shadow: none;
+  background: transparent; border: 1px solid var(--ink-soft); font: 700 9px/1 var(--font-mono); color: transparent;
+}
+.orbit-desktop .win-bar.is-mac .win-btn-close { background: var(--accent); border-color: var(--accent); cursor: pointer; }
+/* the dot stays small, but it's pressable 24px around (WCAG 2.5.8 target size) */
+.orbit-desktop .win-bar.is-mac .win-btn-close::before { content: ''; position: absolute; inset: -6px; border-radius: 50%; }
+:root[data-theme='light'] .orbit-desktop .win-bar.is-mac .win-btn-close { background: #c2457f; border-color: #c2457f; } /* 3.8:1 */
+.orbit-desktop .win-bar.is-mac .win-btn-close span { translate: 0 -0.5px; }
+/* the × shows on hover, as on a Mac */
+.orbit-desktop .win-bar.is-mac .win-btn-close:hover, .orbit-desktop .win-bar.is-mac .win-btn-close:focus-visible { background: var(--accent); border-color: var(--accent); color: rgba(255, 255, 255, 0.9); }
+.orbit-desktop .win-bar.is-mac .win-btn-close:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 3px; }
+
+.orbit-lines { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; color: #fff; }
+.orbit-ring { stroke-opacity: 0.38; }
+.orbit-planet { stroke-opacity: 0.14; }
+.orbit-lines.is-front .orbit-ring { stroke-opacity: 0.3; }
+
+/* the nav bar: frosted glass laid over the top of the hero, so the orbit lines and glow pass
+   under it */
+.taskbar.is-glass {
+  --neon-ink: #f5c2de;
+  position: sticky; background: rgba(29, 25, 29, 0.32); border-bottom-color: rgba(255, 255, 255, 0.1);
+  -webkit-backdrop-filter: blur(20px) saturate(1.6); backdrop-filter: blur(20px) saturate(1.6);
+}
+:root[data-theme='light'] .taskbar.is-glass { --neon-ink: #b03a72; background: rgba(255, 250, 252, 0.72); border-bottom-color: var(--line-strong); }
+.taskbar.is-glass .theme-toggle { border-radius: 10px; }
+:root[data-theme='light'] .orbit-lines { color: var(--ink); }
+:root[data-theme='light'] .orbit-ring { stroke-opacity: 0.22; }
+:root[data-theme='light'] .orbit-planet { stroke-opacity: 0.1; }
+/* dark: the bloom canvas, a touch more saturated and luminous */
+.duet-stage.is-afterimage canvas { filter: saturate(1.25); }
+/* light: no bloom pass (it would wash out on the pale page), so the glow is layered pink
+   drop-shadows that follow the wings and spread out like bloom, plus the pink halo in the canvas */
+.duet-stage.is-light canvas {
+  filter: saturate(1.25)
+    drop-shadow(0 0 2px rgba(214, 70, 140, 0.5))
+    drop-shadow(0 0 14px rgba(232, 93, 158, 0.42))
+    drop-shadow(0 0 40px rgba(240, 120, 180, 0.32));
+}
+@media (max-width: 899px) {
+  /* v4 stacks: name, icon row, README, the butterflies' space */
+  .orbit-desktop { grid-template-columns: minmax(0, 1fr); grid-template-rows: none; align-content: start; column-gap: 0; padding: calc(var(--taskbar-h) + var(--sp-6)) var(--gutter) var(--sp-8); }
+  .orbit-desktop > * { grid-column: 1; grid-row: auto; }
+  .orbit-name { font-size: clamp(52px, 17vw, 96px); }
+  .orbit-icons { order: 1; flex-direction: row; justify-content: space-between; gap: 0; padding: 0; margin-top: var(--sp-4); }
+  .orbit-icons .desktop-file { width: 64px; }
+  .orbit-icons .neon-icon { width: 48px; height: 48px; }
+  .orbit-window { order: 2; margin-top: var(--sp-4); }
+  .orbit-space { order: 3; }
+
+  .orbit-space { display: block; height: min(96vw, 460px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .neon-icon.is-spinning .neon-record { animation: none; }
 }

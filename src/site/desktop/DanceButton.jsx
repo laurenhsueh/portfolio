@@ -1,5 +1,4 @@
 import { forwardRef, useEffect, useRef, useState } from 'react'
-import PixelIcon from '../PixelIcon'
 import { SONG } from '../content/music'
 import { analyzeBeat } from '../music/beat'
 import { setBeat, startDance, stopDance } from '../music/dance'
@@ -23,16 +22,13 @@ function loadSong() {
 }
 const whenIdle = (fn) => (window.requestIdleCallback ? requestIdleCallback(fn, { timeout: 1500 }) : setTimeout(fn, 200))
 
-// notes that drift up out of the record while it plays (pixel icon, start offset in px)
-const NOTES = [['note', 0], ['notes', 10], ['note', -6]]
-
 /**
  * The record player desktop icon: plays Lauren's song (public/music) and makes the butterflies
- * dance to its beat (see music/dance.js). While it plays the record spins, little notes float up
- * out of it and the label reads "Stop dance"; pressing it again stops the music and the dance.
+ * dance to its beat (see music/dance.js). `icon(spinning)` draws it (the neon record spins while
+ * it plays) and `label(open)` names it; pressing it again stops the music and the dance.
  * The song loops while it's on.
  */
-const DanceButton = forwardRef(function DanceButton(_, btnRef) {
+const DanceButton = forwardRef(function DanceButton({ icon, label, slotClassName = 'icon-slot dance-slot', buttonClassName = 'desktop-file dance-button', labelClassName = 'desktop-file-label' }, btnRef) {
   const [open, setOpen] = useState(false)
   const [spinning, setSpinning] = useState(false)
   const audio = useRef(null)
@@ -70,29 +66,20 @@ const DanceButton = forwardRef(function DanceButton(_, btnRef) {
   useEffect(() => () => { audio.current?.pause(); stopDance() }, [])
 
   return (
-    <li className="icon-slot dance-slot">
+    <li className={slotClassName}>
       <button
         ref={btnRef}
         type="button"
-        className={`desktop-file dance-button ${open ? 'is-open' : ''} ${spinning ? 'is-spinning' : ''}`}
+        className={`${buttonClassName} ${open ? 'is-open' : ''} ${spinning ? 'is-spinning' : ''}`}
         onClick={open ? stop : start}
         onPointerEnter={loadSong}
         onPointerDown={loadSong}
         onFocus={loadSong}
-        aria-pressed={open}
-        aria-label={open ? 'Stop the music' : `Dance: play ${SONG.title} and make the butterflies dance`}
+        // the name changes with the visible label (stop dance / dance), so no aria-pressed too
+        aria-label={open ? 'Stop dance: stop the music' : `Dance: play ${SONG.title} and make the butterflies dance`}
       >
-        <span className="record" aria-hidden="true">
-          {[0, 1, 2, 3].map((k) => (
-            <PixelIcon key={k} name={`record${k}`} size={56} className={`record-frame f${k}`} />
-          ))}
-          {spinning && NOTES.map(([name, x], i) => (
-            <span key={i} className={`record-note n${i}`} style={{ '--note-x': `${x}px` }}>
-              <PixelIcon name={name} size={16} />
-            </span>
-          ))}
-        </span>
-        <span className="desktop-file-label">{open ? 'Stop dance' : 'Dance'}</span>
+        {icon(spinning)}
+        <span className={labelClassName}>{label(open)}</span>
       </button>
     </li>
   )

@@ -16,7 +16,10 @@ export default function Footer() {
             <div key={r.label} className="footer-row">
               <dt>{r.label}</dt>
               <dd>
-                <a href={r.href} {...(r.external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}>{r.text}</a>
+                <a href={r.href} {...(r.external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}>
+                  {r.text}
+                  {r.external && <span className="sr-only"> (opens in a new tab)</span>}
+                </a>
               </dd>
             </div>
           ))}

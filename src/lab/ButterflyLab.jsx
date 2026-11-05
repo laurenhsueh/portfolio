@@ -88,7 +88,9 @@ export default function ButterflyLab() {
 
   return (
     <div className="lab">
-      <Leva collapsed={false} />
+      <h1 className="sr-only">Butterfly lab</h1>
+      {/* the controls panel in the site's mono face, not Leva's default fonts */}
+      <Leva collapsed={false} theme={{ fonts: { mono: "'Atkinson Hyperlegible Mono', monospace", sans: "'Atkinson Hyperlegible Mono', monospace" } }} />
       <a className="lab-back" href="#/garden">← Garden</a>
       <Canvas flat camera={{ position: [5, 2.5, 6.5], fov: 40 }} dpr={[1, 2]} gl={{ antialias: false }}>
         <color attach="background" args={[th.bg]} />

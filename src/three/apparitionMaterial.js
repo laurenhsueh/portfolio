@@ -33,6 +33,7 @@ uniform float uIri;
 uniform float uGlow;
 uniform float uOpacity;
 uniform float uLayer;   // 0 = core wing, 1 = haze shell
+uniform float uBlur;    // extra texture mip bias: 0 = crisp; ~4 = a soft, out-of-focus copy (the home page's ghost)
 uniform float uBody;    // 1 on the body mesh
 uniform float uLight;   // 1 in light theme
 uniform vec3 uLightDir;
@@ -69,8 +70,8 @@ void main() {
   vec2 warp = vec2(fbm(q), fbm(q + vec3(5.2, 1.3, 0.0))) - 0.5;
   vec2 suv = uv + warp * mix(0.012, 0.045, uLayer);
 
-  vec4 tex = texture2D(map, suv);
-  float aSoft = texture2D(map, suv, mix(3.0, 5.5, uLayer)).a;
+  vec4 tex = texture2D(map, suv, uBlur);
+  float aSoft = texture2D(map, suv, mix(3.0, 5.5, uLayer) + uBlur * 0.5).a;
   float aWide = 0.5 * (texture2D(map, suv + warp * 0.04, 5.5).a + texture2D(map, suv - warp * 0.03, 6.0).a);
   float lum = dot(tex.rgb, vec3(0.299, 0.587, 0.114));
   float lumBlur = dot(texture2D(map, suv, 4.0).rgb, vec3(0.299, 0.587, 0.114));
@@ -96,6 +97,11 @@ void main() {
   } else {
     shape = pow(aSoft, 1.4) * (0.4 + 0.6 * smoke);
   }
+  // the ghost: a soft silhouette that breaks into drifting wisps, densest near the body and
+  // vapour toward the tips, so it reads as an aura rather than a copy
+  float ghost = clamp(uBlur * 0.34, 0.0, 1.0);
+  float wisp = smoothstep(0.3, 0.85, smoke * 1.1 + smoke2 * 0.4 + (1.0 - fromBody) * 0.3);
+  shape = mix(shape, aSoft * wisp * (1.0 - 0.5 * fromBody) * (1.0 - uBody), ghost);
 
   // dissolve front: tips go first, noisy, with a faint rim of light
   float field = (1.0 - fromBody) * 0.65 + smoke * 0.55 + uBody * 0.4;
@@ -126,10 +132,12 @@ void main() {
   intensity *= mix(1.0, 0.3, uBody);
   intensity *= uPulse * uGlow * mix(1.0, 0.45, uLayer);
   intensity += rim * 0.45 * (1.0 - uLayer);
+  // ...and is lit evenly out to the tips, which are the only part that shows past the butterfly
+  intensity = mix(intensity, (0.25 + 0.5 * smoke2 + 0.25 * (1.0 - fromBody)) * uPulse * uGlow, ghost);
 
   // fine organic grain that sticks to the wing, flickering slowly
   float grain = n3(vec3(uv * 700.0, floor(t * 12.0)));
-  intensity *= 0.85 + 0.3 * grain;
+  intensity *= mix(0.85 + 0.3 * grain, 1.0, clamp(uBlur * 0.25, 0.0, 1.0)); // no grain when blurred
 
   float a = shape * alive * uOpacity * 0.8;
   a = max(a, rim * tex.a * edge * 0.35 * (1.0 - uLayer));
@@ -178,6 +186,7 @@ export function createApparitionMaterial(map, { layer = 0, body = 0 } = {}) {
       uGlow: { value: 1 },
       uOpacity: { value: 1 },
       uLayer: { value: layer },
+      uBlur: { value: 0 },
       uBody: { value: body },
       uLight: { value: 0 },
       uLightDir: { value: new THREE.Vector3(0, 1, 1).normalize() },

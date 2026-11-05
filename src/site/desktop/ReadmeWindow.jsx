@@ -14,6 +14,7 @@ export default function ReadmeWindow({ open, onClose }) {
 
   return (
     <section
+      id="readme-window"
       className={`readme-window win ${open ? 'is-open' : ''}`}
       aria-labelledby="readme-title"
       aria-hidden={!open}

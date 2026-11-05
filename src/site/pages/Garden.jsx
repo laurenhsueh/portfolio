@@ -1,11 +1,4 @@
-// Experiments and side projects. Live items link; the rest are listed from
-// case-studies/case-study-plan.md ("Playground") and will get pages later.
-const ITEMS = [
-  { name: 'Butterfly lab', note: 'Shader experiments for my 3D butterfly.', tag: '3D', href: '#/garden/butterfly-lab' },
-  { name: 'Soul Cal graphics', note: 'Posters and graphics for my hip-hop dance club.', tag: 'graphics' },
-  { name: 'Water polo website', note: 'A website redesign, with before and after.', tag: 'web' },
-  { name: 'Robot game', note: 'Concept art for a game.', tag: 'concept' },
-]
+import { GARDEN_ITEMS as ITEMS } from '../content/garden'
 
 export default function Garden() {
   return (

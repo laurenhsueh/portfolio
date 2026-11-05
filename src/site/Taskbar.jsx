@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import PixelIcon from './PixelIcon'
+import { SunIcon, MoonIcon } from './NeonIcons'
 
 const LINKS = [
   { href: '#/work', label: 'Work', match: '/work' },
@@ -10,10 +10,13 @@ const LINKS = [
 const PHONE = '(max-width: 899px)'
 
 /**
- * Mac-style menu bar: name on the left, links + theme toggle on the right.
+ * Mac-style menu bar: name on the left, links + theme toggle on the right. Frosted glass laid
+ * over the top of the home hero, with the neon line sun/moon matching the desktop icons.
  * On phones the links collapse into a full-screen menu behind an animated hamburger.
  */
 export default function Taskbar({ route, theme, onToggleTheme }) {
+  const home = '/'
+  const workRoute = '/work'
   const dark = theme === 'dark'
   const [menuOpen, setMenuOpen] = useState(false)
 
@@ -40,14 +43,14 @@ export default function Taskbar({ route, theme, onToggleTheme }) {
   const goHome = (e) => {
     setMenuOpen(false)
     // already home: the hash won't change, so scroll up ourselves
-    if (route === '/' || route === '') {
+    if (route === home || route === '') {
       e.preventDefault()
       window.scrollTo({ top: 0, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' })
     }
   }
   return (
-    <header className={`taskbar ${menuOpen ? 'is-menu-open' : ''}`}>
-      <a className="taskbar-brand" href="#/" onClick={goHome} aria-label="Lauren Hsueh, home">
+    <header className={`taskbar is-glass ${menuOpen ? 'is-menu-open' : ''}`}>
+      <a className="taskbar-brand" href={`#${home}`} onClick={goHome} aria-label="Lauren Hsueh, home">
         <span>Lauren Hsueh</span>
       </a>
       <nav className="taskbar-nav" aria-label="Main">
@@ -55,14 +58,15 @@ export default function Taskbar({ route, theme, onToggleTheme }) {
           {LINKS.map((l) => (
             <li key={l.href}>
               <a
-                href={l.href}
-                aria-current={route.startsWith(l.match) ? 'page' : undefined}
+                href={l.match === '/work' ? `#${workRoute}` : l.href}
+                aria-current={route.startsWith(l.match === '/work' ? workRoute : l.match) ? 'page' : undefined}
                 onClick={(e) => {
                   setMenuOpen(false)
                   // re-clicking Work while on '#/work' (hash unchanged): scroll there again
-                  if (l.match === '/work' && route === '/work') {
+                  if (l.match === '/work' && route === workRoute) {
                     e.preventDefault()
-                    document.getElementById('work')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                    const smooth = !matchMedia('(prefers-reduced-motion: reduce)').matches
+                    document.getElementById('work')?.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto', block: 'start' })
                   }
                 }}
               >
@@ -77,7 +81,7 @@ export default function Taskbar({ route, theme, onToggleTheme }) {
             onClick={onToggleTheme}
             aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
           >
-            <PixelIcon name={dark ? 'moon' : 'sun'} size={24} />
+            {dark ? <MoonIcon size={30} /> : <SunIcon size={30} />}
           </button>
         <button
           type="button"

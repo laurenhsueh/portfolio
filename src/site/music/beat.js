@@ -26,9 +26,15 @@ export async function analyzeBeat(arrayBuffer) {
 
 function inWorker(worker, channels, sampleRate) {
   return new Promise((resolve, reject) => {
-    const done = (fn, v) => { worker.terminate(); fn(v) }
+    const done = (fn, v) => {
+      worker.terminate()
+      fn(v)
+    }
     worker.onmessage = ({ data }) => (data.ok ? done(resolve, data.beat) : done(reject, new Error(data.error)))
     worker.onerror = (e) => done(reject, e)
-    worker.postMessage({ channels, sampleRate }, channels.map((c) => c.buffer))
+    worker.postMessage(
+      { channels, sampleRate },
+      channels.map((c) => c.buffer),
+    )
   })
 }

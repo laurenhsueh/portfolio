@@ -4,7 +4,12 @@ import { CONTACT } from './content/contact'
 export default function Footer() {
   const rows = [
     CONTACT.email && { label: 'Email', text: CONTACT.email, href: `mailto:${CONTACT.email}` },
-    CONTACT.linkedin && { label: 'LinkedIn', text: CONTACT.linkedin.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, ''), href: CONTACT.linkedin, external: true },
+    CONTACT.linkedin && {
+      label: 'LinkedIn',
+      text: CONTACT.linkedin.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, ''),
+      href: CONTACT.linkedin,
+      external: true,
+    },
   ].filter(Boolean)
 
   return (

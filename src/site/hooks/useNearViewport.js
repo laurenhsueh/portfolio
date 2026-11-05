@@ -9,8 +9,16 @@ export function useNearViewport(id, margin = '50%') {
   useEffect(() => {
     if (near) return
     const el = document.getElementById(id)
-    if (!el || !('IntersectionObserver' in window)) { setNear(true); return }
-    const io = new IntersectionObserver(([e]) => { if (e.isIntersecting) setNear(true) }, { rootMargin: `${margin} 0px ${margin} 0px` })
+    if (!el || !('IntersectionObserver' in window)) {
+      setNear(true)
+      return
+    }
+    const io = new IntersectionObserver(
+      ([e]) => {
+        if (e.isIntersecting) setNear(true)
+      },
+      { rootMargin: `${margin} 0px ${margin} 0px` },
+    )
     io.observe(el)
     return () => io.disconnect()
   }, [id, margin, near])

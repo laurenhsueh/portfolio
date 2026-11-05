@@ -74,12 +74,28 @@ void main() {
 // palettes per style + theme
 const LOOKS = {
   apparition: {
-    dark: { blending: THREE.AdditiveBlending, smoke: ['#ffd3e8', '#c7a3e6', 0.09, 0.25], dust: ['#ffffff', '#ffc8e3', 0.75] },
-    light: { blending: THREE.NormalBlending, smoke: ['#f2a7cc', '#cbb3ee', 0.14, 0.2], dust: ['#ec92c0', '#b9a2e8', 0.8] },
+    dark: {
+      blending: THREE.AdditiveBlending,
+      smoke: ['#ffd3e8', '#c7a3e6', 0.09, 0.25],
+      dust: ['#ffffff', '#ffc8e3', 0.75],
+    },
+    light: {
+      blending: THREE.NormalBlending,
+      smoke: ['#f2a7cc', '#cbb3ee', 0.14, 0.2],
+      dust: ['#ec92c0', '#b9a2e8', 0.8],
+    },
   },
   powder: {
-    dark: { blending: THREE.AdditiveBlending, smoke: ['#ffd6ea', '#c9a6f0', 0.14, 0.3], dust: ['#ffffff', '#ffc2e0', 0.85] },
-    light: { blending: THREE.NormalBlending, smoke: ['#f0b3d2', '#c8b3ee', 0.16, 0.2], dust: ['#e57fb2', '#a98ae0', 1.0] },
+    dark: {
+      blending: THREE.AdditiveBlending,
+      smoke: ['#ffd6ea', '#c9a6f0', 0.14, 0.3],
+      dust: ['#ffffff', '#ffc2e0', 0.85],
+    },
+    light: {
+      blending: THREE.NormalBlending,
+      smoke: ['#f0b3d2', '#c8b3ee', 0.16, 0.2],
+      dust: ['#e57fb2', '#a98ae0', 1.0],
+    },
   },
 }
 
@@ -110,9 +126,14 @@ class Pool {
       vertexShader: VERT,
       fragmentShader: frag,
       uniforms: {
-        uTime: { value: 0 }, uSize: { value: 1 }, uGrow: { value: 1 }, uPixelRatio: { value: 1 },
-        uOpacity: { value: 1 }, uIri: { value: 0 },
-        uColA: { value: new THREE.Color() }, uColB: { value: new THREE.Color() },
+        uTime: { value: 0 },
+        uSize: { value: 1 },
+        uGrow: { value: 1 },
+        uPixelRatio: { value: 1 },
+        uOpacity: { value: 1 },
+        uIri: { value: 0 },
+        uColA: { value: new THREE.Color() },
+        uColB: { value: new THREE.Color() },
         ...uniforms,
       },
       transparent: true,
@@ -127,8 +148,12 @@ class Pool {
     const k = this.head
     this.head = (k + 1) % this.n
     const j = k * 3
-    this.p[j] = x; this.p[j + 1] = y; this.p[j + 2] = z
-    this.v[j] = vx; this.v[j + 1] = vy; this.v[j + 2] = vz
+    this.p[j] = x
+    this.p[j + 1] = y
+    this.p[j + 2] = z
+    this.v[j] = vx
+    this.v[j + 1] = vy
+    this.v[j + 2] = vz
     this.t[k] = 0
     this.life[k] = life
   }
@@ -137,7 +162,10 @@ class Pool {
     const ages = this.ageAttr.array
     const d = Math.exp(-drag * dt)
     for (let k = 0; k < this.n; k++) {
-      if (this.t[k] > this.life[k]) { ages[k] = 2; continue }
+      if (this.t[k] > this.life[k]) {
+        ages[k] = 2
+        continue
+      }
       this.t[k] += dt
       const j = k * 3
       flow(this.p[j], this.p[j + 1], this.p[j + 2], t, k * 0.013, tmp)
@@ -153,7 +181,10 @@ class Pool {
     this.ageAttr.needsUpdate = true
   }
 
-  dispose() { this.points.geometry.dispose(); this.mat.dispose() }
+  dispose() {
+    this.points.geometry.dispose()
+    this.mat.dispose()
+  }
 }
 
 export class SmokeSystem {
@@ -193,7 +224,10 @@ export class SmokeSystem {
     du.uColA.value.set(l.dust[0])
     du.uColB.value.set(l.dust[1])
     this.baseDust = l.dust[2]
-    for (const m of [this.smoke.mat, this.dust.mat]) { m.blending = l.blending; m.needsUpdate = true }
+    for (const m of [this.smoke.mat, this.dust.mat]) {
+      m.blending = l.blending
+      m.needsUpdate = true
+    }
   }
 
   /**
@@ -216,13 +250,17 @@ export class SmokeSystem {
     let speedSum = 0
     for (let e = 0; e < E; e++) {
       const vi = this.emitters[e] * 3
-      const x = local[vi], y = local[vi + 1], z = local[vi + 2]
+      const x = local[vi],
+        y = local[vi + 1],
+        z = local[vi + 2]
       const j = e * 3
       cur[j] = mw[0] * x + mw[4] * y + mw[8] * z + mw[12]
       cur[j + 1] = mw[1] * x + mw[5] * y + mw[9] * z + mw[13]
       cur[j + 2] = mw[2] * x + mw[6] * y + mw[10] * z + mw[14]
       if (this.havePrev && (e & 7) === 0) {
-        const dx = cur[j] - prev[j], dy = cur[j + 1] - prev[j + 1], dz = cur[j + 2] - prev[j + 2]
+        const dx = cur[j] - prev[j],
+          dy = cur[j + 1] - prev[j + 1],
+          dz = cur[j + 2] - prev[j + 2]
         speedSum += Math.sqrt(dx * dx + dy * dy + dz * dz) / dt
       }
     }
@@ -233,19 +271,26 @@ export class SmokeSystem {
     const emit = (pool, count, life, inherit, jitter, edgeBias) => {
       for (let i = 0; i < count; i++) {
         const fromEdge = Math.random() < edgeBias
-        const e = fromEdge || !this.surface.length
-          ? (Math.random() * this.edges.length) | 0
-          : this.edges.length + ((Math.random() * this.surface.length) | 0)
+        const e =
+          fromEdge || !this.surface.length
+            ? (Math.random() * this.edges.length) | 0
+            : this.edges.length + ((Math.random() * this.surface.length) | 0)
         const j = e * 3
-        let vx = 0, vy = 0, vz = 0
+        let vx = 0,
+          vy = 0,
+          vz = 0
         if (this.havePrev) {
-          vx = (cur[j] - prev[j]) / dt * inherit
-          vy = (cur[j + 1] - prev[j + 1]) / dt * inherit
-          vz = (cur[j + 2] - prev[j + 2]) / dt * inherit
+          vx = ((cur[j] - prev[j]) / dt) * inherit
+          vy = ((cur[j + 1] - prev[j + 1]) / dt) * inherit
+          vz = ((cur[j + 2] - prev[j + 2]) / dt) * inherit
         }
         pool.spawn(
-          cur[j], cur[j + 1], cur[j + 2],
-          vx + (Math.random() - 0.5) * jitter, vy + (Math.random() - 0.5) * jitter, vz + (Math.random() - 0.5) * jitter,
+          cur[j],
+          cur[j + 1],
+          cur[j + 2],
+          vx + (Math.random() - 0.5) * jitter,
+          vy + (Math.random() - 0.5) * jitter,
+          vz + (Math.random() - 0.5) * jitter,
           life * (0.6 + Math.random() * 0.8),
         )
       }
@@ -266,7 +311,10 @@ export class SmokeSystem {
 
     this.smoke.step(dt, t, 0.35, 0.18, 0.9, this.tmp)
     this.dust.step(dt, t, 0.6, 0.25, 1.2, this.tmp)
-    for (const [pool, base] of [[this.smoke, this.baseSmoke], [this.dust, this.baseDust]]) {
+    for (const [pool, base] of [
+      [this.smoke, this.baseSmoke],
+      [this.dust, this.baseDust],
+    ]) {
       const u = pool.mat.uniforms
       u.uTime.value = t
       u.uPixelRatio.value = cfg.pixelRatio
@@ -274,7 +322,10 @@ export class SmokeSystem {
     }
   }
 
-  dispose() { this.smoke.dispose(); this.dust.dispose() }
+  dispose() {
+    this.smoke.dispose()
+    this.dust.dispose()
+  }
 }
 
 /**
@@ -322,7 +373,11 @@ function scanEmitters(geometry, image) {
     if (alphaAt(u, v) < 0.5) continue
     if (Math.abs(u - 0.5) < 0.05) continue // body strip
     let edge = false
-    for (const [ox, oy] of offsets) if (alphaAt(u + ox, v + oy) < 0.5) { edge = true; break }
+    for (const [ox, oy] of offsets)
+      if (alphaAt(u + ox, v + oy) < 0.5) {
+        edge = true
+        break
+      }
     if (edge) edges.push(i)
     else if ((i & 3) === 0) surface.push(i)
   }

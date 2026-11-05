@@ -2,7 +2,10 @@
    Glass README + neon icons + the blooming ghost butterflies (desktop/OrbitDesktop.jsx,
    butterflies/DuetStage.jsx). */
 /* the 3D butterfly fills whatever box it's given */
-.stage-butterfly { position: absolute; inset: 0; }
+.stage-butterfly {
+  position: absolute;
+  inset: 0;
+}
 /* the same bloom stand-in as the home page's butterflies */
 .stage-butterfly canvas {
   pointer-events: none !important;
@@ -10,13 +13,37 @@
 }
 /* afterimage mode: the canvas is opaque black with its own bloom, screened onto the page (black
    vanishes, light adds), so no CSS glow; its stage must not isolate it from the page background */
-.stage-butterfly.is-afterimage canvas { filter: none; mix-blend-mode: screen; }
+.stage-butterfly.is-afterimage canvas {
+  filter: none;
+  mix-blend-mode: screen;
+}
 /* neon line icons (icon set F) */
-.neon-icon { display: block; overflow: visible; color: var(--neon-ink, #f5c2de); filter: drop-shadow(0 0 5px rgba(219, 91, 144, 0.75)); transition: transform 0.2s ease, filter 0.2s ease; }
-.neon-glint { opacity: 0; transition: opacity 0.2s ease; }
-.neon-icon.is-spinning .neon-glint { opacity: 1; }
-.neon-icon.is-spinning .neon-record { transform-box: view-box; transform-origin: 30px 36px; animation: v-spin 1.8s linear infinite; }
-@keyframes v-spin { to { transform: rotate(360deg); } }
+.neon-icon {
+  display: block;
+  overflow: visible;
+  color: var(--neon-ink, #f5c2de);
+  filter: drop-shadow(0 0 5px rgba(219, 91, 144, 0.75));
+  transition:
+    transform 0.2s ease,
+    filter 0.2s ease;
+}
+.neon-glint {
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+.neon-icon.is-spinning .neon-glint {
+  opacity: 1;
+}
+.neon-icon.is-spinning .neon-record {
+  transform-box: view-box;
+  transform-origin: 30px 36px;
+  animation: v-spin 1.8s linear infinite;
+}
+@keyframes v-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
 
 /* glass tokens (they follow the site theme) */
 .orbit-desktop {
@@ -33,30 +60,71 @@
   --glass-glow: rgba(185, 62, 120, 0.14);
   --neon-ink: #b03a72; /* 4.6:1 on --bg */
 }
-:root[data-theme='light'] .is-glass .neon-icon { filter: drop-shadow(0 0 4px rgba(232, 93, 158, 0.35)); }
-.is-glass .desktop-file:hover .neon-icon, .is-glass .desktop-file:focus-visible .neon-icon { filter: drop-shadow(0 0 8px rgba(219, 91, 144, 0.9)); }
+:root[data-theme='light'] .is-glass .neon-icon {
+  filter: drop-shadow(0 0 4px rgba(232, 93, 158, 0.35));
+}
+.is-glass .desktop-file:hover .neon-icon,
+.is-glass .desktop-file:focus-visible .neon-icon {
+  filter: drop-shadow(0 0 8px rgba(219, 91, 144, 0.9));
+}
 
 /* README window: frosted glass, round window buttons, plain type */
 .is-glass .readme-window {
-  background: var(--glass-bg); color: var(--ink);
-  border: 1px solid var(--glass-edge); border-radius: 16px; overflow: hidden;
-  -webkit-backdrop-filter: blur(26px); backdrop-filter: blur(26px);
+  background: var(--glass-bg);
+  color: var(--ink);
+  border: 1px solid var(--glass-edge);
+  border-radius: 16px;
+  overflow: hidden;
+  -webkit-backdrop-filter: blur(26px);
+  backdrop-filter: blur(26px);
   box-shadow: 0 24px 80px var(--glass-glow);
 }
-.is-glass .win-bar { height: 40px; background: transparent; color: var(--ink); border-bottom: 1px solid var(--glass-hair); }
-.is-glass .win-title { font: 500 13px/1 var(--font-mono); letter-spacing: 0.02em; text-transform: lowercase; }
-.is-glass .win-buttons { align-items: center; gap: 6px; }
-.is-glass .win-body { padding: 0; }
-.is-glass .win-pane { background: transparent; border: 0; box-shadow: none; }
+.is-glass .win-bar {
+  height: 40px;
+  background: transparent;
+  color: var(--ink);
+  border-bottom: 1px solid var(--glass-hair);
+}
+.is-glass .win-title {
+  font: 500 13px/1 var(--font-mono);
+  letter-spacing: 0.02em;
+  text-transform: lowercase;
+}
+.is-glass .win-buttons {
+  align-items: center;
+  gap: 6px;
+}
+.is-glass .win-body {
+  padding: 0;
+}
+.is-glass .win-pane {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
 
 /* labels: plain mono, no caps, no pixel box */
 .is-glass .desktop-file-label {
-  font: 500 12px/1 var(--font-mono); letter-spacing: 0.02em; text-transform: none;
-  padding: 5px 9px; border: 0; border-radius: 999px; color: var(--ink-soft);
-  transition: color 0.2s ease, background-color 0.2s ease;
+  font: 500 12px/1 var(--font-mono);
+  letter-spacing: 0.02em;
+  text-transform: none;
+  padding: 5px 9px;
+  border: 0;
+  border-radius: 999px;
+  color: var(--ink-soft);
+  transition:
+    color 0.2s ease,
+    background-color 0.2s ease;
 }
-.is-glass .desktop-file:hover .desktop-file-label, .is-glass .desktop-file:focus-visible .desktop-file-label { color: var(--ink); background: var(--accent-tint); }
-.is-glass .desktop-file.is-open .desktop-file-label { color: var(--ink); background: rgba(232, 93, 158, 0.22); }
+.is-glass .desktop-file:hover .desktop-file-label,
+.is-glass .desktop-file:focus-visible .desktop-file-label {
+  color: var(--ink);
+  background: var(--accent-tint);
+}
+.is-glass .desktop-file.is-open .desktop-file-label {
+  color: var(--ink);
+  background: rgba(232, 93, 158, 0.22);
+}
 
 /* layout (Figma "B — Desktop with orbit") ─
    [ name   ][                         ][ icons ]
@@ -64,7 +132,9 @@
    The lines and the butterflies are absolute layers under the UI (z 5). Neither may set a
    z-index: the bloom canvas is screen-blended onto the page (see .is-afterimage). */
 .orbit-desktop {
-  position: relative; overflow: hidden; overflow: clip;
+  position: relative;
+  overflow: hidden;
+  overflow: clip;
   display: grid;
   /* everything in multiples of --u (see :root), so big screens get the same layout scaled up;
      past 1440 × --u wide the side padding grows instead, keeping it centred */
@@ -73,24 +143,63 @@
   align-content: center; /* the name + README block sits mid-screen on tall monitors */
   column-gap: calc(48 * var(--u));
   /* it starts under the glass nav bar (so the glow passes beneath it) and pads down past it */
-  margin-top: calc(-1 * var(--taskbar-h)); min-height: 100svh;
+  margin-top: calc(-1 * var(--taskbar-h));
+  min-height: 100svh;
   padding: calc(var(--taskbar-h) + 48 * var(--u)) max(calc(88 * var(--u)), calc(50% - 632 * var(--u)))
     calc(48 * var(--u)) max(calc(96 * var(--u)), calc(50% - 624 * var(--u)));
   border-bottom: 1px solid var(--line-strong);
 }
-.orbit-name { text-transform: uppercase; grid-column: 1; grid-row: 1; position: relative; z-index: 5; font-size: clamp(64px, 9.4vw, calc(128 * var(--u))); line-height: 0.86; }
-.orbit-window { grid-column: 1; grid-row: 2; position: relative; z-index: 5; margin-top: calc(48 * var(--u)); }
+.orbit-name {
+  text-transform: uppercase;
+  grid-column: 1;
+  grid-row: 1;
+  position: relative;
+  z-index: 5;
+  font-size: clamp(64px, 9.4vw, calc(128 * var(--u)));
+  line-height: 0.86;
+}
+.orbit-window {
+  grid-column: 1;
+  grid-row: 2;
+  position: relative;
+  z-index: 5;
+  margin-top: calc(48 * var(--u));
+}
 .orbit-icons {
-  grid-column: 3; grid-row: 1 / -1; align-self: start; position: relative; z-index: 5;
-  display: flex; flex-direction: column; gap: var(--sp-3); list-style: none; margin: 0; padding: var(--sp-3) 0 0;
+  grid-column: 3;
+  grid-row: 1 / -1;
+  align-self: start;
+  position: relative;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  list-style: none;
+  margin: 0;
+  padding: var(--sp-3) 0 0;
 }
 /* the hero's README and icons grow with --u too (phones reset these below) */
-.orbit-icons { gap: calc(24 * var(--u)); padding-top: calc(24 * var(--u)); }
-.orbit-icons .desktop-file { width: calc(96 * var(--u)); }
-.orbit-icons .neon-icon { width: calc(56 * var(--u)); height: calc(56 * var(--u)); }
-.orbit-icons .desktop-file-label { font-size: calc(12 * var(--u)); padding: calc(5 * var(--u)) calc(9 * var(--u)); }
-.orbit-desktop .readme-text { font-size: calc(20 * var(--u)); }
-.orbit-space { display: none; }
+.orbit-icons {
+  gap: calc(24 * var(--u));
+  padding-top: calc(24 * var(--u));
+}
+.orbit-icons .desktop-file {
+  width: calc(96 * var(--u));
+}
+.orbit-icons .neon-icon {
+  width: calc(56 * var(--u));
+  height: calc(56 * var(--u));
+}
+.orbit-icons .desktop-file-label {
+  font-size: calc(12 * var(--u));
+  padding: calc(5 * var(--u)) calc(9 * var(--u));
+}
+.orbit-desktop .readme-text {
+  font-size: calc(20 * var(--u));
+}
+.orbit-space {
+  display: none;
+}
 
 /* README: real glass over the big butterfly's left wing: a faint sheen, a bright top edge and
    no outer glow, so the wing's glow and the orbit line show through it, blurred. An Apple-style
@@ -98,85 +207,215 @@
 .orbit-desktop .readme-window {
   --pane-x: calc(40 * var(--u));
   /* the sheen, over a faint dark tint so the text keeps its contrast where the glow passes under */
-  background: linear-gradient(140deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.03) 45%, rgba(255, 255, 255, 0.01)),
+  background:
+    linear-gradient(140deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.03) 45%, rgba(255, 255, 255, 0.01)),
     rgba(20, 15, 20, 0.32);
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: calc(18 * var(--u));
-  -webkit-backdrop-filter: blur(14px) saturate(1.6); backdrop-filter: blur(14px) saturate(1.6);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), inset 0 0 0 1px rgba(255, 255, 255, 0.03);
+  -webkit-backdrop-filter: blur(14px) saturate(1.6);
+  backdrop-filter: blur(14px) saturate(1.6);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.3),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.03);
 }
 :root[data-theme='light'] .orbit-desktop .readme-window {
   /* whiter glass with a real edge (a white rim alone disappears on the pale pink page) */
-  background: linear-gradient(140deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.5) 50%, rgba(255, 255, 255, 0.4));
+  background: linear-gradient(
+    140deg,
+    rgba(255, 255, 255, 0.72),
+    rgba(255, 255, 255, 0.5) 50%,
+    rgba(255, 255, 255, 0.4)
+  );
   border-color: var(--line-strong);
-  box-shadow: inset 0 1px 0 #fff, 0 12px 40px rgba(120, 50, 90, 0.12);
+  box-shadow:
+    inset 0 1px 0 #fff,
+    0 12px 40px rgba(120, 50, 90, 0.12);
 }
-.orbit-desktop .readme-window .win-pane { padding: calc(32 * var(--u)) var(--pane-x) calc(40 * var(--u)); }
+.orbit-desktop .readme-window .win-pane {
+  padding: calc(32 * var(--u)) var(--pane-x) calc(40 * var(--u));
+}
 .orbit-desktop .win-bar.is-mac {
-  position: relative; justify-content: flex-start; gap: calc(16 * var(--u)); height: calc(44 * var(--u)); padding: 0 calc(16 * var(--u));
+  position: relative;
+  justify-content: flex-start;
+  gap: calc(16 * var(--u));
+  height: calc(44 * var(--u));
+  padding: 0 calc(16 * var(--u));
   border-bottom: 1px solid var(--glass-hair);
 }
 /* the title bar is the README's handle: drag it to move the window (OrbitDesktop.jsx) */
-.orbit-desktop .orbit-window .win-bar { cursor: grab !important; touch-action: none; }
-.orbit-desktop .orbit-window.is-dragging .win-bar { cursor: grabbing !important; }
-.orbit-desktop .orbit-window.is-dragging .readme-window { box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 24px 60px rgba(0, 0, 0, 0.35); }
-:root[data-theme='light'] .orbit-desktop .orbit-window.is-dragging .readme-window { box-shadow: inset 0 1px 0 #fff, 0 24px 60px rgba(120, 50, 90, 0.22); }
-/* the title sits left, just after the buttons */
-.orbit-desktop .win-bar.is-mac .win-title { pointer-events: none; color: var(--ink-soft); font-size: calc(13 * var(--u)); }
-.orbit-desktop .win-bar.is-mac .win-buttons { display: flex; align-items: center; gap: calc(8 * var(--u)); }
-.orbit-desktop .win-bar.is-mac .win-btn {
-  width: calc(12 * var(--u)); height: calc(12 * var(--u)); padding: 0; border-radius: 50%; opacity: 1; box-shadow: none;
-  background: transparent; border: 1px solid var(--ink-soft); font: 700 9px/1 var(--font-mono); color: transparent;
+.orbit-desktop .orbit-window .win-bar {
+  cursor: grab !important;
+  touch-action: none;
 }
-.orbit-desktop .win-bar.is-mac .win-btn-close { background: var(--accent); border-color: var(--accent); cursor: pointer; }
+.orbit-desktop .orbit-window.is-dragging .win-bar {
+  cursor: grabbing !important;
+}
+.orbit-desktop .orbit-window.is-dragging .readme-window {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.3),
+    0 24px 60px rgba(0, 0, 0, 0.35);
+}
+:root[data-theme='light'] .orbit-desktop .orbit-window.is-dragging .readme-window {
+  box-shadow:
+    inset 0 1px 0 #fff,
+    0 24px 60px rgba(120, 50, 90, 0.22);
+}
+/* the title sits left, just after the buttons */
+.orbit-desktop .win-bar.is-mac .win-title {
+  pointer-events: none;
+  color: var(--ink-soft);
+  font-size: calc(13 * var(--u));
+}
+.orbit-desktop .win-bar.is-mac .win-buttons {
+  display: flex;
+  align-items: center;
+  gap: calc(8 * var(--u));
+}
+.orbit-desktop .win-bar.is-mac .win-btn {
+  width: calc(12 * var(--u));
+  height: calc(12 * var(--u));
+  padding: 0;
+  border-radius: 50%;
+  opacity: 1;
+  box-shadow: none;
+  background: transparent;
+  border: 1px solid var(--ink-soft);
+  font: 700 9px/1 var(--font-mono);
+  color: transparent;
+}
+.orbit-desktop .win-bar.is-mac .win-btn-close {
+  background: var(--accent);
+  border-color: var(--accent);
+  cursor: pointer;
+}
 /* the dot stays small, but it's pressable 24px around (WCAG 2.5.8 target size) */
-.orbit-desktop .win-bar.is-mac .win-btn-close::before { content: ''; position: absolute; inset: -6px; border-radius: 50%; }
-:root[data-theme='light'] .orbit-desktop .win-bar.is-mac .win-btn-close { background: #c2457f; border-color: #c2457f; } /* 3.8:1 */
-.orbit-desktop .win-bar.is-mac .win-btn-close span { translate: 0 -0.5px; }
+.orbit-desktop .win-bar.is-mac .win-btn-close::before {
+  content: '';
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+}
+:root[data-theme='light'] .orbit-desktop .win-bar.is-mac .win-btn-close {
+  background: #c2457f;
+  border-color: #c2457f;
+} /* 3.8:1 */
+.orbit-desktop .win-bar.is-mac .win-btn-close span {
+  translate: 0 -0.5px;
+}
 /* the × shows on hover, as on a Mac */
-.orbit-desktop .win-bar.is-mac .win-btn-close:hover, .orbit-desktop .win-bar.is-mac .win-btn-close:focus-visible { background: var(--accent); border-color: var(--accent); color: rgba(255, 255, 255, 0.9); }
-.orbit-desktop .win-bar.is-mac .win-btn-close:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 3px; }
+.orbit-desktop .win-bar.is-mac .win-btn-close:hover,
+.orbit-desktop .win-bar.is-mac .win-btn-close:focus-visible {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: rgba(255, 255, 255, 0.9);
+}
+.orbit-desktop .win-bar.is-mac .win-btn-close:focus-visible {
+  outline: 2px solid var(--accent-ink);
+  outline-offset: 3px;
+}
 
-.orbit-lines { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; color: #fff; }
-.orbit-ring { stroke-opacity: 0.38; }
-.orbit-planet { stroke-opacity: 0.14; }
-.orbit-lines.is-front .orbit-ring { stroke-opacity: 0.3; }
+.orbit-lines {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: visible;
+  color: #fff;
+}
+.orbit-ring {
+  stroke-opacity: 0.38;
+}
+.orbit-planet {
+  stroke-opacity: 0.14;
+}
+.orbit-lines.is-front .orbit-ring {
+  stroke-opacity: 0.3;
+}
 
 /* the nav bar: frosted glass laid over the top of the hero, so the orbit lines and glow pass
    under it */
 .taskbar.is-glass {
   --neon-ink: #f5c2de;
-  position: sticky; background: rgba(29, 25, 29, 0.32); border-bottom-color: rgba(255, 255, 255, 0.1);
-  -webkit-backdrop-filter: blur(20px) saturate(1.6); backdrop-filter: blur(20px) saturate(1.6);
+  position: sticky;
+  background: rgba(29, 25, 29, 0.32);
+  border-bottom-color: rgba(255, 255, 255, 0.1);
+  -webkit-backdrop-filter: blur(20px) saturate(1.6);
+  backdrop-filter: blur(20px) saturate(1.6);
 }
-:root[data-theme='light'] .taskbar.is-glass { --neon-ink: #b03a72; background: rgba(255, 250, 252, 0.72); border-bottom-color: var(--line-strong); }
-.taskbar.is-glass .theme-toggle { border-radius: 10px; }
-:root[data-theme='light'] .orbit-lines { color: var(--ink); }
-:root[data-theme='light'] .orbit-ring { stroke-opacity: 0.22; }
-:root[data-theme='light'] .orbit-planet { stroke-opacity: 0.1; }
+:root[data-theme='light'] .taskbar.is-glass {
+  --neon-ink: #b03a72;
+  background: rgba(255, 250, 252, 0.72);
+  border-bottom-color: var(--line-strong);
+}
+.taskbar.is-glass .theme-toggle {
+  border-radius: 10px;
+}
+:root[data-theme='light'] .orbit-lines {
+  color: var(--ink);
+}
+:root[data-theme='light'] .orbit-ring {
+  stroke-opacity: 0.22;
+}
+:root[data-theme='light'] .orbit-planet {
+  stroke-opacity: 0.1;
+}
 /* dark: the bloom canvas, a touch more saturated and luminous */
-.duet-stage.is-afterimage canvas { filter: saturate(1.25); }
+.duet-stage.is-afterimage canvas {
+  filter: saturate(1.25);
+}
 /* light: no bloom pass (it would wash out on the pale page), so the glow is layered pink
    drop-shadows that follow the wings and spread out like bloom, plus the pink halo in the canvas */
 .duet-stage.is-light canvas {
-  filter: saturate(1.25)
-    drop-shadow(0 0 2px rgba(214, 70, 140, 0.5))
-    drop-shadow(0 0 14px rgba(232, 93, 158, 0.42))
+  filter: saturate(1.25) drop-shadow(0 0 2px rgba(214, 70, 140, 0.5)) drop-shadow(0 0 14px rgba(232, 93, 158, 0.42))
     drop-shadow(0 0 40px rgba(240, 120, 180, 0.32));
 }
 @media (max-width: 899px) {
   /* v4 stacks: name, icon row, README, the butterflies' space */
-  .orbit-desktop { grid-template-columns: minmax(0, 1fr); grid-template-rows: none; align-content: start; column-gap: 0; padding: calc(var(--taskbar-h) + var(--sp-6)) var(--gutter) var(--sp-8); }
-  .orbit-desktop > * { grid-column: 1; grid-row: auto; }
-  .orbit-name { font-size: clamp(52px, 17vw, 96px); }
-  .orbit-icons { order: 1; flex-direction: row; justify-content: space-between; gap: 0; padding: 0; margin-top: var(--sp-4); }
-  .orbit-icons .desktop-file { width: 64px; }
-  .orbit-icons .neon-icon { width: 48px; height: 48px; }
-  .orbit-window { order: 2; margin-top: var(--sp-4); }
-  .orbit-space { order: 3; }
+  .orbit-desktop {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: none;
+    align-content: start;
+    column-gap: 0;
+    padding: calc(var(--taskbar-h) + var(--sp-6)) var(--gutter) var(--sp-8);
+  }
+  .orbit-desktop > * {
+    grid-column: 1;
+    grid-row: auto;
+  }
+  .orbit-name {
+    font-size: clamp(52px, 17vw, 96px);
+  }
+  .orbit-icons {
+    order: 1;
+    flex-direction: row;
+    justify-content: space-between;
+    gap: 0;
+    padding: 0;
+    margin-top: var(--sp-4);
+  }
+  .orbit-icons .desktop-file {
+    width: 64px;
+  }
+  .orbit-icons .neon-icon {
+    width: 48px;
+    height: 48px;
+  }
+  .orbit-window {
+    order: 2;
+    margin-top: var(--sp-4);
+  }
+  .orbit-space {
+    order: 3;
+  }
 
-  .orbit-space { display: block; height: min(96vw, 460px); }
+  .orbit-space {
+    display: block;
+    height: min(96vw, 460px);
+  }
 }
 @media (prefers-reduced-motion: reduce) {
-  .neon-icon.is-spinning .neon-record { animation: none; }
+  .neon-icon.is-spinning .neon-record {
+    animation: none;
+  }
 }

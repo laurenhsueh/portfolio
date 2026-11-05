@@ -55,7 +55,14 @@ function OrbitLines({ geo, part }) {
   const id = `orbit-${part}`
   const half = part === 'back' ? 1 : 0 // SVG sweep 1 from the left point runs over the top
   return (
-    <svg className={`orbit-lines is-${part}`} viewBox={`0 0 ${W} ${H}`} width={W} height={H} aria-hidden="true" focusable="false">
+    <svg
+      className={`orbit-lines is-${part}`}
+      viewBox={`0 0 ${W} ${H}`}
+      width={W}
+      height={H}
+      aria-hidden="true"
+      focusable="false"
+    >
       <defs>
         <filter id={`${id}-feather`} x="-20%" y="-20%" width="140%" height="140%">
           <feGaussianBlur stdDeviation="12" />
@@ -63,12 +70,20 @@ function OrbitLines({ geo, part }) {
         <mask id={`${id}-mask`} maskUnits="userSpaceOnUse" x="0" y="0" width={W} height={H}>
           <rect width={W} height={H} fill="#fff" />
           <g filter={`url(#${id}-feather)`}>
-            {Object.entries(holes).map(([k, r]) => r && (
-              <rect
-                key={k}
-                x={r.x - HOLE_PAD} y={r.y - HOLE_PAD} width={r.w + HOLE_PAD * 2} height={r.h + HOLE_PAD * 2} rx="24" fill="#000"
-              />
-            ))}
+            {Object.entries(holes).map(
+              ([k, r]) =>
+                r && (
+                  <rect
+                    key={k}
+                    x={r.x - HOLE_PAD}
+                    y={r.y - HOLE_PAD}
+                    width={r.w + HOLE_PAD * 2}
+                    height={r.h + HOLE_PAD * 2}
+                    rx="24"
+                    fill="#000"
+                  />
+                ),
+            )}
           </g>
         </mask>
       </defs>
@@ -145,7 +160,9 @@ export default function OrbitDesktop({ theme }) {
     const holes = { name, icons }
     sceneRef.current = {
       ...sceneRef.current, // keeps `drag` and the butterflies' `live` positions
-      w: W, h: H, big,
+      w: W,
+      h: H,
+      big,
       readmeOpen: openRef.current,
       readmeSpot: win && { x: win.x + win.w / 2, y: win.y + win.h / 2 },
       rightLimit: !narrow && icons ? icons.x - 24 : W - 8,
@@ -263,13 +280,14 @@ export default function OrbitDesktop({ theme }) {
       onPointerCancel={onPointerUp}
     >
       <OrbitLines geo={geo} part="back" />
-      {webgl && afterPaint && ( // the 3D waits until the page has painted
-        <SafeBoundary>
-          <Suspense fallback={null}>
-            <DuetStage sceneRef={sceneRef} reduced={reduced} theme={theme} />
-          </Suspense>
-        </SafeBoundary>
-      )}
+      {webgl &&
+        afterPaint && ( // the 3D waits until the page has painted
+          <SafeBoundary>
+            <Suspense fallback={null}>
+              <DuetStage sceneRef={sceneRef} reduced={reduced} theme={theme} />
+            </Suspense>
+          </SafeBoundary>
+        )}
       <OrbitLines geo={geo} part="front" />
 
       <h1 ref={nameRef} className="desktop-name orbit-name">
@@ -295,13 +313,15 @@ export default function OrbitDesktop({ theme }) {
             <span className="desktop-file-label">readme</span>
           </button>
         </li>
-        <DanceButton icon={(spinning) => <DanceIcon size={56} className={spinning ? 'is-spinning' : ''} />} label={(open) => (open ? 'stop dance' : 'dance')} />
+        <DanceButton
+          icon={(spinning) => <DanceIcon size={56} className={spinning ? 'is-spinning' : ''} />}
+          label={(open) => (open ? 'stop dance' : 'dance')}
+        />
         <ContactItems />
       </ul>
 
       {/* phones: the butterflies get this space under the README */}
       <div ref={spaceRef} className="orbit-space" aria-hidden="true" />
-
     </section>
   )
 }

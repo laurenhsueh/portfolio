@@ -3,51 +3,107 @@
   background: var(--win-body);
   border: 1px solid var(--win-edge);
   box-shadow:
-    inset 1px 1px 0 var(--win-hi), inset -1px -1px 0 var(--win-lo),
+    inset 1px 1px 0 var(--win-hi),
+    inset -1px -1px 0 var(--win-lo),
     6px 6px 0 var(--shadow-pixel);
   color: var(--ink);
   transition: background-color 0.4s ease;
 }
 .win-bar {
-  display: flex; align-items: center; justify-content: space-between; gap: var(--sp-1);
-  height: 32px; padding: 0 var(--sp-1) 0 var(--sp-2);
-  background: var(--win-bar); color: var(--win-bar-ink);
-  border-bottom: 1px solid var(--win-edge); user-select: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-1);
+  height: 32px;
+  padding: 0 var(--sp-1) 0 var(--sp-2);
+  background: var(--win-bar);
+  color: var(--win-bar-ink);
+  border-bottom: 1px solid var(--win-edge);
+  user-select: none;
 }
-.win-title { margin: 0; font: 400 var(--text-label)/1 var(--font-mono); letter-spacing: 0.08em; }
-.win-buttons { display: flex; gap: 4px; }
+.win-title {
+  margin: 0;
+  font: 400 var(--text-label)/1 var(--font-mono);
+  letter-spacing: 0.08em;
+}
+.win-buttons {
+  display: flex;
+  gap: 4px;
+}
 .win-btn {
-  position: relative; display: grid; place-items: center; width: 20px; height: 20px; padding: 0;
-  background: var(--win-body); border: 1px solid var(--win-edge);
-  box-shadow: inset 1px 1px 0 var(--win-hi), inset -1px -1px 0 var(--win-lo);
-  color: var(--win-edge); font: 700 15px/1 var(--font-mono);
-}
-.win-btn-close { cursor: pointer; }
-.win-btn-close span { translate: 0 -1px; }
-.win-body { padding: var(--sp-1); }
-.win-pane {
-  position: relative; background: var(--win-pane);
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  background: var(--win-body);
   border: 1px solid var(--win-edge);
-  box-shadow: inset 1px 1px 0 var(--win-lo), inset -1px -1px 0 var(--win-hi);
+  box-shadow:
+    inset 1px 1px 0 var(--win-hi),
+    inset -1px -1px 0 var(--win-lo);
+  color: var(--win-edge);
+  font: 700 15px/1 var(--font-mono);
+}
+.win-btn-close {
+  cursor: pointer;
+}
+.win-btn-close span {
+  translate: 0 -1px;
+}
+.win-body {
+  padding: var(--sp-1);
+}
+.win-pane {
+  position: relative;
+  background: var(--win-pane);
+  border: 1px solid var(--win-edge);
+  box-shadow:
+    inset 1px 1px 0 var(--win-lo),
+    inset -1px -1px 0 var(--win-hi);
 }
 
 /* README: pink glow, no offset shadow (the home page's glass look overrides it below) */
 .readme-window {
   box-shadow:
-    inset 1px 1px 0 var(--win-hi), inset -1px -1px 0 var(--win-lo),
-    0 0 48px var(--win-glow), 0 0 120px var(--win-glow);
+    inset 1px 1px 0 var(--win-hi),
+    inset -1px -1px 0 var(--win-lo),
+    0 0 48px var(--win-glow),
+    0 0 120px var(--win-glow);
 }
 /* README: open/close transition */
 .readme-window {
   transform-origin: 50% 0;
-  opacity: 0; transform: scale(0.96); visibility: hidden; pointer-events: none;
-  transition: opacity 0.24s ease, transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1), visibility 0s linear 0.28s,
+  opacity: 0;
+  transform: scale(0.96);
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    opacity 0.24s ease,
+    transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1),
+    visibility 0s linear 0.28s,
     background-color 0.4s ease;
 }
 .readme-window.is-open {
-  opacity: 1; transform: none; visibility: visible; pointer-events: auto;
-  transition: opacity 0.24s ease, transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1), visibility 0s, background-color 0.4s ease;
+  opacity: 1;
+  transform: none;
+  visibility: visible;
+  pointer-events: auto;
+  transition:
+    opacity 0.24s ease,
+    transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1),
+    visibility 0s,
+    background-color 0.4s ease;
 }
-.readme-window .win-pane { padding: var(--sp-5); }
-.readme-text { margin: 0; font-size: 20px; line-height: 1.5; text-wrap: pretty; }
-.dance-button .desktop-file-label { white-space: nowrap; } /* "stop dance" */
+.readme-window .win-pane {
+  padding: var(--sp-5);
+}
+.readme-text {
+  margin: 0;
+  font-size: 20px;
+  line-height: 1.5;
+  text-wrap: pretty;
+}
+.dance-button .desktop-file-label {
+  white-space: nowrap;
+} /* "stop dance" */

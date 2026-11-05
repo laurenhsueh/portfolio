@@ -112,7 +112,11 @@ export default function Butterfly({ params, playback, look, keyLight, hudRef }) 
     b.uIri.value = look.iridescence * 0.3
     b.uGlow.value = look.glow * 0.35 * (light ? 0.55 : 1)
 
-    for (const [m, op] of [[mats.apparition.wing, 1], [mats.apparition.body, 1], [mats.apparition.haze, look.haze]]) {
+    for (const [m, op] of [
+      [mats.apparition.wing, 1],
+      [mats.apparition.body, 1],
+      [mats.apparition.haze, look.haze],
+    ]) {
       const u = m.uniforms
       u.uIri.value = look.iridescence
       u.uGlow.value = look.glow * 1.15 // glow 0.3 ≈ the earlier 0.5 default's brightness
@@ -170,7 +174,10 @@ export default function Butterfly({ params, playback, look, keyLight, hudRef }) 
     const dissolve = app ? dissolveCurve(t, look.dissolvePeriod) * look.dissolve : 0
 
     // key light direction in view space for the iridescence mask
-    _light.set(...keyLight).normalize().transformDirection(camera.matrixWorldInverse)
+    _light
+      .set(...keyLight)
+      .normalize()
+      .transformDirection(camera.matrixWorldInverse)
     for (const m of [mats.powder.wing, mats.powder.body]) {
       m.userData.uniforms.uLightDir.value.copy(_light)
       m.userData.uniforms.uTime.value = t

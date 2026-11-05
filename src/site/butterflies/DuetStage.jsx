@@ -8,7 +8,6 @@ import { guide } from './guide'
 import { pageRect } from './layout'
 import { DARK_BLOOM, LIGHT_HALO } from './lookParams'
 
-
 // The #/v4 stage: the big ghost butterfly hovering in its orbit, and a smaller one that comes
 // and goes. Both share one canvas, so on dark they get the same bloom pipeline as #/v3
 // (./afterimage.js, with only a faint trail), screen-blended onto the page.
@@ -122,13 +121,17 @@ function Director({ duet, sceneRef, reduced }) {
     const ox = held ? drag.x - homeX : 0
     const oy = held ? drag.y - homeY : 0
     if (reduced) {
-      O.x = ox; O.y = oy; O.vx = 0; O.vy = 0
+      O.x = ox
+      O.y = oy
+      O.vx = 0
+      O.vy = 0
     } else {
       const w = held ? DRAG_FOLLOW : BIG_HOME
       const lift = held ? 0 : Math.min(Math.hypot(O.x, O.y), 800) * 0.15 // arc home, like the small one
       O.vx += (w * w * (ox - O.x) - 2 * w * O.vx) * dt
       O.vy += (w * w * (oy - lift - O.y) - 2 * w * O.vy) * dt
-      O.x += O.vx * dt; O.y += O.vy * dt
+      O.x += O.vx * dt
+      O.y += O.vy * dt
     }
     duet.big.x = homeX + O.x
     duet.big.y = homeY + O.y
@@ -140,14 +143,19 @@ function Director({ duet, sceneRef, reduced }) {
     const swingTo = (v) => Math.max(-DRAG_SWING_MAX, Math.min(DRAG_SWING_MAX, -v * DRAG_SWING))
     duet.swing.big = lerp(duet.swing.big, held ? swingTo(O.vx) : 0, 1 - Math.exp(-dt * 6))
 
-    if (!duet.ready) { // start already away (or in place), never flying in on first paint
-      S.x = tx; S.y = ty
+    if (!duet.ready) {
+      // start already away (or in place), never flying in on first paint
+      S.x = tx
+      S.y = ty
       S.fade = goingAway ? 0 : 1
       duet.ready = true
     }
 
     if (reduced) {
-      S.x = tx; S.y = ty; S.vx = 0; S.vy = 0
+      S.x = tx
+      S.y = ty
+      S.vx = 0
+      S.vy = 0
     } else {
       // a critically damped spring: smooth, no overshoot, and it can be retargeted any time.
       // Unhurried when flying in or out; stiffer while dancing, to keep up with the partner.
@@ -159,8 +167,10 @@ function Director({ duet, sceneRef, reduced }) {
       const aimY = ty - (held ? 0 : Math.min(dist, 800) * 0.18 * (1 - dl))
       const ax = w * w * (tx - S.x) - 2 * w * S.vx
       const ay = w * w * (aimY - S.y) - 2 * w * S.vy
-      S.vx += ax * dt; S.vy += ay * dt
-      S.x += S.vx * dt; S.y += S.vy * dt
+      S.vx += ax * dt
+      S.vy += ay * dt
+      S.x += S.vx * dt
+      S.y += S.vy * dt
     }
 
     // fade out only once it's nearly off screen, and back in as it sets off
@@ -206,10 +216,14 @@ function Stage({ sceneRef, reduced, theme }) {
     const lean = Math.cos(duet.theta) * 0.12 * duet.dl
     const held = sceneRef.current?.drag?.who === 'big'
     return {
-      at: [B.x / size.width, B.y / size.height], span: B.span / unit(),
+      at: [B.x / size.width, B.y / size.height],
+      span: B.span / unit(),
       // hidden while the scroll butterfly has it (it flew down to Work as the same butterfly)
-      rot: [BIG_ROT[0], BIG_ROT[1] + lean, duet.bigRz], fade: guide.heroHidden ? 0 : 1,
-      held, flying: B.flying ?? 0, swing: duet.swing.big,
+      rot: [BIG_ROT[0], BIG_ROT[1] + lean, duet.bigRz],
+      fade: guide.heroHidden ? 0 : 1,
+      held,
+      flying: B.flying ?? 0,
+      swing: duet.swing.big,
     }
   }
   const driveSmall = () => {
@@ -223,15 +237,37 @@ function Stage({ sceneRef, reduced, theme }) {
       rot: [SMALL_ROT[0], SMALL_ROT[1], S.rz],
       fade: S.fade * (0.8 + 0.2 * S.depth),
       z: S.depth * 0.8,
-      held: sc.drag?.who === 'small', flying: S.flying ?? 0, swing: duet.swing.small,
+      held: sc.drag?.who === 'small',
+      flying: S.flying ?? 0,
+      swing: duet.swing.small,
     }
   }
 
   return (
     <>
       <Director duet={duet} sceneRef={sceneRef} reduced={reduced} />
-      <Flyer drive={driveBig} bob={1.3} bobRate={1.25} reduced={reduced} theme={theme} flapRate={BLOOM.flapRate} smokeAmount={bloom ? BLOOM.smoke : undefined} haloGain={bloom ? 0.45 : LIGHT_HALO.gain} haloSize={bloom ? null : LIGHT_HALO.size} />
-      <Flyer drive={driveSmall} bob={1.6} bobRate={1.5} reduced={reduced} theme={theme} flapRate={0.7} smokeAmount={bloom ? BLOOM.smoke * 0.6 : undefined} haloGain={bloom ? 0.45 : LIGHT_HALO.gain} haloSize={bloom ? null : LIGHT_HALO.size} />
+      <Flyer
+        drive={driveBig}
+        bob={1.3}
+        bobRate={1.25}
+        reduced={reduced}
+        theme={theme}
+        flapRate={BLOOM.flapRate}
+        smokeAmount={bloom ? BLOOM.smoke : undefined}
+        haloGain={bloom ? 0.45 : LIGHT_HALO.gain}
+        haloSize={bloom ? null : LIGHT_HALO.size}
+      />
+      <Flyer
+        drive={driveSmall}
+        bob={1.6}
+        bobRate={1.5}
+        reduced={reduced}
+        theme={theme}
+        flapRate={0.7}
+        smokeAmount={bloom ? BLOOM.smoke * 0.6 : undefined}
+        haloGain={bloom ? 0.45 : LIGHT_HALO.gain}
+        haloSize={bloom ? null : LIGHT_HALO.size}
+      />
       {bloom && <Afterimage cfg={BLOOM} reduced={reduced} />}
     </>
   )
@@ -245,7 +281,11 @@ export default function DuetStage({ sceneRef, reduced, theme }) {
 
   useEffect(() => {
     guide.heroEl = wrapRef.current
-    return () => { guide.heroEl = null; guide.hero = null; guide.heroHidden = false }
+    return () => {
+      guide.heroEl = null
+      guide.hero = null
+      guide.heroHidden = false
+    }
   }, [])
 
   useEffect(() => {
@@ -257,7 +297,11 @@ export default function DuetStage({ sceneRef, reduced, theme }) {
   }, [])
 
   return (
-    <div ref={wrapRef} className={`stage-butterfly duet-stage ${bloom ? 'is-afterimage' : 'is-light'}`} aria-hidden="true">
+    <div
+      ref={wrapRef}
+      className={`stage-butterfly duet-stage ${bloom ? 'is-afterimage' : 'is-light'}`}
+      aria-hidden="true"
+    >
       <ButterflyCanvas bloom={bloom} frameloop={visible ? 'always' : 'never'}>
         <Stage sceneRef={sceneRef} reduced={reduced} theme={theme} />
       </ButterflyCanvas>

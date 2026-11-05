@@ -15,9 +15,15 @@ function loadSong() {
     })
     .then((buf) => {
       songUrl = URL.createObjectURL(new Blob([buf], { type: 'audio/mpeg' })) // copies, before decoding detaches buf
-      whenIdle(() => analyzeBeat(buf).then((b) => setBeat(b.bpm, b.offset)).catch(() => {})) // else: default tempo
+      whenIdle(() =>
+        analyzeBeat(buf)
+          .then((b) => setBeat(b.bpm, b.offset))
+          .catch(() => {}),
+      ) // else: default tempo
     })
-    .catch(() => { songPromise = null }) // try again next time
+    .catch(() => {
+      songPromise = null
+    }) // try again next time
   return songPromise
 }
 const whenIdle = (fn) => (window.requestIdleCallback ? requestIdleCallback(fn, { timeout: 1500 }) : setTimeout(fn, 200))
@@ -28,7 +34,16 @@ const whenIdle = (fn) => (window.requestIdleCallback ? requestIdleCallback(fn, {
  * it plays) and `label(open)` names it; pressing it again stops the music and the dance.
  * The song loops while it's on.
  */
-const DanceButton = forwardRef(function DanceButton({ icon, label, slotClassName = 'icon-slot dance-slot', buttonClassName = 'desktop-file dance-button', labelClassName = 'desktop-file-label' }, btnRef) {
+const DanceButton = forwardRef(function DanceButton(
+  {
+    icon,
+    label,
+    slotClassName = 'icon-slot dance-slot',
+    buttonClassName = 'desktop-file dance-button',
+    labelClassName = 'desktop-file-label',
+  },
+  btnRef,
+) {
   const [open, setOpen] = useState(false)
   const [spinning, setSpinning] = useState(false)
   const audio = useRef(null)
@@ -40,8 +55,14 @@ const DanceButton = forwardRef(function DanceButton({ icon, label, slotClassName
       const a = new Audio(songUrl ?? SONG.src)
       a.loop = true
       a.preload = 'auto'
-      a.addEventListener('playing', () => { startDance(() => a.currentTime); setSpinning(true) })
-      a.addEventListener('pause', () => { stopDance(); setSpinning(false) })
+      a.addEventListener('playing', () => {
+        startDance(() => a.currentTime)
+        setSpinning(true)
+      })
+      a.addEventListener('pause', () => {
+        stopDance()
+        setSpinning(false)
+      })
       audio.current = a
     }
     return audio.current
@@ -51,19 +72,30 @@ const DanceButton = forwardRef(function DanceButton({ icon, label, slotClassName
     setOpen(true)
     loadSong()
     // play straight from the click so the browser allows the sound
-    getAudio().play().catch(() => setOpen(false))
+    getAudio()
+      .play()
+      .catch(() => setOpen(false))
   }
 
   const stop = () => {
     const a = audio.current
-    if (a) { a.pause(); a.currentTime = 0 }
+    if (a) {
+      a.pause()
+      a.currentTime = 0
+    }
     stopDance()
     setSpinning(false)
     setOpen(false)
   }
 
   // leaving the page (route change) stops the music
-  useEffect(() => () => { audio.current?.pause(); stopDance() }, [])
+  useEffect(
+    () => () => {
+      audio.current?.pause()
+      stopDance()
+    },
+    [],
+  )
 
   return (
     <li className={slotClassName}>

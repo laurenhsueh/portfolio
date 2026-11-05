@@ -57,7 +57,17 @@ function downbeatLift(db) {
  * haloSize (override the props for this frame) }. `bob` / `bobRate`:
  * how much and how fast it hovers. `theme` 'light' switches to the iridescent pink-glass look (no bloom there).
  */
-export function Flyer({ drive, reduced, bob = 1, bobRate = 0.8, flapRate = 0.55, smokeAmount, haloGain = 1, theme = 'dark', haloSize = null }) {
+export function Flyer({
+  drive,
+  reduced,
+  bob = 1,
+  bobRate = 0.8,
+  flapRate = 0.55,
+  smokeAmount,
+  haloGain = 1,
+  theme = 'dark',
+  haloSize = null,
+}) {
   const gltf = useLoader(GLTFLoader, GLB)
   const { size, gl } = useThree()
 
@@ -86,7 +96,11 @@ export function Flyer({ drive, reduced, bob = 1, bobRate = 0.8, flapRate = 0.55,
       wings.add(haze)
     }
     if (body) body.material = mats.body
-    for (const [m, op] of [[mats.wing, 1], [mats.body, 1], [mats.haze, 0.8]]) {
+    for (const [m, op] of [
+      [mats.wing, 1],
+      [mats.body, 1],
+      [mats.haze, 0.8],
+    ]) {
       m.uniforms.uIri.value = 1
       m.uniforms.uGlow.value = LOOK.glow * 1.15
       m.userData.op = op
@@ -96,7 +110,9 @@ export function Flyer({ drive, reduced, bob = 1, bobRate = 0.8, flapRate = 0.55,
   }, [gltf])
 
   const halo = useMemo(() => {
-    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: HALO_TEX, transparent: true, depthWrite: false, color: '#ffc4df' }))
+    const sp = new THREE.Sprite(
+      new THREE.SpriteMaterial({ map: HALO_TEX, transparent: true, depthWrite: false, color: '#ffc4df' }),
+    )
     sp.renderOrder = -2
     const hm = sp.material
     // pure additive light that leaves the canvas alpha alone
@@ -133,21 +149,31 @@ export function Flyer({ drive, reduced, bob = 1, bobRate = 0.8, flapRate = 0.55,
     hm.needsUpdate = true
   }, [theme, mats, smoke, halo, haloSize])
 
-  useEffect(() => () => {
-    Object.values(mats).forEach((m) => m.dispose())
-    wings?.geometry.dispose()
-    smoke?.dispose()
-    halo.material.dispose()
-  }, [mats, wings, smoke, halo])
+  useEffect(
+    () => () => {
+      Object.values(mats).forEach((m) => m.dispose())
+      wings?.geometry.dispose()
+      smoke?.dispose()
+      halo.material.dispose()
+    },
+    [mats, wings, smoke, halo],
+  )
 
   // the rest-pose field depends only on the model, so every butterfly shares one
   const field = useMemo(() => {
     if (!wings) return null
     let f = FIELD_CACHE.get(gltf)
-    if (!f) FIELD_CACHE.set(gltf, (f = precompute(Float32Array.from(wings.geometry.attributes.position.array), NODE_DEFAULTS)))
+    if (!f)
+      FIELD_CACHE.set(
+        gltf,
+        (f = precompute(Float32Array.from(wings.geometry.attributes.position.array), NODE_DEFAULTS)),
+      )
     return f
   }, [gltf, wings])
-  const st = useMemo(() => ({ t: 0, frame: SCENE.frameStart, params: { ...NODE_DEFAULTS }, dl: 0, tick: 0, hold: 0, fly: 0 }), [])
+  const st = useMemo(
+    () => ({ t: 0, frame: SCENE.frameStart, params: { ...NODE_DEFAULTS }, dl: 0, tick: 0, hold: 0, fly: 0 }),
+    [],
+  )
   const mainRef = useRef() // position + a roll in the screen plane (drv.roll)
   const poseRef = useRef() // the body's pose + scale
 
@@ -186,8 +212,8 @@ export function Flyer({ drive, reduced, bob = 1, bobRate = 0.8, flapRate = 0.55,
       const bobX = Math.sin(tt * bobRate * 0.62) * 0.015 * bob * motion
       const bobY = (Math.sin(tt * bobRate) * 0.02 * bob - downbeatLift(db) * st.dl * 2.2) * motion
       return {
-        dx: bobX * spanPx / size.width,
-        dy: bobY * spanPx / size.height,
+        dx: (bobX * spanPx) / size.width,
+        dy: (bobY * spanPx) / size.height,
         rx: rest[0] + Math.sin(tt * 0.31) * 0.03 * motion,
         ry: rest[1] + Math.sin(tt * 0.23 + 1.7) * 0.07 * motion,
         rz: rest[2] + Math.sin(tt * 0.27 + 0.9) * 0.05 * motion + sway * motion,
@@ -199,7 +225,10 @@ export function Flyer({ drive, reduced, bob = 1, bobRate = 0.8, flapRate = 0.55,
     const beat = st.frame / NODE_DEFAULTS.frameDivisor
     const fdx = Math.sin(t * 2.3) * FLIGHT_WEAVE * fly * motion
     const fdy = -Math.cos(beat) * FLIGHT_BOB * fly * motion
-    const [x, y] = toWorld(home[0] + p.dx * (1 - hold) + (fdx * spanPx) / size.width, home[1] + p.dy * (1 - hold) + (fdy * spanPx) / size.height)
+    const [x, y] = toWorld(
+      home[0] + p.dx * (1 - hold) + (fdx * spanPx) / size.width,
+      home[1] + p.dy * (1 - hold) + (fdy * spanPx) / size.height,
+    )
     // held pose: `drv.holdRot` overrides the default (e.g. mirrored), and `drv.roll` tilts the
     // whole held butterfly in the screen plane (landing: the body leans toward the surface)
     const hr = drv.holdRot ?? HOLD_ROT
@@ -238,7 +267,12 @@ export function Flyer({ drive, reduced, bob = 1, bobRate = 0.8, flapRate = 0.55,
       pos.needsUpdate = true
       if (st.tick++ % 2 === 0) wings.geometry.computeVertexNormals()
     }
-    smoke?.update(reduced ? 0 : dt, wings, { amount: (smokeAmount ?? LOOK.smoke) * fade, life: 3.2, burst: 0, pixelRatio: gl.getPixelRatio() })
+    smoke?.update(reduced ? 0 : dt, wings, {
+      amount: (smokeAmount ?? LOOK.smoke) * fade,
+      life: 3.2,
+      burst: 0,
+      pixelRatio: gl.getPixelRatio(),
+    })
 
     _v.copy(KEY_LIGHT).transformDirection(camera.matrixWorldInverse)
     const kick = st.dl * 0.175 * Math.max(0, Math.cos((Math.PI * 2 * db) / 4)) ** 8
@@ -257,7 +291,11 @@ export function Flyer({ drive, reduced, bob = 1, bobRate = 0.8, flapRate = 0.55,
   return (
     <>
       <primitive object={halo} />
-      <group ref={mainRef}><group ref={poseRef}><primitive object={root} /></group></group>
+      <group ref={mainRef}>
+        <group ref={poseRef}>
+          <primitive object={root} />
+        </group>
+      </group>
       {smoke && <primitive object={smoke.group} />}
     </>
   )
@@ -273,7 +311,9 @@ export function Afterimage({ cfg, reduced, adjust, idle }) {
   const idleFrames = useRef(0)
   const { gl, scene, camera, size, viewport } = useThree()
   const fx = useMemo(() => createAfterimage(gl, scene, camera, { bloom: cfg.bloom }), [gl, scene, camera, cfg.bloom])
-  useEffect(() => { fx.setSize(size.width, size.height, viewport.dpr) }, [fx, size, viewport.dpr])
+  useEffect(() => {
+    fx.setSize(size.width, size.height, viewport.dpr)
+  }, [fx, size, viewport.dpr])
   useEffect(() => () => fx.dispose(), [fx])
   useFrame((_, rawDt) => {
     const dt = Math.min(rawDt, 1 / 20)

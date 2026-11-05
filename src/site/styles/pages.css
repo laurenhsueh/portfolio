@@ -1,19 +1,61 @@
 /* ── Inner pages ───────────────────────────────────────────────────────────── */
-.page { max-width: 832px; margin: 0 auto; padding: var(--sp-12) var(--gutter); }
-.page-title { font: 400 clamp(56px, 8vw, 96px)/1 var(--font-display); margin: 0 0 var(--sp-3); }
-.page-lede { font-size: 18px; line-height: 1.6; margin: 0 0 var(--sp-5); }
-.page-body { font-size: var(--text-body); line-height: 1.75; color: var(--ink-soft); max-width: 62ch; }
-.file-list { list-style: none; margin: 0; padding: 0; border-top: 1.5px solid var(--line-strong); }
-.file-row {
-  display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--sp-1) var(--sp-2);
-  padding: var(--sp-2) 0; border-bottom: 1px solid var(--line);
+.page {
+  max-width: 832px;
+  margin: 0 auto;
+  padding: var(--sp-12) var(--gutter);
 }
-.file-row-name { font-weight: 700; font-size: var(--text-body); }
-a.file-row-name { color: var(--accent-ink); text-decoration: none; }
-a.file-row-name:hover { text-decoration: underline; }
-.file-row-note { grid-column: 1; font-size: var(--text-body); color: var(--ink-soft); line-height: 1.5; }
+.page-title {
+  font: 400 clamp(56px, 8vw, 96px)/1 var(--font-display);
+  margin: 0 0 var(--sp-3);
+}
+.page-lede {
+  font-size: 18px;
+  line-height: 1.6;
+  margin: 0 0 var(--sp-5);
+}
+.page-body {
+  font-size: var(--text-body);
+  line-height: 1.75;
+  color: var(--ink-soft);
+  max-width: 62ch;
+}
+.file-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 1.5px solid var(--line-strong);
+}
+.file-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--sp-1) var(--sp-2);
+  padding: var(--sp-2) 0;
+  border-bottom: 1px solid var(--line);
+}
+.file-row-name {
+  font-weight: 700;
+  font-size: var(--text-body);
+}
+a.file-row-name {
+  color: var(--accent-ink);
+  text-decoration: none;
+}
+a.file-row-name:hover {
+  text-decoration: underline;
+}
+.file-row-note {
+  grid-column: 1;
+  font-size: var(--text-body);
+  color: var(--ink-soft);
+  line-height: 1.5;
+}
 .file-row-tag {
-  grid-column: 2; grid-row: 1 / span 2; align-self: center;
-  font: var(--text-label) var(--font-mono); letter-spacing: 0.06em; color: var(--accent-ink);
-  border: 1px solid var(--accent-ink); padding: var(--sp-1);
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  align-self: center;
+  font: var(--text-label) var(--font-mono);
+  letter-spacing: 0.06em;
+  color: var(--accent-ink);
+  border: 1px solid var(--accent-ink);
+  padding: var(--sp-1);
 }

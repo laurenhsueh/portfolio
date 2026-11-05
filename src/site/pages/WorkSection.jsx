@@ -25,12 +25,17 @@ export default function WorkSection() {
         if (!el) return
         const r = el.getBoundingClientRect()
         const d = Math.abs(r.top + r.height / 2 - line)
-        if (d < bestD) { bestD = d; best = i }
+        if (d < bestD) {
+          bestD = d
+          best = i
+        }
       })
       guide.active = best
       setActive(best)
     }
-    const onScroll = () => { if (!raf) raf = requestAnimationFrame(measure) }
+    const onScroll = () => {
+      if (!raf) raf = requestAnimationFrame(measure)
+    }
     measure()
     window.addEventListener('scroll', onScroll, { passive: true })
     window.addEventListener('resize', onScroll)
@@ -51,21 +56,39 @@ export default function WorkSection() {
   return (
     <section id="work" className="work" aria-labelledby="work-title" tabIndex={-1}>
       <header className="section-head">
-        <h2 id="work-title" className="section-title">Work</h2>
+        <h2 id="work-title" className="section-title">
+          Work
+        </h2>
       </header>
       <div className="work-body">
         <ol className="work-stack">
           {PROJECTS.map((p, i) => (
-            <li key={p.id} className="work-card" data-perch={i} ref={(el) => { cardRefs.current[i] = el }}>
+            <li
+              key={p.id}
+              className="work-card"
+              data-perch={i}
+              ref={(el) => {
+                cardRefs.current[i] = el
+              }}
+            >
               <div className="work-card-text">
-                <h3 className="work-card-title">
-                  {p.href ? <a href={p.href}>{p.title}</a> : p.title}
-                </h3>
-                <p className="work-card-meta">{p.dates}<span className="work-card-sep" aria-hidden="true">|</span><span className="sr-only">, </span>{p.role}</p>
+                <h3 className="work-card-title">{p.href ? <a href={p.href}>{p.title}</a> : p.title}</h3>
+                <p className="work-card-meta">
+                  {p.dates}
+                  <span className="work-card-sep" aria-hidden="true">
+                    |
+                  </span>
+                  <span className="sr-only">, </span>
+                  {p.role}
+                </p>
                 <p className="work-card-line">{p.line}</p>
               </div>
               <div className="work-card-media">
-                {p.image ? <img src={p.image} alt="" loading="lazy" /> : <div className="media-ph" aria-hidden="true" />}
+                {p.image ? (
+                  <img src={p.image} alt="" loading="lazy" />
+                ) : (
+                  <div className="media-ph" aria-hidden="true" />
+                )}
               </div>
             </li>
           ))}

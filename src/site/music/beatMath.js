@@ -59,12 +59,18 @@ export function findBeat(chans, sampleRate) {
   let best = -Infinity
   for (let b = 60; b <= 180; b += 0.5) {
     const sc = score(b)
-    if (sc > best) { best = sc; bpm = b }
+    if (sc > best) {
+      best = sc
+      bpm = b
+    }
   }
   // refine to 0.05 BPM around the winner
   for (let b = bpm - 0.5; b <= bpm + 0.5; b += 0.05) {
     const sc = score(b)
-    if (sc > best) { best = sc; bpm = b }
+    if (sc > best) {
+      best = sc
+      bpm = b
+    }
   }
   const lag = (60 * fps) / bpm
 
@@ -75,7 +81,10 @@ export function findBeat(chans, sampleRate) {
   for (let off = 0; off < steps; off++) {
     let s = 0
     for (let f = off; f < n; f += lag) s += flux[Math.round(f)] ?? 0
-    if (s > bestHit) { bestHit = s; bestOff = off }
+    if (s > bestHit) {
+      bestHit = s
+      bestOff = off
+    }
   }
   return { bpm, offset: bestOff / fps }
 }

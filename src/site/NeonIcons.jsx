@@ -1,8 +1,15 @@
 // Icon set F from the Figma icon board: thin neon-pink line icons, each with a small line
 // butterfly landing on it. 64-unit artboards; colour (currentColor) and glow come from CSS
 // (.neon-icon).
-const STROKE = { stroke: 'currentColor', strokeWidth: 2.2, strokeLinecap: 'round', strokeLinejoin: 'round', fill: 'none' }
-const WING = 'M32 30C26 16 12 12 10 22c-1 8 9 11 20 11-9 3-14 10-10 14 5 5 10-4 12-10 2 6 7 15 12 10 4-4-1-11-10-14 11 0 21-3 20-11-2-10-16-6-22 8z'
+const STROKE = {
+  stroke: 'currentColor',
+  strokeWidth: 2.2,
+  strokeLinecap: 'round',
+  strokeLinejoin: 'round',
+  fill: 'none',
+}
+const WING =
+  'M32 30C26 16 12 12 10 22c-1 8 9 11 20 11-9 3-14 10-10 14 5 5 10-4 12-10 2 6 7 15 12 10 4-4-1-11-10-14 11 0 21-3 20-11-2-10-16-6-22 8z'
 
 /** A line butterfly centred at (cx, cy), `s` × the 64-unit original (stroke kept at 2.2). */
 function Butterfly({ cx, cy, s }) {
@@ -10,14 +17,28 @@ function Butterfly({ cx, cy, s }) {
   return (
     <g className="neon-butterfly" transform={`translate(${cx - 32 * s} ${cy - 31 * s}) scale(${s})`}>
       <path d={WING} stroke="currentColor" strokeWidth={w} strokeLinejoin="round" fill="none" />
-      <path d="M32 29v13M32 27c-1-5-4-8-7-9M32 27c1-5 4-8 7-9" stroke="currentColor" strokeWidth={w} strokeLinecap="round" fill="none" />
+      <path
+        d="M32 29v13M32 27c-1-5-4-8-7-9M32 27c1-5 4-8 7-9"
+        stroke="currentColor"
+        strokeWidth={w}
+        strokeLinecap="round"
+        fill="none"
+      />
     </g>
   )
 }
 
 function Svg({ size = 60, className = '', children }) {
   return (
-    <svg className={`neon-icon ${className}`} width={size} height={size} viewBox="0 0 64 64" fill="none" aria-hidden="true" focusable="false">
+    <svg
+      className={`neon-icon ${className}`}
+      width={size}
+      height={size}
+      viewBox="0 0 64 64"
+      fill="none"
+      aria-hidden="true"
+      focusable="false"
+    >
       {children}
     </svg>
   )
@@ -76,7 +97,11 @@ export function SunIcon(props) {
   return (
     <Svg {...props}>
       <circle cx="32" cy="32" r="11" {...STROKE} />
-      <path d="M32 8v6M32 50v6M8 32h6M50 32h6M15 15l4.2 4.2M44.8 44.8L49 49M15 49l4.2-4.2M44.8 19.2L49 15" {...STROKE} strokeOpacity="0.75" />
+      <path
+        d="M32 8v6M32 50v6M8 32h6M50 32h6M15 15l4.2 4.2M44.8 44.8L49 49M15 49l4.2-4.2M44.8 19.2L49 15"
+        {...STROKE}
+        strokeOpacity="0.75"
+      />
     </Svg>
   )
 }
@@ -101,4 +126,3 @@ export function EmailIcon(props) {
     </Svg>
   )
 }
-

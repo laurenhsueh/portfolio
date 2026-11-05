@@ -43,8 +43,24 @@ const DEBUG = typeof location !== 'undefined' && new URLSearchParams(location.se
 const sizeK = (span) => clamp((span - 100) / 300, 0, 1) // 0 small … 1 big
 
 function createState() {
-  return { ready: false, owner: 'hero', key: '', x: 0, y: 0, span: 100, fade: 0, ry: ROT_LEFT[1], rz: ROT_LEFT[2], flying: 0,
-    held: 0, landing: 0, restRot: null, corner: 1, trip: null, els: null }
+  return {
+    ready: false,
+    owner: 'hero',
+    key: '',
+    x: 0,
+    y: 0,
+    span: 100,
+    fade: 0,
+    ry: ROT_LEFT[1],
+    rz: ROT_LEFT[2],
+    flying: 0,
+    held: 0,
+    landing: 0,
+    restRot: null,
+    corner: 1,
+    trip: null,
+    els: null,
+  }
 }
 
 /** Hand the butterfly back to the hero canvas. */
@@ -101,7 +117,9 @@ function pickTarget(st, els, vw, vh) {
     const span = clamp(vw * 0.11, 104, 160)
     st.corner = imageRight ? 1 : -1
     return {
-      mode, key: `card${i}`, span,
+      mode,
+      key: `card${i}`,
+      span,
       tx: (imageRight ? r.right - span * 0.6 : r.left + span * 0.6) + sx,
       ty: r.top - span * LAND_LIFT + sy,
       rot: imageRight ? ROT_RIGHT : ROT_LEFT,
@@ -110,7 +128,14 @@ function pickTarget(st, els, vw, vh) {
   if (mode === 'nest' && nest) {
     // the Garden: bigger, in the middle of the orbit
     const r = pageRect(nest)
-    return { mode, key: 'nest', span: clamp(r.width * 1.2, 280, 560), tx: r.left + r.width / 2, ty: r.top + r.height / 2, rot: ROT_LEFT }
+    return {
+      mode,
+      key: 'nest',
+      span: clamp(r.width * 1.2, 280, 560),
+      tx: r.left + r.width / 2,
+      ty: r.top + r.height / 2,
+      rot: ROT_LEFT,
+    }
   }
   const h = guide.hero ?? offscreenSpot(vw)
   return { mode: 'home', key: 'home', span: h.span, tx: h.x, ty: h.y, rot: ROT_LEFT }
@@ -131,8 +156,16 @@ function offView(x, y, m, vw, vh) {
 /** A new destination: start a glide from wherever it is now. */
 function startTrip(st, t, reduced) {
   const dist = Math.hypot(t.tx - st.x, t.ty - st.y)
-  st.trip = { fx: st.x, fy: st.y, fspan: st.span, fry: st.ry, frz: st.rz, p: 0,
-    dur: reduced ? 0 : clamp(1.4 + dist / 2200, 1.4, 2.2), side: Math.sign(t.tx - st.x) || 1 }
+  st.trip = {
+    fx: st.x,
+    fy: st.y,
+    fspan: st.span,
+    fry: st.ry,
+    frz: st.rz,
+    p: 0,
+    dur: reduced ? 0 : clamp(1.4 + dist / 2200, 1.4, 2.2),
+    side: Math.sign(t.tx - st.x) || 1,
+  }
   st.key = t.key
 }
 
@@ -167,7 +200,9 @@ function stepTrip(st, t, dt, vw, vh) {
 
 /** Resting: stay on the spot (cards don't move on the page; the hero's spot bobs). */
 function rest(st, t) {
-  st.x = t.tx; st.y = t.ty; st.span = t.span
+  st.x = t.tx
+  st.y = t.ty
+  st.span = t.span
   st.ry = st.restRot ? st.restRot[0] : t.rot[1]
   st.rz = st.restRot ? st.restRot[1] : t.rot[2]
   st.flying = 0
@@ -177,7 +212,8 @@ function Director({ st, activeRef, reduced }) {
   const { size } = useThree()
   useFrame((_, rawDt) => {
     const dt = Math.min(rawDt, 1 / 20)
-    if (!activeRef.current) { // off screen: the hero keeps (or gets back) its butterfly
+    if (!activeRef.current) {
+      // off screen: the hero keeps (or gets back) its butterfly
       if (st.ready) giveBack(st)
       st.ready = false
       return
@@ -189,19 +225,28 @@ function Director({ st, activeRef, reduced }) {
     const t = pickTarget(st, els, vw, vh)
     const hero = guide.hero
 
-    if (!st.ready) { // start where the hero's butterfly is, still the hero's
+    if (!st.ready) {
+      // start where the hero's butterfly is, still the hero's
       const h = hero ?? offscreenSpot(vw)
-      st.x = h.x; st.y = h.y; st.span = h.span
+      st.x = h.x
+      st.y = h.y
+      st.span = h.span
       giveBack(st)
       st.ready = true
     }
 
     // the hero has it: follow it invisibly until Work comes into view, then take it over
     if (st.owner === 'hero') {
-      if (t.mode === 'home') { st.x = t.tx; st.y = t.ty; st.span = t.span; return }
+      if (t.mode === 'home') {
+        st.x = t.tx
+        st.y = t.ty
+        st.span = t.span
+        return
+      }
       st.owner = 'guide'
       st.fade = 1
-      st.ry = ROT_LEFT[1]; st.rz = ROT_LEFT[2]
+      st.ry = ROT_LEFT[1]
+      st.rz = ROT_LEFT[2]
       guide.heroHidden = !!hero
     }
 
@@ -213,7 +258,10 @@ function Director({ st, activeRef, reduced }) {
     // landed: wings folded with a flutter (Flyer's held pose), eased in over the end of the trip
     st.held = t.mode !== 'card' ? 0 : done ? 1 : st.landing
     if (t.mode === 'home' && done) {
-      if (hero) { giveBack(st); return } // home: hand it back
+      if (hero) {
+        giveBack(st)
+        return
+      } // home: hand it back
       st.fade = reduced ? 0 : lerp(st.fade, 0, 1 - Math.exp(-dt * 5)) // no hero: fade out up there
     } else {
       st.fade = 1
@@ -246,7 +294,8 @@ function Stage({ activeRef, reduced, theme }) {
       haloSize: bloom ? lerp(16, 9, k) : lerp(11, LIGHT_HALO.size, k),
     }
   }
-  const adjust = (pass) => { // the bloom pass follows the size too
+  const adjust = (pass) => {
+    // the bloom pass follows the size too
     const k = sizeK(st.span)
     pass.strength = lerp(0.22, DARK_BLOOM.bloom.strength, k)
     pass.radius = lerp(0.95, DARK_BLOOM.bloom.radius, k)
@@ -256,8 +305,25 @@ function Stage({ activeRef, reduced, theme }) {
       <Director st={st} activeRef={activeRef} reduced={reduced} />
 
       {/* the hero's big butterfly's settings (DuetStage), with a shorter trail */}
-      <Flyer drive={drive} bob={1.3} bobRate={1.25} reduced={reduced} theme={theme} flapRate={DARK_BLOOM.flapRate} smokeAmount={bloom ? GUIDE_BLOOM.smoke : undefined} haloGain={bloom ? 0.45 : LIGHT_HALO.gain} haloSize={bloom ? null : LIGHT_HALO.size} />
-      {bloom && <Afterimage cfg={GUIDE_BLOOM} reduced={reduced} adjust={adjust} idle={() => st.owner !== 'guide' || st.fade < 0.01} />}
+      <Flyer
+        drive={drive}
+        bob={1.3}
+        bobRate={1.25}
+        reduced={reduced}
+        theme={theme}
+        flapRate={DARK_BLOOM.flapRate}
+        smokeAmount={bloom ? GUIDE_BLOOM.smoke : undefined}
+        haloGain={bloom ? 0.45 : LIGHT_HALO.gain}
+        haloSize={bloom ? null : LIGHT_HALO.size}
+      />
+      {bloom && (
+        <Afterimage
+          cfg={GUIDE_BLOOM}
+          reduced={reduced}
+          adjust={adjust}
+          idle={() => st.owner !== 'guide' || st.fade < 0.01}
+        />
+      )}
     </>
   )
 }
@@ -272,12 +338,15 @@ export default function GuideButterfly({ reduced, theme }) {
     const els = [document.getElementById('work'), document.querySelector('[data-garden]')].filter(Boolean)
     if (!els.length || !('IntersectionObserver' in window)) return
     const seen = new Map()
-    const io = new IntersectionObserver((entries) => {
-      entries.forEach((e) => seen.set(e.target, e.isIntersecting))
-      const on = [...seen.values()].some(Boolean)
-      activeRef.current = on
-      setActive(on)
-    }, { threshold: 0 })
+    const io = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e) => seen.set(e.target, e.isIntersecting))
+        const on = [...seen.values()].some(Boolean)
+        activeRef.current = on
+        setActive(on)
+      },
+      { threshold: 0 },
+    )
     els.forEach((el) => io.observe(el))
     return () => io.disconnect()
   }, [])

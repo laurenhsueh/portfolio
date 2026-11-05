@@ -70,17 +70,28 @@ class TrailPass extends Pass {
     this.prev = rt()
     this.next = rt()
     this.feedback = new THREE.ShaderMaterial({
-      vertexShader: VERT, fragmentShader: FEEDBACK, depthTest: false, depthWrite: false,
+      vertexShader: VERT,
+      fragmentShader: FEEDBACK,
+      depthTest: false,
+      depthWrite: false,
       uniforms: {
-        tCur: { value: null }, tPrev: { value: null },
-        uFade: { value: 0.96 }, uAge: { value: new THREE.Vector3(1, 1, 1) },
-        uDrift: { value: new THREE.Vector2(0, 0) }, uTexel: { value: new THREE.Vector2(1, 1) },
-        uAnchor: { value: new THREE.Vector2(0, 0) }, uShrink: { value: 1 }, uEmit: { value: 0.8 },
+        tCur: { value: null },
+        tPrev: { value: null },
+        uFade: { value: 0.96 },
+        uAge: { value: new THREE.Vector3(1, 1, 1) },
+        uDrift: { value: new THREE.Vector2(0, 0) },
+        uTexel: { value: new THREE.Vector2(1, 1) },
+        uAnchor: { value: new THREE.Vector2(0, 0) },
+        uShrink: { value: 1 },
+        uEmit: { value: 0.8 },
         uSpread: { value: 1.2 },
       },
     })
     this.composite = new THREE.ShaderMaterial({
-      vertexShader: VERT, fragmentShader: COMPOSITE, depthTest: false, depthWrite: false,
+      vertexShader: VERT,
+      fragmentShader: COMPOSITE,
+      depthTest: false,
+      depthWrite: false,
       uniforms: { tCur: { value: null }, tTrail: { value: null }, uGain: { value: 1 } },
     })
     this.quad = new FullScreenQuad(null)
@@ -118,7 +129,10 @@ class TrailPass extends Pass {
   render(renderer, writeBuffer, readBuffer) {
     if (!this.cleared) {
       // start from black, not from whatever the new buffers hold
-      for (const t of [this.prev, this.next]) { renderer.setRenderTarget(t); renderer.clear() }
+      for (const t of [this.prev, this.next]) {
+        renderer.setRenderTarget(t)
+        renderer.clear()
+      }
       this.cleared = true
     }
     const fb = this.feedback.uniforms
@@ -135,12 +149,17 @@ class TrailPass extends Pass {
     renderer.setRenderTarget(this.renderToScreen ? null : writeBuffer)
     this.quad.render(renderer)
 
-    const t = this.prev; this.prev = this.next; this.next = t
+    const t = this.prev
+    this.prev = this.next
+    this.next = t
   }
 
   dispose() {
-    this.prev.dispose(); this.next.dispose()
-    this.feedback.dispose(); this.composite.dispose(); this.quad.dispose()
+    this.prev.dispose()
+    this.next.dispose()
+    this.feedback.dispose()
+    this.composite.dispose()
+    this.quad.dispose()
   }
 }
 
@@ -155,7 +174,12 @@ export function createAfterimage(gl, scene, camera, { trailScale = 0.5, bloomSca
   composer.addPass(trail)
   // only the bright core blooms (the additive wings run well above 1 in this HDR buffer), so the
   // trail keeps its shape instead of washing into one glow
-  const bloomPass = new UnrealBloomPass(new THREE.Vector2(256, 256), bloom.strength ?? 0.45, bloom.radius ?? 0.45, bloom.threshold ?? 0.6)
+  const bloomPass = new UnrealBloomPass(
+    new THREE.Vector2(256, 256),
+    bloom.strength ?? 0.45,
+    bloom.radius ?? 0.45,
+    bloom.threshold ?? 0.6,
+  )
   composer.addPass(bloomPass)
   composer.addPass(new OutputPass())
 
@@ -167,7 +191,13 @@ export function createAfterimage(gl, scene, camera, { trailScale = 0.5, bloomSca
       composer.setSize(width, height)
       bloomPass.setSize(width * pixelRatio * bloomScale, height * pixelRatio * bloomScale)
     },
-    render(dt) { composer.render(dt) },
-    dispose() { trail.dispose(); bloomPass.dispose(); composer.dispose() },
+    render(dt) {
+      composer.render(dt)
+    },
+    dispose() {
+      trail.dispose()
+      bloomPass.dispose()
+      composer.dispose()
+    },
   }
 }

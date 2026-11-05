@@ -2,8 +2,21 @@ import { CONTACT } from '../content/contact'
 import { LinkedInIcon, EmailIcon } from '../NeonIcons'
 
 const ITEMS = [
-  { key: 'linkedin', Icon: LinkedInIcon, label: 'LinkedIn', href: CONTACT.linkedin, external: true, a11y: 'LinkedIn profile' },
-  { key: 'email', Icon: EmailIcon, label: 'Email', href: CONTACT.email && `mailto:${CONTACT.email}`, a11y: `Email ${CONTACT.email}` },
+  {
+    key: 'linkedin',
+    Icon: LinkedInIcon,
+    label: 'LinkedIn',
+    href: CONTACT.linkedin,
+    external: true,
+    a11y: 'LinkedIn profile',
+  },
+  {
+    key: 'email',
+    Icon: EmailIcon,
+    label: 'Email',
+    href: CONTACT.email && `mailto:${CONTACT.email}`,
+    a11y: `Email ${CONTACT.email}`,
+  },
 ].filter((it) => it.href)
 
 /** Contact icons as desktop-file list items: neon icon + label underneath (no phone, by choice). */

@@ -8,7 +8,10 @@ export default function ReadmeWindow({ open, onClose }) {
   const firstRender = useRef(true)
 
   useEffect(() => {
-    if (firstRender.current) { firstRender.current = false; return }
+    if (firstRender.current) {
+      firstRender.current = false
+      return
+    }
     if (open) closeRef.current?.focus({ preventScroll: true })
   }, [open])
 
@@ -19,9 +22,17 @@ export default function ReadmeWindow({ open, onClose }) {
       aria-labelledby="readme-title"
       aria-hidden={!open}
       inert={open ? undefined : ''}
-      onKeyDown={(e) => { if (e.key === 'Escape') onClose() }}
+      onKeyDown={(e) => {
+        if (e.key === 'Escape') onClose()
+      }}
     >
-      <WindowChrome title="README" titleId="readme-title" onClose={onClose} closeLabel="Close README" closeRef={closeRef} />
+      <WindowChrome
+        title="README"
+        titleId="readme-title"
+        onClose={onClose}
+        closeLabel="Close README"
+        closeRef={closeRef}
+      />
       <div className="win-body">
         <div className="win-pane">
           <p className="readme-text">{README_TEXT}</p>

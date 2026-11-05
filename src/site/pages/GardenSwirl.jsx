@@ -34,14 +34,21 @@ export default function GardenSwirl({ reduced }) {
       if (guide.enRoute && performance.now() - since < MAX_WAIT_MS) timer = setTimeout(check, 250)
       else setRevealed(true)
     }
-    const io = new IntersectionObserver(([e]) => {
-      clearTimeout(timer)
-      if (!e.isIntersecting) return
-      since = performance.now()
-      timer = setTimeout(check, reduced ? 0 : FALLBACK_MS)
-    }, { threshold: 0.4 })
+    const io = new IntersectionObserver(
+      ([e]) => {
+        clearTimeout(timer)
+        if (!e.isIntersecting) return
+        since = performance.now()
+        timer = setTimeout(check, reduced ? 0 : FALLBACK_MS)
+      },
+      { threshold: 0.4 },
+    )
     io.observe(sectionRef.current)
-    return () => { off(); io.disconnect(); clearTimeout(timer) }
+    return () => {
+      off()
+      io.disconnect()
+      clearTimeout(timer)
+    }
   }, [revealed, reduced])
 
   // geometry from the stage's size
@@ -92,11 +99,17 @@ export default function GardenSwirl({ reduced }) {
     const io = new IntersectionObserver(([e]) => {
       onScreen = e.isIntersecting
       cancelAnimationFrame(raf)
-      if (onScreen) { last = performance.now(); raf = requestAnimationFrame(frame) }
+      if (onScreen) {
+        last = performance.now()
+        raf = requestAnimationFrame(frame)
+      }
     })
     io.observe(stageRef.current)
     frame(performance.now()) // place them once right away
-    return () => { io.disconnect(); cancelAnimationFrame(raf) }
+    return () => {
+      io.disconnect()
+      cancelAnimationFrame(raf)
+    }
   }, [geo, reduced])
 
   // drag to spin: horizontal drags turn the ring (the front follows the pointer); vertical
@@ -135,7 +148,11 @@ export default function GardenSwirl({ reduced }) {
   }
   // a drag that ends on a card shouldn't open it
   const onClickCapture = (e) => {
-    if (spin.current.suppressClick) { e.preventDefault(); e.stopPropagation(); spin.current.suppressClick = false }
+    if (spin.current.suppressClick) {
+      e.preventDefault()
+      e.stopPropagation()
+      spin.current.suppressClick = false
+    }
   }
 
   return (
@@ -151,7 +168,13 @@ export default function GardenSwirl({ reduced }) {
           <a href="#/garden" className="swirl-head-link">
             <span className="swirl-head-text">See Garden</span>
             <svg className="swirl-head-arrow" width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true">
-              <path d="M7 21L21 7M10 7h11v11" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+              <path
+                d="M7 21L21 7M10 7h11v11"
+                stroke="currentColor"
+                strokeWidth="1.6"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
             </svg>
           </a>
         </h2>
@@ -169,7 +192,14 @@ export default function GardenSwirl({ reduced }) {
         {geo && (
           <svg className="swirl-rings" width={geo.w} height={geo.h} aria-hidden="true">
             <ellipse cx={geo.cx} cy={geo.cy} rx={geo.rx} ry={geo.ry} transform={`rotate(-14 ${geo.cx} ${geo.cy})`} />
-            <ellipse cx={geo.cx} cy={geo.cy} rx={geo.rx * 0.72} ry={geo.ry * 1.6} transform={`rotate(12 ${geo.cx} ${geo.cy})`} className="is-faint" />
+            <ellipse
+              cx={geo.cx}
+              cy={geo.cy}
+              rx={geo.rx * 0.72}
+              ry={geo.ry * 1.6}
+              transform={`rotate(12 ${geo.cx} ${geo.cy})`}
+              className="is-faint"
+            />
           </svg>
         )}
         {geo && (
@@ -182,9 +212,19 @@ export default function GardenSwirl({ reduced }) {
         )}
         <ul className="swirl-cards">
           {GARDEN_ITEMS.map((it, i) => (
-            <li key={it.name} className="swirl-slot" ref={(el) => { cardRefs.current[i] = el }}>
+            <li
+              key={it.name}
+              className="swirl-slot"
+              ref={(el) => {
+                cardRefs.current[i] = el
+              }}
+            >
               <a className="swirl-card" href={it.href ?? '#/garden'} draggable={false} style={{ '--i': i }}>
-                <span className="swirl-card-bar" aria-hidden="true"><i /><i /><i /></span>
+                <span className="swirl-card-bar" aria-hidden="true">
+                  <i />
+                  <i />
+                  <i />
+                </span>
                 <span className="swirl-card-media" aria-hidden="true">
                   {it.image ? <img src={it.image} alt="" draggable={false} /> : null}
                 </span>
@@ -194,7 +234,9 @@ export default function GardenSwirl({ reduced }) {
             </li>
           ))}
         </ul>
-        <div ref={cursorRef} className="swirl-cursor" aria-hidden="true">Drag</div>
+        <div ref={cursorRef} className="swirl-cursor" aria-hidden="true">
+          Drag
+        </div>
       </div>
     </section>
   )

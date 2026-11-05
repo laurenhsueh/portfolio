@@ -6,7 +6,9 @@ let version = 0
 const cache = new WeakMap()
 
 if (typeof window !== 'undefined') {
-  const bump = () => { version++ }
+  const bump = () => {
+    version++
+  }
   window.addEventListener('resize', bump)
   if ('ResizeObserver' in window) new ResizeObserver(bump).observe(document.documentElement)
 }
@@ -23,4 +25,6 @@ export function pageRect(el) {
 }
 
 /** Force everything to be re-measured on next use (e.g. after a layout change no observer sees). */
-export function invalidateLayout() { version++ }
+export function invalidateLayout() {
+  version++
+}

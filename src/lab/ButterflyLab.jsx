@@ -60,22 +60,26 @@ export default function ButterflyLab() {
     drift: { value: 1, min: 0, max: 2, step: 0.05, label: 'flight drift' },
   })
 
-  const [params, setParams] = useControls('Geometry Nodes', () => ({
-    frameDivisor: { value: NODE_DEFAULTS.frameDivisor, min: 0.5, max: 12, step: 0.1, label: 'frame ÷ (flap speed)' },
-    distFalloff: { value: NODE_DEFAULTS.distFalloff, min: 0, max: 1.5, step: 0.01, label: 'distance × (wave lag)' },
-    amplitude: { value: NODE_DEFAULTS.amplitude, min: 0, max: 2, step: 0.01, label: 'amplitude' },
-    'Map Range': folder({
-      mapFromMin: { value: NODE_DEFAULTS.mapFromMin, min: -3, max: 0.99, step: 0.05, label: 'from min' },
-      mapFromMax: { value: NODE_DEFAULTS.mapFromMax, min: -0.99, max: 3, step: 0.05, label: 'from max' },
-      mapToMin: { value: NODE_DEFAULTS.mapToMin, min: -2, max: 2, step: 0.05, label: 'to min (rad)' },
-      mapToMax: { value: NODE_DEFAULTS.mapToMax, min: -2, max: 3, step: 0.05, label: 'to max (rad)' },
+  const [params, setParams] = useControls(
+    'Geometry Nodes',
+    () => ({
+      frameDivisor: { value: NODE_DEFAULTS.frameDivisor, min: 0.5, max: 12, step: 0.1, label: 'frame ÷ (flap speed)' },
+      distFalloff: { value: NODE_DEFAULTS.distFalloff, min: 0, max: 1.5, step: 0.01, label: 'distance × (wave lag)' },
+      amplitude: { value: NODE_DEFAULTS.amplitude, min: 0, max: 2, step: 0.01, label: 'amplitude' },
+      'Map Range': folder({
+        mapFromMin: { value: NODE_DEFAULTS.mapFromMin, min: -3, max: 0.99, step: 0.05, label: 'from min' },
+        mapFromMax: { value: NODE_DEFAULTS.mapFromMax, min: -0.99, max: 3, step: 0.05, label: 'from max' },
+        mapToMin: { value: NODE_DEFAULTS.mapToMin, min: -2, max: 2, step: 0.05, label: 'to min (rad)' },
+        mapToMax: { value: NODE_DEFAULTS.mapToMax, min: -2, max: 3, step: 0.05, label: 'to max (rad)' },
+      }),
+      'Distance field': folder({
+        yStretch: { value: NODE_DEFAULTS.yStretch, min: 0.1, max: 4, step: 0.05, label: 'Y stretch' },
+        centerY: { value: NODE_DEFAULTS.centerY, min: -4, max: 4, step: 0.05, label: 'origin Y' },
+      }),
+      'reset defaults': button(() => setParams({ ...NODE_DEFAULTS })),
     }),
-    'Distance field': folder({
-      yStretch: { value: NODE_DEFAULTS.yStretch, min: 0.1, max: 4, step: 0.05, label: 'Y stretch' },
-      centerY: { value: NODE_DEFAULTS.centerY, min: -4, max: 4, step: 0.05, label: 'origin Y' },
-    }),
-    'reset defaults': button(() => setParams({ ...NODE_DEFAULTS })),
-  }), { collapsed: true })
+    { collapsed: true },
+  )
 
   const th = THEMES[look.theme]
   const bloom = look.style === 'apparition' ? th.apparitionBloom : th.bloom
@@ -83,15 +87,24 @@ export default function ButterflyLab() {
 
   useEffect(() => {
     document.documentElement.dataset.labTheme = look.theme
-    return () => { delete document.documentElement.dataset.labTheme }
+    return () => {
+      delete document.documentElement.dataset.labTheme
+    }
   }, [look.theme])
 
   return (
     <div className="lab">
       <h1 className="sr-only">Butterfly lab</h1>
       {/* the controls panel in the site's mono face, not Leva's default fonts */}
-      <Leva collapsed={false} theme={{ fonts: { mono: "'Atkinson Hyperlegible Mono', monospace", sans: "'Atkinson Hyperlegible Mono', monospace" } }} />
-      <a className="lab-back" href="#/garden">← Garden</a>
+      <Leva
+        collapsed={false}
+        theme={{
+          fonts: { mono: "'Atkinson Hyperlegible Mono', monospace", sans: "'Atkinson Hyperlegible Mono', monospace" },
+        }}
+      />
+      <a className="lab-back" href="#/garden">
+        ← Garden
+      </a>
       <Canvas flat camera={{ position: [5, 2.5, 6.5], fov: 40 }} dpr={[1, 2]} gl={{ antialias: false }}>
         <color attach="background" args={[th.bg]} />
         <ambientLight intensity={th.ambient} color="#fff4f8" />

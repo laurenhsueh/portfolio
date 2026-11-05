@@ -117,7 +117,9 @@ export function createHaloTexture() {
   for (let i = 0; i <= 16; i++) {
     const x = i / 16
     const a = Math.exp(-x * x * 5.5) * (1 - x)
-    const r = Math.round(255 - x * 30), gg = Math.round(235 - x * 60), b = Math.round(245 - x * 10)
+    const r = Math.round(255 - x * 30),
+      gg = Math.round(235 - x * 60),
+      b = Math.round(245 - x * 10)
     grad.addColorStop(x, `rgba(${r},${gg},${b},${a.toFixed(3)})`)
   }
   g.fillStyle = grad

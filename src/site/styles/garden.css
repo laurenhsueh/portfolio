@@ -1,56 +1,217 @@
 /* Garden orbit (pages/GardenSwirl.jsx): hidden until the butterfly arrives, then rings → cards */
-.swirl { position: relative; padding: var(--sp-12) var(--gutter) var(--sp-12); overflow: hidden; }
-.swirl-head { display: flex; justify-content: center; text-align: center; margin-bottom: var(--sp-3); }
-.swirl-head-link { display: inline-flex; align-items: flex-start; gap: 10px; text-decoration: none; }
-.swirl-head-text { text-decoration: underline; text-decoration-color: transparent; text-decoration-thickness: 2px; text-underline-offset: 0.14em; transition: text-decoration-color 0.2s ease; }
-.swirl-head-link:hover .swirl-head-text, .swirl-head-link:focus-visible .swirl-head-text { text-decoration-color: currentColor; }
-.swirl-head-arrow { color: var(--accent-ink); margin-top: 0.12em; transition: transform 0.2s ease; }
-:root[data-theme='dark'] .swirl-head-arrow { color: #f5c2de; }
-.swirl-head-link:hover .swirl-head-arrow { transform: translate(3px, -3px); }
-.swirl-stage { position: relative; height: clamp(520px, 56vw, 680px); touch-action: pan-y; user-select: none; -webkit-user-select: none; }
-.swirl-rings { position: absolute; inset: 0; overflow: visible; pointer-events: none; opacity: 0; transform: scale(0.94); transition: opacity 0.8s ease, transform 1s ease; }
-.swirl-rings ellipse { fill: none; stroke: var(--accent-ink); stroke-opacity: 0.4; stroke-width: 1; }
-:root[data-theme='dark'] .swirl-rings ellipse { stroke: #f5c2de; stroke-opacity: 0.35; }
-.swirl-rings ellipse.is-faint { stroke: var(--ink); stroke-opacity: 0.14; }
+.swirl {
+  position: relative;
+  padding: var(--sp-12) var(--gutter) var(--sp-12);
+  overflow: hidden;
+}
+.swirl-head {
+  display: flex;
+  justify-content: center;
+  text-align: center;
+  margin-bottom: var(--sp-3);
+}
+.swirl-head-link {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 10px;
+  text-decoration: none;
+}
+.swirl-head-text {
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 0.14em;
+  transition: text-decoration-color 0.2s ease;
+}
+.swirl-head-link:hover .swirl-head-text,
+.swirl-head-link:focus-visible .swirl-head-text {
+  text-decoration-color: currentColor;
+}
+.swirl-head-arrow {
+  color: var(--accent-ink);
+  margin-top: 0.12em;
+  transition: transform 0.2s ease;
+}
+:root[data-theme='dark'] .swirl-head-arrow {
+  color: #f5c2de;
+}
+.swirl-head-link:hover .swirl-head-arrow {
+  transform: translate(3px, -3px);
+}
+.swirl-stage {
+  position: relative;
+  height: clamp(520px, 56vw, 680px);
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.swirl-rings {
+  position: absolute;
+  inset: 0;
+  overflow: visible;
+  pointer-events: none;
+  opacity: 0;
+  transform: scale(0.94);
+  transition:
+    opacity 0.8s ease,
+    transform 1s ease;
+}
+.swirl-rings ellipse {
+  fill: none;
+  stroke: var(--accent-ink);
+  stroke-opacity: 0.4;
+  stroke-width: 1;
+}
+:root[data-theme='dark'] .swirl-rings ellipse {
+  stroke: #f5c2de;
+  stroke-opacity: 0.35;
+}
+.swirl-rings ellipse.is-faint {
+  stroke: var(--ink);
+  stroke-opacity: 0.14;
+}
 /* the invisible spot in the middle of the orbit where the butterfly settles */
-.swirl-nest { position: absolute; pointer-events: none; }
-.swirl-cards { list-style: none; margin: 0; padding: 0; }
-.swirl-slot { position: absolute; left: 0; top: 0; will-change: transform; }
+.swirl-nest {
+  position: absolute;
+  pointer-events: none;
+}
+.swirl-cards {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.swirl-slot {
+  position: absolute;
+  left: 0;
+  top: 0;
+  will-change: transform;
+}
 .swirl-card {
-  display: flex; flex-direction: column; gap: 6px; width: 184px; padding: 0 12px 12px; text-decoration: none; color: inherit;
-  border-radius: 12px; background: var(--card-bg); border: 1px solid var(--card-edge); box-shadow: 0 0 32px var(--card-glow);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 184px;
+  padding: 0 12px 12px;
+  text-decoration: none;
+  color: inherit;
+  border-radius: 12px;
+  background: var(--card-bg);
+  border: 1px solid var(--card-edge);
+  box-shadow: 0 0 32px var(--card-glow);
   /* no backdrop blur: these move every frame, and a moving blur is costly to composite */
   background: var(--swirl-card-bg);
-  opacity: 0; transform: scale(0.85); transition: opacity 0.6s ease, transform 0.7s cubic-bezier(0.2, 0.8, 0.2, 1), border-color 0.2s ease;
+  opacity: 0;
+  transform: scale(0.85);
+  transition:
+    opacity 0.6s ease,
+    transform 0.7s cubic-bezier(0.2, 0.8, 0.2, 1),
+    border-color 0.2s ease;
   transition-delay: calc(0.3s + var(--i) * 0.09s);
 }
-.swirl-card:hover { border-color: var(--accent-ink); }
-.swirl-card-bar { display: flex; gap: 5px; height: 26px; align-items: center; margin: 0 -12px 2px; padding: 0 12px; border-bottom: 1px solid var(--card-edge); }
-.swirl-card-bar i { width: 8px; height: 8px; border-radius: 50%; border: 1px solid var(--ink-soft); opacity: 0.6; }
-.swirl-card-bar i:first-child { background: var(--accent); border-color: var(--accent); opacity: 1; }
-.swirl-card-media { display: block; aspect-ratio: 4 / 3; border-radius: 6px; overflow: hidden; background: var(--ph); border: 1px dashed var(--ph-edge); }
-.swirl-card-media img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.swirl-card-name { margin-top: 4px; font: 400 20px/1.1 var(--font-display); }
-.swirl-card-tag { font-size: 12px; color: var(--accent-ink); }
-.swirl.is-revealed .swirl-rings { opacity: 1; transform: none; }
-.swirl.is-revealed .swirl-card { opacity: 1; transform: none; }
-.swirl.is-revealed .swirl-card:hover { transition-delay: 0s; }
+.swirl-card:hover {
+  border-color: var(--accent-ink);
+}
+.swirl-card-bar {
+  display: flex;
+  gap: 5px;
+  height: 26px;
+  align-items: center;
+  margin: 0 -12px 2px;
+  padding: 0 12px;
+  border-bottom: 1px solid var(--card-edge);
+}
+.swirl-card-bar i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 1px solid var(--ink-soft);
+  opacity: 0.6;
+}
+.swirl-card-bar i:first-child {
+  background: var(--accent);
+  border-color: var(--accent);
+  opacity: 1;
+}
+.swirl-card-media {
+  display: block;
+  aspect-ratio: 4 / 3;
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--ph);
+  border: 1px dashed var(--ph-edge);
+}
+.swirl-card-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.swirl-card-name {
+  margin-top: 4px;
+  font: 400 20px/1.1 var(--font-display);
+}
+.swirl-card-tag {
+  font-size: 12px;
+  color: var(--accent-ink);
+}
+.swirl.is-revealed .swirl-rings {
+  opacity: 1;
+  transform: none;
+}
+.swirl.is-revealed .swirl-card {
+  opacity: 1;
+  transform: none;
+}
+.swirl.is-revealed .swirl-card:hover {
+  transition-delay: 0s;
+}
 .swirl-cursor {
-  position: absolute; left: 0; top: 0; z-index: 40; display: none; place-items: center; width: 76px; height: 76px; border-radius: 50%;
-  background: rgba(232, 93, 158, 0.9); color: #fff; font: 700 11px/1 var(--font-mono); letter-spacing: 0.12em; text-transform: uppercase;
-  box-shadow: 0 0 24px rgba(232, 93, 158, 0.5); pointer-events: none;
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 40;
+  display: none;
+  place-items: center;
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  background: rgba(232, 93, 158, 0.9);
+  color: #fff;
+  font: 700 11px/1 var(--font-mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  box-shadow: 0 0 24px rgba(232, 93, 158, 0.5);
+  pointer-events: none;
 }
 @media (hover: hover) and (pointer: fine) {
-  .swirl-stage, .swirl-stage a { cursor: none !important; }
-  .swirl-stage:hover .swirl-cursor { display: grid; }
+  .swirl-stage,
+  .swirl-stage a {
+    cursor: none !important;
+  }
+  .swirl-stage:hover .swirl-cursor {
+    display: grid;
+  }
 }
 
 /* the scroll butterfly's canvas (butterflies/GuideButterfly.jsx): fixed, behind the cards */
 /* z-index 0: above the section backgrounds but under the cards (z 1) and the front of the Garden orbit */
-.guide-stage { position: fixed; inset: 0; z-index: 0; pointer-events: none; transition: opacity 0.4s ease; }
-.guide-stage.is-off { opacity: 0; }
-.guide-stage.is-dark { mix-blend-mode: screen; } /* opaque black canvas with its own bloom: black vanishes, light adds */
-.guide-stage.is-dark canvas { filter: saturate(1.25); }
+.guide-stage {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  transition: opacity 0.4s ease;
+}
+.guide-stage.is-off {
+  opacity: 0;
+}
+.guide-stage.is-dark {
+  mix-blend-mode: screen;
+} /* opaque black canvas with its own bloom: black vanishes, light adds */
+.guide-stage.is-dark canvas {
+  filter: saturate(1.25);
+}
 .guide-stage.is-light canvas {
-  filter: saturate(1.25) drop-shadow(0 0 2px rgba(214, 70, 140, 0.5)) drop-shadow(0 0 14px rgba(232, 93, 158, 0.42)) drop-shadow(0 0 40px rgba(240, 120, 180, 0.32));
+  filter: saturate(1.25) drop-shadow(0 0 2px rgba(214, 70, 140, 0.5)) drop-shadow(0 0 14px rgba(232, 93, 158, 0.42))
+    drop-shadow(0 0 40px rgba(240, 120, 180, 0.32));
 }

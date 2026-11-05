@@ -6,7 +6,9 @@ function initialTheme() {
   try {
     const saved = localStorage.getItem(KEY)
     if (saved === 'light' || saved === 'dark') return saved
-  } catch { /* storage blocked (private mode): fall back to the OS setting */ }
+  } catch {
+    /* storage blocked (private mode): fall back to the OS setting */
+  }
   return window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
 }
 
@@ -21,7 +23,11 @@ export function useTheme() {
   const toggle = useCallback(() => {
     setTheme((t) => {
       const next = t === 'dark' ? 'light' : 'dark'
-      try { localStorage.setItem(KEY, next) } catch { /* storage blocked: the choice lasts this visit only */ }
+      try {
+        localStorage.setItem(KEY, next)
+      } catch {
+        /* storage blocked: the choice lasts this visit only */
+      }
       return next
     })
   }, [])

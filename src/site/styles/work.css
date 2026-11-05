@@ -1,45 +1,202 @@
 /* ── Work ──────────────────────────────────────────────────────────────────── */
-.work { background: var(--bg-alt); padding: var(--sp-12) var(--gutter) var(--sp-15); transition: background-color 0.4s ease; }
-.section-head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--sp-2); flex-wrap: wrap; margin-bottom: var(--sp-5); }
-.section-title { margin: 0; font: 400 clamp(48px, 6vw, 80px)/1 var(--font-display); }
+.work {
+  background: var(--bg-alt);
+  padding: var(--sp-12) var(--gutter) var(--sp-15);
+  transition: background-color 0.4s ease;
+}
+.section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sp-2);
+  flex-wrap: wrap;
+  margin-bottom: var(--sp-5);
+}
+.section-title {
+  margin: 0;
+  font: 400 clamp(48px, 6vw, 80px)/1 var(--font-display);
+}
 /* glass cards shared by Work and the Garden orbit */
-:root { --swirl-card-bg: rgba(252, 246, 249, 0.92); --card-bg: rgba(255, 251, 253, 0.72); --card-edge: rgba(41, 35, 41, 0.16); --card-glow: rgba(232, 93, 158, 0.14);
-  --ph: linear-gradient(135deg, #efc6da 0%, #ecdcef 55%, #dccdf0 100%); --ph-edge: rgba(156, 51, 102, 0.22); }
-:root[data-theme='dark'] { --swirl-card-bg: rgba(34, 27, 34, 0.9); --card-bg: rgba(38, 30, 38, 0.6); --card-edge: rgba(244, 234, 240, 0.13); --card-glow: rgba(232, 93, 158, 0.12);
-  --ph: linear-gradient(135deg, #3d2238 0%, #211726 55%, #2b1f3d 100%); --ph-edge: rgba(245, 194, 222, 0.18); }
+:root {
+  --swirl-card-bg: rgba(252, 246, 249, 0.92);
+  --card-bg: rgba(255, 251, 253, 0.72);
+  --card-edge: rgba(41, 35, 41, 0.16);
+  --card-glow: rgba(232, 93, 158, 0.14);
+  --ph: linear-gradient(135deg, #efc6da 0%, #ecdcef 55%, #dccdf0 100%);
+  --ph-edge: rgba(156, 51, 102, 0.22);
+}
+:root[data-theme='dark'] {
+  --swirl-card-bg: rgba(34, 27, 34, 0.9);
+  --card-bg: rgba(38, 30, 38, 0.6);
+  --card-edge: rgba(244, 234, 240, 0.13);
+  --card-glow: rgba(232, 93, 158, 0.12);
+  --ph: linear-gradient(135deg, #3d2238 0%, #211726 55%, #2b1f3d 100%);
+  --ph-edge: rgba(245, 194, 222, 0.18);
+}
 
 /* Work: a plain vertical stack, a sticky rail of dots on the right (butterfly = card in view) */
-.work-body { position: relative; }
+.work-body {
+  position: relative;
+}
 /* the heading and the cards share one width, so "Work" lines up with the cards' left edge */
-.work > .section-head, .work-body { max-width: 1080px; margin-left: auto; margin-right: auto; }
-.work-stack { list-style: none; margin: 0 auto; padding: 0; max-width: 1080px; display: flex; flex-direction: column; gap: var(--sp-12); }
+.work > .section-head,
+.work-body {
+  max-width: 1080px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.work-stack {
+  list-style: none;
+  margin: 0 auto;
+  padding: 0;
+  max-width: 1080px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-12);
+}
 .work-card {
-  position: relative; z-index: 1; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); gap: var(--sp-5); align-items: stretch;
-  padding: var(--sp-4); border-radius: 14px; background: var(--card-bg); border: 1px solid var(--card-edge);
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+  gap: var(--sp-5);
+  align-items: stretch;
+  padding: var(--sp-4);
+  border-radius: 14px;
+  background: var(--card-bg);
+  border: 1px solid var(--card-edge);
   /* light frosting, so the butterfly behind reads as a butterfly, softened, not a blur */
-  box-shadow: 0 0 40px var(--card-glow); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
-  transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.35s ease, background-color 0.4s ease;
+  box-shadow: 0 0 40px var(--card-glow);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  transition:
+    transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1),
+    box-shadow 0.35s ease,
+    background-color 0.4s ease;
 }
 /* alternate sides: every other card puts its image on the left */
-.work-card:nth-child(even) { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); }
-.work-card:nth-child(even) .work-card-media { order: -1; }
-.work-card:hover { transform: scale(1.025); box-shadow: 0 0 60px var(--card-glow); }
-.work-card-text { display: flex; flex-direction: column; min-width: 0; }
-.work-card-title { margin: 0 0 var(--sp-2); font: 400 clamp(32px, 3vw, 44px)/1.05 var(--font-display); }
-.work-card-title a { text-decoration: none; }
-.work-card-title a::after { content: ''; position: absolute; inset: 0; border-radius: inherit; }
-.work-card-meta { margin: 0 0 var(--sp-2); font-size: 14px; line-height: 1.5; color: var(--accent-ink); }
-.work-card-sep { margin: 0 0.6em; opacity: 0.7; }
-.work-card-line { margin: 0; font-size: var(--text-body); font-weight: 400; line-height: 1.6; color: var(--ink-soft); }
-.work-card-media { position: relative; aspect-ratio: 16 / 10; border-radius: 8px; overflow: hidden; align-self: center; }
-.work-card-media img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.media-ph { position: absolute; inset: 0; background: var(--ph); border: 1px dashed var(--ph-edge); border-radius: inherit; }
-.work-rail { position: absolute; top: 0; bottom: 0; right: calc(var(--gutter) * -0.5); width: 0; }
-.work-dots { position: sticky; z-index: 1; top: 50vh; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; gap: var(--sp-1); }
-.work-dot { display: grid; place-items: center; width: 32px; height: 32px; padding: 0; border: 0; background: none; border-radius: 50%; }
-.work-dot-pip { width: 6px; height: 6px; border-radius: 50%; background: var(--ink); opacity: 0.3; transition: opacity 0.2s ease, transform 0.2s ease; }
-.work-dot:hover .work-dot-pip { opacity: 0.7; transform: scale(1.3); }
-.work-dot .neon-icon { color: var(--accent-ink); }
-:root[data-theme='dark'] .work-dot .neon-icon { color: #f5c2de; }
-.work-dot.is-active .neon-icon { animation: dot-land 0.35s ease-out; }
-@keyframes dot-land { from { transform: scale(0.4) rotate(-20deg); opacity: 0; } to { transform: none; opacity: 1; } }
+.work-card:nth-child(even) {
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+}
+.work-card:nth-child(even) .work-card-media {
+  order: -1;
+}
+.work-card:hover {
+  transform: scale(1.025);
+  box-shadow: 0 0 60px var(--card-glow);
+}
+.work-card-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.work-card-title {
+  margin: 0 0 var(--sp-2);
+  font: 400 clamp(32px, 3vw, 44px)/1.05 var(--font-display);
+}
+.work-card-title a {
+  text-decoration: none;
+}
+.work-card-title a::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
+.work-card-meta {
+  margin: 0 0 var(--sp-2);
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--accent-ink);
+}
+.work-card-sep {
+  margin: 0 0.6em;
+  opacity: 0.7;
+}
+.work-card-line {
+  margin: 0;
+  font-size: var(--text-body);
+  font-weight: 400;
+  line-height: 1.6;
+  color: var(--ink-soft);
+}
+.work-card-media {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  border-radius: 8px;
+  overflow: hidden;
+  align-self: center;
+}
+.work-card-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.media-ph {
+  position: absolute;
+  inset: 0;
+  background: var(--ph);
+  border: 1px dashed var(--ph-edge);
+  border-radius: inherit;
+}
+.work-rail {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: calc(var(--gutter) * -0.5);
+  width: 0;
+}
+.work-dots {
+  position: sticky;
+  z-index: 1;
+  top: 50vh;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-1);
+}
+.work-dot {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  background: none;
+  border-radius: 50%;
+}
+.work-dot-pip {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--ink);
+  opacity: 0.3;
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
+}
+.work-dot:hover .work-dot-pip {
+  opacity: 0.7;
+  transform: scale(1.3);
+}
+.work-dot .neon-icon {
+  color: var(--accent-ink);
+}
+:root[data-theme='dark'] .work-dot .neon-icon {
+  color: #f5c2de;
+}
+.work-dot.is-active .neon-icon {
+  animation: dot-land 0.35s ease-out;
+}
+@keyframes dot-land {
+  from {
+    transform: scale(0.4) rotate(-20deg);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}

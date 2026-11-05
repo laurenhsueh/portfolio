@@ -24,8 +24,12 @@ export default function Taskbar({ route, theme, onToggleTheme }) {
   useEffect(() => {
     if (!menuOpen) return
     const mq = matchMedia(PHONE)
-    const onKey = (e) => { if (e.key === 'Escape') setMenuOpen(false) }
-    const onMq = () => { if (!mq.matches) setMenuOpen(false) }
+    const onKey = (e) => {
+      if (e.key === 'Escape') setMenuOpen(false)
+    }
+    const onMq = () => {
+      if (!mq.matches) setMenuOpen(false)
+    }
     const prev = document.body.style.overflow
     document.body.style.overflow = 'hidden'
     window.addEventListener('keydown', onKey)
@@ -38,7 +42,9 @@ export default function Taskbar({ route, theme, onToggleTheme }) {
   }, [menuOpen])
 
   // any navigation closes the menu
-  useEffect(() => { setMenuOpen(false) }, [route])
+  useEffect(() => {
+    setMenuOpen(false)
+  }, [route])
 
   const goHome = (e) => {
     setMenuOpen(false)
@@ -66,7 +72,9 @@ export default function Taskbar({ route, theme, onToggleTheme }) {
                   if (l.match === '/work' && route === workRoute) {
                     e.preventDefault()
                     const smooth = !matchMedia('(prefers-reduced-motion: reduce)').matches
-                    document.getElementById('work')?.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto', block: 'start' })
+                    document
+                      .getElementById('work')
+                      ?.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto', block: 'start' })
                   }
                 }}
               >
@@ -76,13 +84,13 @@ export default function Taskbar({ route, theme, onToggleTheme }) {
           ))}
         </ul>
         <button
-            type="button"
-            className="theme-toggle"
-            onClick={onToggleTheme}
-            aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
-          >
-            {dark ? <MoonIcon size={30} /> : <SunIcon size={30} />}
-          </button>
+          type="button"
+          className="theme-toggle"
+          onClick={onToggleTheme}
+          aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
+        >
+          {dark ? <MoonIcon size={30} /> : <SunIcon size={30} />}
+        </button>
         <button
           type="button"
           className="menu-toggle"

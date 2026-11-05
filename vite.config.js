@@ -16,7 +16,10 @@ export default defineConfig({
         manualChunks(id) {
           if (!id.includes('node_modules')) return
           if (/[\\/]node_modules[\\/](react|react-dom|scheduler)[\\/]/.test(id)) return 'react'
-          if (/[\\/]node_modules[\\/](three|@react-three[\\/]fiber|react-reconciler|its-fine|suspend-react)[\\/]/.test(id)) return 'three'
+          if (
+            /[\\/]node_modules[\\/](three|@react-three[\\/]fiber|react-reconciler|its-fine|suspend-react)[\\/]/.test(id)
+          )
+            return 'three'
         },
       },
     },

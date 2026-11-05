@@ -238,7 +238,9 @@ button { font: inherit; color: inherit; }
 
 /* Work: a plain vertical stack, a sticky rail of dots on the right (butterfly = card in view) */
 .work-body { position: relative; }
-.work-stack { list-style: none; margin: 0 auto; padding: 0; max-width: 960px; display: flex; flex-direction: column; gap: var(--sp-12); }
+/* the heading and the cards share one width, so "Work" lines up with the cards' left edge */
+.work > .section-head, .work-body { max-width: 1080px; margin-left: auto; margin-right: auto; }
+.work-stack { list-style: none; margin: 0 auto; padding: 0; max-width: 1080px; display: flex; flex-direction: column; gap: var(--sp-12); }
 .work-card {
   position: relative; z-index: 1; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); gap: var(--sp-5); align-items: stretch;
   padding: var(--sp-4); border-radius: 14px; background: var(--card-bg); border: 1px solid var(--card-edge);

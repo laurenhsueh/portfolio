@@ -51,7 +51,7 @@ function downbeatLift(db) {
  * One butterfly, placed every frame by `drive(t, dt)` → { at ([x, y] canvas fractions), span
  * (wingspan × min(w, 1.3 h)), rot (resting rotation; head = +Y), fade, z, held (being dragged, or
  * landed), flying (0..1, how fast it's travelling), swing (lean from the drag, rad), and optional
- * holdRot (the held pose, default HOLD_ROT), roll (screen-plane tilt while held, rad), haloGain /
+ * holdRot (the held pose, default HOLD_ROT), holdRate ([in, out] easing rates, default [9, 4]), roll (screen-plane tilt while held, rad), haloGain /
  * haloSize (override the props for this frame) }. `bob` / `bobRate`:
  * how much and how fast it hovers. `theme` 'light' switches to the iridescent pink-glass look (no bloom there).
  */
@@ -158,8 +158,10 @@ export function Flyer({ drive, reduced, bob = 1, bobRate = 0.8, flapRate = 0.55,
     const fade = drv.fade ?? 1
     const home = drv.at
     // ease into / out of the held pose (folding is quick, opening up to fly a touch slower)
-    const heldT = drv.held ? 1 : 0
-    st.hold = reduced ? heldT : lerp(st.hold, heldT, 1 - Math.exp(-dt * (heldT ? 9 : 4)))
+    // `held` may be a number (0..1) to fold part-way; `holdRate` [in, out] sets how fast it eases
+    const heldT = typeof drv.held === 'number' ? drv.held : drv.held ? 1 : 0
+    const [rateIn, rateOut] = drv.holdRate ?? [9, 4]
+    st.hold = reduced ? heldT : lerp(st.hold, heldT, 1 - Math.exp(-dt * (heldT > st.hold ? rateIn : rateOut)))
     st.fly = reduced ? 0 : lerp(st.fly, drv.flying ?? 0, 1 - Math.exp(-dt * 5))
     const hold = st.hold
     const fly = st.fly * (1 - hold)

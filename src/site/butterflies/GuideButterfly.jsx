@@ -44,7 +44,7 @@ const sizeK = (span) => clamp((span - 100) / 300, 0, 1) // 0 small … 1 big
 
 function createState() {
   return { ready: false, owner: 'hero', key: '', x: 0, y: 0, span: 100, fade: 0, ry: ROT_LEFT[1], rz: ROT_LEFT[2], flying: 0,
-    held: false, corner: 1, trip: null, els: null, tick: 0 }
+    held: 0, landing: 0, restRot: null, corner: 1, trip: null, els: null, tick: 0 }
 }
 
 /** Hand the butterfly back to the hero canvas. */
@@ -52,7 +52,7 @@ function giveBack(st) {
   st.owner = 'hero'
   st.key = ''
   st.trip = null
-  st.held = false
+  st.held = 0
   st.fade = 0
   guide.heroHidden = false
   guide.enRoute = false
@@ -102,7 +102,7 @@ function Director({ st, activeRef, reduced }) {
       // image right on even cards). Folded, its lowest point is ~0.3 × span below its centre.
       const r = card.getBoundingClientRect()
       const imageRight = i % 2 === 0
-      span = clamp(vw * 0.08, 80, 120)
+      span = clamp(vw * 0.11, 104, 160)
       tx = (imageRight ? r.right - span * 0.6 : r.left + span * 0.6) + sx
       ty = r.top - span * LAND_LIFT + sy
       rot = imageRight ? ROT_RIGHT : ROT_LEFT
@@ -158,7 +158,11 @@ function Director({ st, activeRef, reduced }) {
       const e = ease(T.p)
       const env = Math.sin(Math.PI * e) // 0 at both ends, 1 midway
       // turning: it slowly turns side-on as it sets off and back to face us as it settles
-      const turned = smooth(0, 0.3, T.p) * (1 - smooth(0.7, 1, T.p))
+      // heading for a card it stays side-on and folds into its landing over the last stretch
+      // (turning back to face us first, then folding, looked abrupt)
+      const landing = mode === 'card'
+      const turned = smooth(0, 0.3, T.p) * (landing ? 1 : 1 - smooth(0.7, 1, T.p))
+      st.landing = landing ? smooth(0.55, 1, T.p) : 0
       const dx = tx - T.fx
       const dy = ty - T.fy
       const L = Math.hypot(dx, dy) || 1
@@ -172,16 +176,21 @@ function Director({ st, activeRef, reduced }) {
       st.ry = lerp(lerp(T.fry, rot[1], e), rot[1] - T.side * SIDE_YAW, turned) // turn so its front faces the way it flies
       st.rz = lerp(T.frz, rot[2], e) - T.side * BANK * turned // leans a little into its heading
       st.flying = env * 0.6
-      if (T.p >= 1) st.trip = null
+      if (T.p >= 1) {
+        st.trip = null
+        st.restRot = landing ? [st.ry, st.rz] : null // landed: keep the side-on turn while the wings finish folding
+      }
     } else {
       // resting: stay on the spot (the card doesn't move on the page; the hero's spot bobs)
       st.x = tx; st.y = ty; st.span = span
-      st.ry = rot[1]; st.rz = rot[2]
+      st.ry = st.restRot ? st.restRot[0] : rot[1]
+      st.rz = st.restRot ? st.restRot[1] : rot[2]
       st.flying = 0
     }
 
     const done = !st.trip
-    st.held = mode === 'card' && done // landed: wings fold up, with a flutter (Flyer's held pose)
+    // landed: wings folded with a flutter (Flyer's held pose), eased in over the end of the trip
+    st.held = mode !== 'card' ? 0 : done ? 1 : st.landing
     if (mode === 'home' && done) {
       if (hero) { giveBack(st); return }
       st.fade = reduced ? 0 : lerp(st.fade, 0, 1 - Math.exp(-dt * 5)) // no hero: fade out up there
@@ -208,6 +217,7 @@ function Stage({ activeRef, reduced, theme }) {
       rot: [ROT_LEFT[0], st.ry, st.rz],
       fade: st.fade,
       held: st.held,
+      holdRate: [2.5, 2.5], // folds and opens slowly
       holdRot: LAND_POSE[st.corner],
       roll: st.corner * LAND_ROLL,
       flying: st.flying,

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { PROJECTS } from '../content/projects'
 import { ButterflyIcon } from '../NeonIcons'
 import { guide } from '../butterflies/guide'
+import MaskedTitle from '../motion/MaskedTitle'
 
 /**
  * Featured work: a vertical stack of cards that alternate sides (text | image, then image | text).
@@ -57,7 +58,7 @@ export default function WorkSection() {
     <section id="work" className="work" aria-labelledby="work-title" tabIndex={-1}>
       <header className="section-head">
         <h2 id="work-title" className="section-title">
-          Work
+          <MaskedTitle text="Work" />
         </h2>
       </header>
       <div className="work-body">
@@ -67,6 +68,7 @@ export default function WorkSection() {
               key={p.id}
               className="work-card"
               data-perch={i}
+              data-reveal="fade"
               ref={(el) => {
                 cardRefs.current[i] = el
               }}

@@ -10,3 +10,4 @@
 @import './styles/footer.css'; /* Footer */
 @import './styles/responsive.css'; /* Tablet / mobile overrides and reduced motion for the sections above */
 @import './styles/home.css'; /* Home: the orbit desktop (desktop/OrbitDesktop.jsx) and its butterflies */
+@import './styles/motion.css'; /* Load-in and scroll reveals (all timings live here) */

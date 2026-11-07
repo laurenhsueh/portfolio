@@ -55,7 +55,7 @@ export default function Taskbar({ route, theme, onToggleTheme }) {
     }
   }
   return (
-    <header className={`taskbar is-glass ${menuOpen ? 'is-menu-open' : ''}`}>
+    <header className={`taskbar is-glass hero-fade is-fade-only ${menuOpen ? 'is-menu-open' : ''}`}>
       <a className="taskbar-brand" href={`#${home}`} onClick={goHome} aria-label="Lauren Hsueh, home">
         <span>Lauren Hsueh</span>
       </a>

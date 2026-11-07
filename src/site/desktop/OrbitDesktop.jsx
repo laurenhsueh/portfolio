@@ -8,6 +8,7 @@ import { ReadmeIcon, DanceIcon } from '../NeonIcons'
 const DuetStage = lazy(() => import('../butterflies/DuetStage'))
 import { useAfterPaint } from '../hooks/useAfterPaint'
 import SafeBoundary from '../SafeBoundary'
+import MaskedTitle from '../motion/MaskedTitle'
 
 // The big butterfly on desktop: centred in the open space between the name's right edge and
 // the icon column, level with the middle of the name + README block. Its wingspan is
@@ -56,7 +57,8 @@ function OrbitLines({ geo, part }) {
   const half = part === 'back' ? 1 : 0 // SVG sweep 1 from the left point runs over the top
   return (
     <svg
-      className={`orbit-lines is-${part}`}
+      className={`orbit-lines is-${part} hero-fade is-fade-only`}
+      style={{ '--n': 2 }}
       viewBox={`0 0 ${W} ${H}`}
       width={W}
       height={H}
@@ -133,13 +135,19 @@ export default function OrbitDesktop({ theme }) {
       if (!b.width && !b.height) return null
       return { x: b.left - hb.left, y: b.top - hb.top, w: b.width, h: b.height }
     }
-    // the name's block spans its grid column; measure the letters themselves
+    // the name's block spans its grid column; measure the letters themselves (their masks, which
+    // stay put while the letters rise through them on load)
     const relText = (el) => {
       if (!el) return null
-      const r = document.createRange()
-      r.selectNodeContents(el)
-      const b = r.getBoundingClientRect()
-      return b.width ? { x: b.left - hb.left, y: b.top - hb.top, w: b.width, h: b.height } : null
+      let l = Infinity, t = Infinity, r = -Infinity, btm = -Infinity
+      for (const m of el.querySelectorAll('.mt-char')) {
+        const b = m.getBoundingClientRect()
+        l = Math.min(l, b.left)
+        t = Math.min(t, b.top)
+        r = Math.max(r, b.right)
+        btm = Math.max(btm, b.bottom)
+      }
+      return r > l ? { x: l - hb.left, y: t - hb.top, w: r - l, h: btm - t } : null
     }
     const W = hb.width
     const H = hb.height
@@ -291,14 +299,19 @@ export default function OrbitDesktop({ theme }) {
       <OrbitLines geo={geo} part="front" />
 
       <h1 ref={nameRef} className="desktop-name orbit-name">
-        <span>Lauren</span> <span>Hsueh</span>
+        <span>
+          <MaskedTitle text="Lauren" mode="load" />
+        </span>{' '}
+        <span>
+          <MaskedTitle text="Hsueh" mode="load" from={6} />
+        </span>
       </h1>
 
-      <div ref={windowRef} className="hero-window orbit-window">
+      <div ref={windowRef} className="hero-window orbit-window hero-fade" style={{ '--n': 1 }}>
         <ReadmeWindow open={readmeOpen} onClose={closeReadme} />
       </div>
 
-      <ul ref={iconsRef} className="orbit-icons" role="list" aria-label="Desktop">
+      <ul ref={iconsRef} className="orbit-icons hero-fade" style={{ '--n': 1 }} role="list" aria-label="Desktop">
         <li className="icon-slot">
           <button
             ref={iconRef}

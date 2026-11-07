@@ -14,7 +14,7 @@ export default function Footer() {
 
   return (
     <footer className="site-footer">
-      <div className="footer-inner">
+      <div className="footer-inner" data-reveal>
         <p className="footer-name">Lauren Hsueh</p>
         <dl className="footer-contacts">
           {rows.map((r) => (

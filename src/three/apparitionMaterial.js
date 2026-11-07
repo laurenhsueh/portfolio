@@ -158,6 +158,8 @@ void main() {
     glass *= 1.0 - spots * 0.3 * (1.0 - uBody);
     glass = mix(glass, uColRose * 0.85, uBody * 0.55);
     outCol = glass * (0.9 + 0.1 * uPulse);
+    // a little richer, as the canvas's old CSS saturate(1.25) did (now free, here in the shader)
+    outCol = max(mix(vec3(dot(outCol, vec3(0.2126, 0.7152, 0.0722))), outCol, 1.25), 0.0);
     a *= (0.65 + inner * 0.2 + spec * 0.3 + fres * 0.2) * mix(1.0, 0.6, uLayer);
   }
   gl_FragColor = vec4(outCol, clamp(a, 0.0, 1.0));

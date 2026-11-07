@@ -10,7 +10,9 @@ import { SmokeSystem, findEmitters } from '../../three/Smoke'
 import { dance, beatNow } from '../music/dance'
 import { BUTTERFLY_LOOK as LOOK } from './lookParams'
 import { createAfterimage } from './afterimage'
+import { createLightGlow } from './lightglow'
 import { lerp } from './math'
+import { guide } from './guide'
 
 // The ghost "apparition" butterfly (same GLB, material, halo and smoke as the Garden lab), for
 // the home page's DuetStage.jsx. `Flyer` is one butterfly that a choreographer moves every
@@ -21,6 +23,9 @@ const WING_FLY = [NODE_DEFAULTS.mapToMin, NODE_DEFAULTS.mapToMax] // the Map Ran
 // held: the wings fold up over the back (≈ π/2 is straight up, touching) and only flutter a
 // little, and the body turns side-on so the folded wings face the viewer
 const WING_HELD = [1.34, 1.56]
+// the load-in intro: wings start shut (≈ π/2, touching overhead) and unfold to the normal flap
+const WING_CLOSED = [1.5, 1.57]
+const easeOutCubic = (x) => 1 - (1 - x) ** 3
 const HOLD_ROT = [0.12, 1.3, 0.2] // x pitch, y turn (side-on), z tilt; head = +Y
 const HOLD_FLUTTER = 1.8 // × the flap rate: a held butterfly beats its folded wings fast
 // flying (released, heading home): it flaps harder, pitches forward, and its path bobs on each
@@ -67,6 +72,8 @@ export function Flyer({
   haloGain = 1,
   theme = 'dark',
   haloSize = null,
+  intro = 0,
+  sharePhase = false,
 }) {
   const gltf = useLoader(GLTFLoader, GLB)
   const { size, gl } = useThree()
@@ -171,13 +178,24 @@ export function Flyer({
     return f
   }, [gltf, wings])
   const st = useMemo(
-    () => ({ t: 0, frame: SCENE.frameStart, params: { ...NODE_DEFAULTS }, dl: 0, tick: 0, hold: 0, fly: 0 }),
+    () => ({
+      t: 0,
+      frame: SCENE.frameStart,
+      params: { ...NODE_DEFAULTS },
+      dl: 0,
+      tick: 0,
+      hold: 0,
+      fly: 0,
+      intro: 0,
+      shown: false,
+      warm: false,
+    }),
     [],
   )
   const mainRef = useRef() // position + a roll in the screen plane (drv.roll)
   const poseRef = useRef() // the body's pose + scale
 
-  useFrame(({ camera }, rawDt) => {
+  useFrame(({ camera, scene }, rawDt) => {
     const g = mainRef.current
     if (!g || !wings || !field) return
     const dt = Math.min(rawDt, 1 / 20)
@@ -189,7 +207,18 @@ export function Flyer({
 
     const drv = drive(t, dt)
     const rest = drv.rot
-    const fade = drv.fade ?? 1
+    // the big butterfly has two copies (hero canvas, scroll canvas): the one appearing picks up
+    // the other's clock and wingbeat, so swapping between them is seamless
+    const showing = (drv.fade ?? 1) > 0.01
+    if (sharePhase && showing && !st.shown && guide.phase) {
+      st.t = guide.phase.t
+      st.frame = guide.phase.frame
+    }
+    st.shown = showing
+    // intro (once, the first time it's shown): fade 0 → 1 while the wings open from shut
+    if (intro > 0 && (drv.fade ?? 1) > 0.01) st.intro = Math.min(1, st.intro + dt / intro)
+    const open = intro > 0 && !reduced ? easeOutCubic(st.intro) : 1
+    const fade = (drv.fade ?? 1) * (intro > 0 && !reduced ? Math.min(1, st.intro * 1.6) ** 1.5 : 1)
     const home = drv.at
     // ease into / out of the held pose (folding is quick, opening up to fly a touch slower)
     // `held` may be a number (0..1) to fold part-way; `holdRate` [in, out] sets how fast it eases
@@ -240,6 +269,13 @@ export function Flyer({
       lerp(p.rz, hr[2] + (drv.swing ?? 0), hold),
     )
     poseRef.current.scale.setScalar(scale)
+    // compile every shader once up front (wings, body, halo, smoke), while nothing is on screen,
+    // so it doesn't hitch the first time this butterfly appears
+    if (!st.warm) {
+      st.warm = true
+      g.visible = halo.visible = true
+      gl.compile(scene, camera)
+    }
     g.visible = fade > 0.01
     g.updateWorldMatrix(true, true)
 
@@ -247,8 +283,8 @@ export function Flyer({
     halo.scale.setScalar(scale * (drv.haloSize ?? halo.material.userData.size ?? 9))
 
     // flap; dancing locks one slow flap to every 2 beats (as on the home page)
-    st.params.mapToMin = lerp(WING_FLY[0], WING_HELD[0], hold)
-    st.params.mapToMax = lerp(WING_FLY[1], WING_HELD[1], hold)
+    st.params.mapToMin = lerp(lerp(WING_CLOSED[0], WING_FLY[0], open), WING_HELD[0], hold)
+    st.params.mapToMax = lerp(lerp(WING_CLOSED[1], WING_FLY[1], open), WING_HELD[1], hold)
     st.frame += dt * SCENE.fps * flapRate * motion * (1 + HOLD_FLUTTER * hold + FLIGHT_FLAP * fly)
     if (st.dl > 0.001 && !reduced) {
       const tempoFps = (FLAP_CYCLE * 0.5 * dance.bpm) / 60
@@ -261,6 +297,7 @@ export function Flyer({
         st.frame += diff * (1 - Math.exp(-dt * 2)) * st.dl
       }
     }
+    if (sharePhase && g.visible) guide.phase = { t: st.t, frame: st.frame }
     if (g.visible) {
       const pos = wings.geometry.attributes.position
       evaluateWings(field, st.frame, st.params, pos.array)
@@ -302,27 +339,73 @@ export function Flyer({
 }
 
 /**
- * Takes over rendering (priority 1) with the trail + bloom pipeline: every frame is stamped
- * into a short-lived trail (`cfg.life`, `cfg.blur`), then bloomed (`cfg.bloom`). `adjust(bloomPass)`,
- * if given, runs every frame before rendering, to retune the bloom live. `idle()`, if given and
- * true, stops the (fullscreen) composer from drawing once the trail has cleared.
+ * Takes over rendering (priority 1). `enabled` (dark theme): the trail + bloom pipeline, where
+ * every frame is stamped into a short-lived trail (`cfg.life`, `cfg.blur`), then bloomed
+ * (`cfg.bloom`); `adjust(bloomPass)`, if given, runs every frame before rendering, to retune the
+ * bloom live. Not enabled (light): a plain render. The pipeline is built (and its shaders
+ * compiled) once, whichever theme the page starts in, so switching themes never rebuilds anything.
+ * `idle()`, if given and true, stops drawing once the canvas has cleared, so an empty canvas
+ * isn't redrawn (and its CSS glow recomputed) every frame.
  */
-export function Afterimage({ cfg, reduced, adjust, idle }) {
+const IDLE_FRAMES = 40 // ≈ 0.7 s: enough for any trail to fade before the canvas stops drawing
+
+export function Afterimage({ cfg, reduced, adjust, idle, enabled = true }) {
   const idleFrames = useRef(0)
+  const warmed = useRef(false)
+  const mode = useRef(enabled)
+  const cleared = useRef(false)
   const { gl, scene, camera, size, viewport } = useThree()
   const fx = useMemo(() => createAfterimage(gl, scene, camera, { bloom: cfg.bloom }), [gl, scene, camera, cfg.bloom])
+  const glow = useMemo(() => createLightGlow(gl, scene, camera), [gl, scene, camera]) // light theme's glow
   useEffect(() => {
     fx.setSize(size.width, size.height, viewport.dpr)
-  }, [fx, size, viewport.dpr])
-  useEffect(() => () => fx.dispose(), [fx])
+    glow.setSize(size.width, size.height, viewport.dpr)
+  }, [fx, glow, size, viewport.dpr])
+  useEffect(
+    () => () => {
+      fx.dispose()
+      glow.dispose()
+    },
+    [fx, glow],
+  )
   useFrame((_, rawDt) => {
     const dt = Math.min(rawDt, 1 / 20)
-    fx.trail.step(dt, { on: !reduced, life: cfg.life ?? 1.6, blur: cfg.blur }, reduced ? 0 : 0.8)
-    adjust?.(fx.bloomPass) // e.g. a softer, wider bloom for a smaller butterfly
-    // nothing on screen: render a few more frames so the trail clears, then stop drawing
+    // dark: an opaque black canvas, screen-blended onto the page; light: see-through. Set every
+    // frame (it's cheap) so the clear colour can never lag behind the theme.
+    gl.setClearColor('#000000', enabled ? 1 : 0)
+    if (enabled !== mode.current) {
+      // theme switched: draw again even if idle, or the old theme's last frame would stay up
+      // (a dark frame is opaque black, which covers the page once it's no longer screen-blended)
+      mode.current = enabled
+      idleFrames.current = 0
+      fx.reset()
+    }
+    if (rawDt > 0.25) fx.reset() // resumed after a pause: drop the stale trail rather than show it
+    // nothing on screen: keep drawing until the trail has faded, then wipe the canvas once and stop
     idleFrames.current = idle?.() ? idleFrames.current + 1 : 0
-    if (idleFrames.current > 12) return
-    fx.render(dt)
+    if (idleFrames.current > IDLE_FRAMES && warmed.current) {
+      if (!cleared.current) {
+        fx.reset()
+        gl.setRenderTarget(null)
+        gl.clear()
+        cleared.current = true
+      }
+      return
+    }
+    cleared.current = false
+    // the first frame runs both pipelines (whichever theme is showing draws last, over the other),
+    // so both are compiled up front and a theme switch never stalls on a shader compile
+    if (!enabled || !warmed.current) glow.render()
+    if (enabled || !warmed.current) {
+      fx.trail.step(dt, { on: !reduced, life: cfg.life ?? 1.6, blur: cfg.blur }, reduced ? 0 : 0.8)
+      adjust?.(fx.bloomPass) // e.g. a softer, wider bloom for a smaller butterfly
+      fx.render(dt)
+    }
+    if (!enabled && !warmed.current) {
+      fx.reset()
+      glow.render()
+    }
+    warmed.current = true
   }, 1)
   return null
 }

@@ -194,6 +194,14 @@ export function createAfterimage(gl, scene, camera, { trailScale = 0.5, bloomSca
     render(dt) {
       composer.render(dt)
     },
+    /** Wipe the trail (e.g. after a while unused, so an old ghost doesn't flash up). */
+    reset() {
+      for (const rt of [trail.prev, trail.next]) {
+        gl.setRenderTarget(rt)
+        gl.clear()
+      }
+      gl.setRenderTarget(null)
+    },
     dispose() {
       trail.dispose()
       bloomPass.dispose()

@@ -2,13 +2,15 @@ import { useEffect, useRef, useState } from 'react'
 import { GARDEN_ITEMS } from '../content/garden'
 import { guide } from '../butterflies/guide'
 import { invalidateLayout } from '../butterflies/layout'
+import MaskedTitle from '../motion/MaskedTitle'
 
 // The home page's Garden: the garden projects orbit the middle of the stage on a tilted ring, like
 // the orbit on the desktop, and the scroll butterfly settles in that middle ([data-nest], an
 // invisible marker). Dragging spins the ring (with a pink DRAG cursor on mouse); it also drifts
 // slowly on its own. The rings and cards wait until the butterfly arrives (guide.arrive), then
-// fade in. If it's late or missing (no WebGL, reduced motion), a timer shows them anyway, so
-// content never stays hidden. The centred "See Garden" heading links to the full Garden page.
+// fade in, and fade back out when it flies off (guide.leave), so they play again next time. If
+// the butterfly isn't running (no WebGL, or it failed), a timer shows them anyway, so content
+// never stays hidden. The centred "See Garden" heading links to the full Garden page.
 const TILT = (-14 * Math.PI) / 180
 const IDLE_SPIN = 0.07 // rad/s
 const FALLBACK_MS = 900 // after the section is in view, unless the butterfly is on its way…
@@ -24,15 +26,20 @@ export default function GardenSwirl({ reduced }) {
   const [geo, setGeo] = useState(null)
   const spin = useRef({ a: 0, v: 0, drag: null, suppressClick: false })
 
-  // reveal when the butterfly lands, or shortly after the section comes into view without it
+  // in while the butterfly is in the Garden, out when it leaves
+  useEffect(() => guide.onArrive(setRevealed), [])
+
+  // no butterfly running: reveal shortly after the section comes into view
   useEffect(() => {
     if (revealed) return
-    const off = guide.onArrive(() => setRevealed(true))
     let timer = 0
     let since = 0
     const check = () => {
-      if (guide.enRoute && performance.now() - since < MAX_WAIT_MS) timer = setTimeout(check, 250)
-      else setRevealed(true)
+      if (guide.arrived) setRevealed(true)
+      else if (guide.live || (guide.enRoute && performance.now() - since < MAX_WAIT_MS)) {
+        // the butterfly will bring the reveal; keep checking (while in view) in case it stops running
+        timer = setTimeout(check, 250)
+      } else setRevealed(true)
     }
     const io = new IntersectionObserver(
       ([e]) => {
@@ -45,7 +52,6 @@ export default function GardenSwirl({ reduced }) {
     )
     io.observe(sectionRef.current)
     return () => {
-      off()
       io.disconnect()
       clearTimeout(timer)
     }
@@ -166,7 +172,9 @@ export default function GardenSwirl({ reduced }) {
       <header className="swirl-head">
         <h2 id="garden-title" className="section-title">
           <a href="#/garden" className="swirl-head-link">
-            <span className="swirl-head-text">See Garden</span>
+            <span className="swirl-head-text">
+              <MaskedTitle text="See Garden" />
+            </span>
             <svg className="swirl-head-arrow" width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true">
               <path
                 d="M7 21L21 7M10 7h11v11"

@@ -1,10 +1,10 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import { Flyer, Afterimage } from './StageButterfly'
 import ButterflyCanvas from './ButterflyCanvas'
 import { lerp, clamp, smooth, easeInOut } from './math'
 import { DARK_BLOOM, LIGHT_HALO } from './lookParams'
-import { guide } from './guide'
+import { guide, HANDBACK_RATE } from './guide'
 import { pageRect } from './layout'
 
 // The scroll butterfly: the hero's big butterfly, carried down the page on a fixed canvas that
@@ -63,13 +63,12 @@ function createState() {
   }
 }
 
-/** Hand the butterfly back to the hero canvas. */
+/** Hand the butterfly back to the hero canvas. This copy fades out over the hero's fading in. */
 function giveBack(st) {
   st.owner = 'hero'
   st.key = ''
   st.trip = null
   st.held = 0
-  st.fade = 0
   guide.heroHidden = false
   guide.enRoute = false
 }
@@ -208,13 +207,28 @@ function rest(st, t) {
   st.flying = 0
 }
 
-function Director({ st, activeRef, reduced }) {
+const WARM_FRAMES = 20 // drawn (invisibly) right after mounting, so shaders compile off the critical path
+
+function Director({ st, activeRef, reduced, onBusy, onWarm }) {
+  const frames = useRef(0)
   const { size } = useThree()
+  useEffect(
+    () => () => {
+      guide.live = false
+    },
+    [],
+  )
   useFrame((_, rawDt) => {
     const dt = Math.min(rawDt, 1 / 20)
-    if (!activeRef.current) {
-      // off screen: the hero keeps (or gets back) its butterfly
-      if (st.ready) giveBack(st)
+    guide.live = true
+    if (++frames.current === WARM_FRAMES) onWarm()
+    // keep drawing while this copy is on screen in any way (still flying home after Work has
+    // scrolled away, or fading out over the hero's), and only stop once it's fully gone
+    const busy = st.ready && (st.owner === 'guide' || st.fade > 0.01)
+    onBusy(busy)
+    if (!activeRef.current && !busy) {
+      // off screen: the hero keeps its butterfly
+      guide.leave()
       st.ready = false
       return
     }
@@ -237,10 +251,14 @@ function Director({ st, activeRef, reduced }) {
 
     // the hero has it: follow it invisibly until Work comes into view, then take it over
     if (st.owner === 'hero') {
-      if (t.mode === 'home') {
+      if (t.mode === 'home' || !activeRef.current) {
         st.x = t.tx
         st.y = t.ty
         st.span = t.span
+        st.ry = ROT_LEFT[1]
+        st.rz = ROT_LEFT[2]
+        st.flying = 0
+        st.fade = reduced ? 0 : lerp(st.fade, 0, 1 - Math.exp(-dt * HANDBACK_RATE))
         return
       }
       st.owner = 'guide'
@@ -248,6 +266,17 @@ function Director({ st, activeRef, reduced }) {
       st.ry = ROT_LEFT[1]
       st.rz = ROT_LEFT[2]
       guide.heroHidden = !!hero
+    }
+
+    // heading home while out of sight (a quick scroll up left it a screen away): don't leave the
+    // hero empty while it flies back in; hand it over now and the hero's own fades in in place
+    if (t.mode === 'home' && hero && offView(st.x, st.y, st.span * 0.6, vw, vh)) {
+      st.fade = 0
+      st.x = t.tx
+      st.y = t.ty
+      st.span = t.span
+      giveBack(st)
+      return
     }
 
     if (t.key !== st.key) startTrip(st, t, reduced)
@@ -259,26 +288,28 @@ function Director({ st, activeRef, reduced }) {
     st.held = t.mode !== 'card' ? 0 : done ? 1 : st.landing
     if (t.mode === 'home' && done) {
       if (hero) {
-        giveBack(st)
+        giveBack(st) // home: hand it back (it fades out here as the hero's fades in)
         return
-      } // home: hand it back
+      }
       st.fade = reduced ? 0 : lerp(st.fade, 0, 1 - Math.exp(-dt * 5)) // no hero: fade out up there
     } else {
       st.fade = 1
     }
     if (t.mode === 'nest' && done) guide.arrive()
+    else if (t.mode !== 'nest') guide.leave() // flying off: the Garden fades back out
     guide.enRoute = t.mode === 'nest' && !done
   }, -1)
   return null
 }
 
-function Stage({ activeRef, reduced, theme }) {
+function Stage({ activeRef, reduced, theme, onBusy, onWarm }) {
   const { size } = useThree()
   const st = useMemo(createState, [])
   if (import.meta.env.DEV && DEBUG) window.__guideButterfly = st // tuning: open the page with ?debug
   const bloom = theme !== 'light'
   const drive = () => {
-    if (!st.ready || st.owner === 'hero') return { at: [0.5, -0.5], span: 0.1, rot: ROT_LEFT, fade: 0 }
+    if (!st.ready || (st.owner === 'hero' && st.fade <= 0.01))
+      return { at: [0.5, -0.5], span: 0.1, rot: ROT_LEFT, fade: 0 }
     const k = sizeK(st.span)
     return {
       at: [(st.x - window.scrollX) / size.width, (st.y - window.scrollY) / size.height],
@@ -302,7 +333,7 @@ function Stage({ activeRef, reduced, theme }) {
   }
   return (
     <>
-      <Director st={st} activeRef={activeRef} reduced={reduced} />
+      <Director st={st} activeRef={activeRef} reduced={reduced} onBusy={onBusy} onWarm={onWarm} />
 
       {/* the hero's big butterfly's settings (DuetStage), with a shorter trail */}
       <Flyer
@@ -311,19 +342,13 @@ function Stage({ activeRef, reduced, theme }) {
         bobRate={1.25}
         reduced={reduced}
         theme={theme}
+        sharePhase
         flapRate={DARK_BLOOM.flapRate}
         smokeAmount={bloom ? GUIDE_BLOOM.smoke : undefined}
         haloGain={bloom ? 0.45 : LIGHT_HALO.gain}
         haloSize={bloom ? null : LIGHT_HALO.size}
       />
-      {bloom && (
-        <Afterimage
-          cfg={GUIDE_BLOOM}
-          reduced={reduced}
-          adjust={adjust}
-          idle={() => st.owner !== 'guide' || st.fade < 0.01}
-        />
-      )}
+      <Afterimage cfg={GUIDE_BLOOM} reduced={reduced} adjust={adjust} idle={() => st.fade < 0.01} enabled={bloom} />
     </>
   )
 }
@@ -331,6 +356,19 @@ function Stage({ activeRef, reduced, theme }) {
 export default function GuideButterfly({ reduced, theme }) {
   const [active, setActive] = useState(false)
   const activeRef = useRef(false)
+  // still on screen after Work/Garden scrolled away (flying home, or fading out over the hero)
+  const [busy, setBusy] = useState(false)
+  const busyRef = useRef(false)
+  const onBusy = useCallback((b) => {
+    if (b === busyRef.current) return
+    busyRef.current = b
+    setBusy(b)
+  }, [])
+  // a few invisible frames right after mounting (well before Work), so the WebGL setup and
+  // shader compiles happen then, not at the moment it takes over the butterfly
+  const [warming, setWarming] = useState(true)
+  const onWarm = useCallback(() => setWarming(false), [])
+  const on = active || busy
   const bloom = theme !== 'light'
 
   // only render while Work or the Garden is on screen
@@ -353,9 +391,9 @@ export default function GuideButterfly({ reduced, theme }) {
 
   // dark: an opaque black canvas with its own bloom, screen-blended onto the page (like the hero)
   return (
-    <div className={`guide-stage ${bloom ? 'is-dark' : 'is-light'}${active ? '' : ' is-off'}`} aria-hidden="true">
-      <ButterflyCanvas bloom={bloom} frameloop={active ? 'always' : 'never'}>
-        <Stage activeRef={activeRef} reduced={reduced} theme={theme} />
+    <div className={`guide-stage ${bloom ? 'is-dark' : 'is-light'}${on ? '' : ' is-off'}`} aria-hidden="true">
+      <ButterflyCanvas frameloop={on || warming ? 'always' : 'never'}>
+        <Stage activeRef={activeRef} reduced={reduced} theme={theme} onBusy={onBusy} onWarm={onWarm} />
       </ButterflyCanvas>
     </div>
   )

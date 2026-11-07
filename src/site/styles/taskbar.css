@@ -95,7 +95,7 @@
   line-height: 0.92;
   letter-spacing: 0.01em;
 }
-.desktop-name span {
+.desktop-name > span {
   display: block;
 }
 

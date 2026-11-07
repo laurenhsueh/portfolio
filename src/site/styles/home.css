@@ -367,8 +367,9 @@
 /* light: no bloom pass (it would wash out on the pale page), so the glow is layered pink
    drop-shadows that follow the wings and spread out like bloom, plus the pink halo in the canvas */
 .duet-stage.is-light canvas {
-  filter: saturate(1.25) drop-shadow(0 0 2px rgba(214, 70, 140, 0.5)) drop-shadow(0 0 14px rgba(232, 93, 158, 0.42))
-    drop-shadow(0 0 40px rgba(240, 120, 180, 0.32));
+  /* no CSS filter: a CSS blur is redone over the whole canvas every frame the butterfly moves.
+     The pink glow is drawn in WebGL at quarter resolution instead (butterflies/lightglow.js). */
+  filter: none;
 }
 @media (max-width: 899px) {
   /* v4 stacks: name, icon row, README, the butterflies' space */

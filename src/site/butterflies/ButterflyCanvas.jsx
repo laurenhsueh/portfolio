@@ -2,19 +2,20 @@ import { Canvas } from '@react-three/fiber'
 import { CAMERA } from './StageButterfly'
 
 /**
- * The canvas both home butterfly stages use. `bloom` (dark theme): an opaque black canvas with its
- * own bloom pass, screen-blended onto the page by CSS. Otherwise (light): a see-through canvas.
- * The two need different GL contexts, hence the key.
+ * The canvas both home butterfly stages use. Dark: cleared to opaque black, with its own bloom
+ * pass, screen-blended onto the page by CSS. Light: see-through, with a WebGL glow. One GL context
+ * serves both themes (Afterimage switches the clear colour and render path), so toggling the theme
+ * never tears the canvas down and rebuilds it, which used to stall the switch.
  */
-export default function ButterflyCanvas({ bloom, frameloop, children }) {
+export default function ButterflyCanvas({ frameloop, children }) {
   return (
     <Canvas
-      key={bloom ? 'bloom' : 'plain'}
       frameloop={frameloop}
-      dpr={bloom ? [1, 1.25] : [1, 1.75]}
+      // the same resolution in both themes (light used to render ~44% more pixels)
+      dpr={[1, 1.25]}
       camera={CAMERA}
-      gl={{ alpha: !bloom, antialias: !bloom, powerPreference: bloom ? 'default' : 'low-power' }}
-      onCreated={bloom ? ({ gl }) => gl.setClearColor('#000000', 1) : undefined}
+      // light used to ask for the low-power GPU, which made it the laggier theme on dual-GPU laptops
+      gl={{ alpha: true, antialias: true, powerPreference: 'default' }}
       style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}
     >
       {children}

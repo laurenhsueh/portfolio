@@ -1,0 +1,166 @@
+/* ── Motion: load-in and scroll reveals ────────────────────────────────────────
+   Every timing is here. The butterfly's wing-open intro is in butterflies/DuetStage.jsx
+   (INTRO_S) since it runs in WebGL. */
+:root {
+  --motion-ease: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* letter-by-letter baseline mask (the name, Work, See Garden, Garden) */
+  --mt-dur: 1100ms; /* each letter's rise */
+  --mt-stagger: 75ms; /* between letters */
+  --mt-start: 650ms; /* the name starts this long after load (while the butterfly opens) */
+  --mt-out-dur: 500ms; /* letters dropping back when a title scrolls away */
+
+  /* hero pieces that just fade in on load (nav, README, icons, orbit lines) */
+  --hero-fade-dur: 1400ms;
+  --hero-fade-start: 1400ms;
+  --hero-fade-stagger: 220ms;
+  --hero-fade-shift: 10px;
+
+  /* scroll fades */
+  --reveal-dur: 1000ms;
+  --reveal-out-dur: 650ms;
+  --reveal-shift: 16px;
+  /* --reveal-stagger: 110ms lives in motion/useScrollReveal.js (STAGGER_MS) */
+}
+
+/* ── Baseline mask ── */
+.mt {
+  display: inline;
+}
+.mt-word {
+  white-space: nowrap;
+}
+/* each letter is its own mask; the padding (cancelled by the negative margin, so spacing doesn't
+   change) leaves room for caps above the tight line-height and descenders below it */
+.mt-char {
+  display: inline-block;
+  overflow: hidden;
+  padding: 0.12em 0.04em 0.2em;
+  margin: -0.12em -0.04em -0.2em;
+}
+.mt-inner {
+  display: inline-block;
+}
+.mt[data-mask='load'] .mt-inner {
+  animation: mt-rise var(--mt-dur) var(--motion-ease) backwards;
+  animation-delay: calc(var(--mt-start) + var(--i, 0) * var(--mt-stagger));
+}
+@keyframes mt-rise {
+  from {
+    transform: translateY(calc(100% + 0.35em));
+  }
+}
+.mt[data-mask='view'] .mt-inner {
+  transform: translateY(calc(100% + 0.35em));
+  transition: transform var(--mt-out-dur) ease-in;
+}
+.mt[data-mask='view'].is-visible .mt-inner {
+  transform: none;
+  transition: transform var(--mt-dur) var(--motion-ease) calc(var(--i, 0) * var(--mt-stagger));
+}
+/* See Garden's hover underline: inline-blocks don't inherit the link's underline, so draw it per letter */
+.swirl-head-text .mt-inner {
+  text-decoration-line: underline;
+  text-decoration-color: transparent;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.14em;
+  transition-property: transform, text-decoration-color;
+}
+.swirl-head-link:hover .swirl-head-text .mt-inner,
+.swirl-head-link:focus-visible .swirl-head-text .mt-inner {
+  /* the longhand, not the text-decoration shorthand, which would reset the thickness to the
+     font's default (thick at this size) */
+  text-decoration-line: underline;
+  text-decoration-color: currentColor;
+}
+.swirl-head-link:hover .swirl-head-text,
+.swirl-head-link:focus-visible .swirl-head-text {
+  text-decoration-color: transparent;
+}
+
+/* ── Hero fade-in on load ── */
+.hero-fade {
+  animation: hero-fade var(--hero-fade-dur) var(--motion-ease) backwards;
+  animation-delay: calc(var(--hero-fade-start) + var(--n, 0) * var(--hero-fade-stagger));
+}
+@keyframes hero-fade {
+  from {
+    opacity: 0;
+    transform: translateY(var(--hero-fade-shift));
+  }
+}
+/* opacity only: the nav is sticky, and the orbit lines are laid over measured positions */
+.hero-fade.is-fade-only {
+  animation-name: hero-fade-only;
+}
+@keyframes hero-fade-only {
+  from {
+    opacity: 0;
+  }
+}
+
+/* ── Scroll reveals (motion/useScrollReveal.js toggles .is-visible) ── */
+[data-reveal]:not(.mt) {
+  opacity: 0;
+  transform: translateY(var(--reveal-shift));
+  transition:
+    opacity var(--reveal-out-dur) ease,
+    transform var(--reveal-out-dur) ease;
+}
+[data-reveal]:not(.mt).is-visible {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity var(--reveal-dur) var(--motion-ease) var(--reveal-delay, 0ms),
+    transform var(--reveal-dur) var(--motion-ease) var(--reveal-delay, 0ms);
+}
+/* opacity only (Work cards: the scroll butterfly measures them, and they scale on hover) */
+[data-reveal='fade']:not(.mt),
+[data-reveal='fade']:not(.mt).is-visible {
+  transform: none;
+}
+.work-card[data-reveal='fade'].is-visible {
+  transition:
+    opacity var(--reveal-dur) var(--motion-ease) var(--reveal-delay, 0ms),
+    transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1),
+    box-shadow 0.35s ease,
+    background-color 0.4s ease;
+}
+.work-card[data-reveal='fade']:not(.is-visible) {
+  transition:
+    opacity var(--reveal-out-dur) ease,
+    transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1),
+    box-shadow 0.35s ease,
+    background-color 0.4s ease;
+}
+.work-card[data-reveal='fade']:hover {
+  transform: scale(1.025);
+}
+
+/* ── Reduced motion: no movement, everything simply there (a quick fade at most) ── */
+@media (prefers-reduced-motion: reduce) {
+  .mt-inner,
+  .hero-fade {
+    animation: none !important;
+    transform: none !important;
+  }
+  [data-reveal]:not(.mt) {
+    transform: none !important;
+  }
+}
+
+/* ── Theme switch: one dissolve of the whole page (hooks/useTheme.js) ── */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 650ms;
+  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+.is-theme-switching *,
+.is-theme-switching *::before,
+.is-theme-switching *::after {
+  transition: none !important;
+}
+/* the dissolve's overlay mustn't swallow clicks (e.g. a quick second tap on the theme toggle) */
+::view-transition {
+  pointer-events: none;
+}

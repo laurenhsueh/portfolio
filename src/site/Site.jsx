@@ -7,6 +7,7 @@ import { useHashRoute } from './hooks/useHashRoute'
 import Home from './pages/Home'
 import Garden from './pages/Garden'
 import About from './pages/About'
+import { useScrollReveal } from './motion/useScrollReveal'
 
 const ButterflyLab = lazy(() => import('../lab/ButterflyLab'))
 
@@ -23,6 +24,7 @@ function arrowCursor(fill) {
 export default function Site() {
   const route = useHashRoute()
   const [theme, toggleTheme] = useTheme()
+  useScrollReveal()
 
   // Figma-style arrow cursor in the theme's accent pink (CSS vars can't reach cursor images)
   useEffect(() => {

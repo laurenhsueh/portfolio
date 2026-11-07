@@ -4,7 +4,7 @@ import { dance, beatNow } from '../music/dance'
 import { Flyer, Afterimage } from './StageButterfly'
 import ButterflyCanvas from './ButterflyCanvas'
 import { lerp, angLerp } from './math'
-import { guide } from './guide'
+import { guide, HANDBACK_RATE } from './guide'
 import { pageRect } from './layout'
 import { DARK_BLOOM, LIGHT_HALO } from './lookParams'
 
@@ -47,6 +47,7 @@ const HIDDEN = { at: [0.5, 0.5], span: 0.3, fade: 0 } // before the first measur
 const BIG_ROT = [0.3, 0.15, -0.18]
 const SMALL_ROT = [0.32, 0.25, -Math.PI / 5]
 const BLOOM = DARK_BLOOM
+const INTRO_S = 2.4 // the big one's load-in: wings open from shut while it fades in (seconds)
 
 function createDuet() {
   return {
@@ -54,6 +55,7 @@ function createDuet() {
     dl: 0, // 0 → 1 as the dance eases in
     theta: Math.PI * 0.75,
     big: { x: 0, y: 0, span: 1 },
+    heroFade: 1, // eases back in when the scroll butterfly hands it back (a short crossfade)
     bigOff: { x: 0, y: 0, vx: 0, vy: 0 }, // the big one's offset from home (dragged / flying back)
     bigRz: BIG_ROT[2], // the big one's heading (it turns to face its way home)
     swing: { big: 0, small: 0 }, // lean while dragged
@@ -81,6 +83,14 @@ function Director({ duet, sceneRef, reduced }) {
     const cx = lerp(sc.big.x, danceX, dl) // the pair's centre
     const cy = sc.big.y
     duet.big.span = bigSpan
+    // the scroll butterfly takes it over instantly (same spot, same wingbeat); handing it back,
+    // the two crossfade, so there's never a frame without a butterfly
+    duet.heroFade =
+      guide.heroHidden || reduced
+        ? guide.heroHidden
+          ? 0
+          : 1
+        : lerp(duet.heroFade, 1, 1 - Math.exp(-dt * HANDBACK_RATE))
 
     // the small one's target
     const away = { x: sc.w + smallSpan * 0.8, y: -smallSpan * 0.5 }
@@ -220,7 +230,7 @@ function Stage({ sceneRef, reduced, theme }) {
       span: B.span / unit(),
       // hidden while the scroll butterfly has it (it flew down to Work as the same butterfly)
       rot: [BIG_ROT[0], BIG_ROT[1] + lean, duet.bigRz],
-      fade: guide.heroHidden ? 0 : 1,
+      fade: duet.heroFade,
       held,
       flying: B.flying ?? 0,
       swing: duet.swing.big,
@@ -248,6 +258,8 @@ function Stage({ sceneRef, reduced, theme }) {
       <Director duet={duet} sceneRef={sceneRef} reduced={reduced} />
       <Flyer
         drive={driveBig}
+        intro={INTRO_S}
+        sharePhase
         bob={1.3}
         bobRate={1.25}
         reduced={reduced}
@@ -268,7 +280,7 @@ function Stage({ sceneRef, reduced, theme }) {
         haloGain={bloom ? 0.45 : LIGHT_HALO.gain}
         haloSize={bloom ? null : LIGHT_HALO.size}
       />
-      {bloom && <Afterimage cfg={BLOOM} reduced={reduced} />}
+      <Afterimage cfg={BLOOM} reduced={reduced} enabled={bloom} />
     </>
   )
 }
@@ -302,7 +314,7 @@ export default function DuetStage({ sceneRef, reduced, theme }) {
       className={`stage-butterfly duet-stage ${bloom ? 'is-afterimage' : 'is-light'}`}
       aria-hidden="true"
     >
-      <ButterflyCanvas bloom={bloom} frameloop={visible ? 'always' : 'never'}>
+      <ButterflyCanvas frameloop={visible ? 'always' : 'never'}>
         <Stage sceneRef={sceneRef} reduced={reduced} theme={theme} />
       </ButterflyCanvas>
     </div>

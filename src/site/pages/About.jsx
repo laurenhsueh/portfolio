@@ -6,8 +6,8 @@ export default function About() {
       <h1 id="about-title" className="page-title">
         About
       </h1>
-      <p className="page-lede">{README_TEXT}</p>
-      <p className="page-body">
+      <p className="page-lede" data-reveal>{README_TEXT}</p>
+      <p className="page-body" data-reveal>
         I work across product management and design: leading a team of PMs on a school publishing platform, building
         UI/UX for clients, and making graphics with a lot of personality for my hip-hop dance club.
       </p>
